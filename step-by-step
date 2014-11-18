@@ -40,7 +40,7 @@ ADD:
 			1101 001 010 000 000
 
 	----------------------------
-	Key
+	Size Key
 	----------------------------
 	Byte	1101 xxx 000 xxx xxx
 	Word	1101 xxx 001 xxx xxx
@@ -58,7 +58,7 @@ ADDA (Add Address):
 			1101 110 011 000 111
 
 	----------------------------
-	Key
+	Size Key
 	----------------------------
 	Word	1101 xxx 011 xxx xxx
 	Long	1101 xxx 111 xxx xxx
@@ -71,7 +71,7 @@ SUB (Subtract):
 
 
 	----------------------------
-	Key
+	Size Key
 	----------------------------
 	Byte	1001 xxx 000 xxx xxx
 	Word	1001 xxx 001 xxx xxx
@@ -81,14 +81,15 @@ SUB (Subtract):
 
 SUBQ (Subtract Quick):
 
+		0101 xxx 1 xx [xxx xxx]
+			 |DATA |size  |effective address
+
 		[Instruction] 	1001 xxx 1
 
 		[DATA]			[xxx] 1-8 is only allowed
 						Three bits of immediate data; 1 – 7 represent immediate
 						values of 1 – 7, and zero represents eight.
 		
-		0101 xxx 1 xx [xxx xxx]
-			 |DATA |size  |effective address
 
 		Example:
 			SUBQ.L #8,A0
@@ -98,7 +99,7 @@ SUBQ (Subtract Quick):
 			1001 111 1 10 001 000
 
 	-----------------------------
-	Key
+	Size Key
 	-----------------------------
 	Byte	0101 xxx 1 00 xxx xxx
 	Word	0101 xxx 1 01 xxx xxx
@@ -124,5 +125,35 @@ CMP, CMPI
 Bcc (BCS, BGE, BLT, BVC)
 BRA, JSR, RTS
 
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Address     Hex				Binary							Assembly Code
+--------------------------------------------------------------------------------
+			S124
+
+00000000	1000 			0001 0000 0000 0000 			START 	ORG $1000
+
+00001000    303C 000E		0011 000 000 111 100 [000E]				move.w #14,d0
+
+00001004    45F9 0000116E	0100 010 111 111 001 [0000116E]			lea $0000116E, a2
+
+0000100A    325A  			0011 001 001 011 010 			parse_B  movea.(a2)+,a1	
+
+1000000C    3409			0011 010 000 001 001 					move.w a1,d2
+
+0000100E	B47C 0000	    1011 010 001 111 100 [0000]				cmp #<data>0000,(word)d2
+
+00001012    6700 0006		0110 0111 00000000   [0006]    			bEQ parse_A offset(+6) (1014 + 0006 = 101A)
+																	bNE
+00001016 	4E4F 			010011100100 1111		 				trap #15 
+
+00001018 	60F0			01100000 11110000						bra parse_B  offset(FE) (1018 + (-000E) = 100A)
+
+0000101A 	103C 0009		0001 000 000 111 100 [0009]		parse_A move.b #9,d0   			
+
+0000101E 	4E4F 			010011100100 1111		 				trap #15 
+
+00001020 	4E01			0100 1110 0000 0001
 --------------------------------------------------------------------------------
 
