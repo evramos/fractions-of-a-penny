@@ -2,6 +2,354 @@
 68K Instructions to Disassemble:
 
 --------------------------------------------------------------------------------
+Function zeroOp builds the following instructions:
+--------------------------------------------------------------------------------
+ *   DATA
+
+ *	 NOP			 		0100 1110 0111 0001		0x4E71
+
+ *	 RTS 					0100 1110 0111 0101 	0x4E75
+
+
+
+
+
+--------------------------------------------------------------------------------
+Function oneOp builds the following instructions:
+--------------------------------------------------------------------------------
+ *	 JSR <ea>										   0100 1110 10 [EA - 6bits]
+
+		SP – 4 → Sp; PC → (SP); Destination Address → PC
+
+		[OP] 		0100111010 xxxxxx
+
+		Example:
+			JSR [LABEL]
+--------------------------------------------------------------------------------
+ *	 NEG <ea>								0100 0100 [Size - 2bits][EA - 6bits]
+
+		0 – Destination → Destination
+
+		01000100 xx [xxx xxx]
+			     |SIZE  |Effective Address
+
+		[OP] 		01000100 xx xxxxxx
+
+		[SIZE]		Byte	01000100 00 xxxxxx
+					Word	01000100 01 xxxxxx
+					Long	01000100 10 xxxxxx
+
+		Example:
+
+
+
+
+--------------------------------------------------------------------------------
+Function arithReg builds the following instructions:
+--------------------------------------------------------------------------------
+ *	 ADD <ea>,Dn:  			 1101 [Register - 3bits][OPmode - 3bits][EA - 6bits]
+
+		Source + Destination -> Destination
+
+		1101 xxx xxx [xxx xxx]
+			 |R  |OPMODE |Effective Address
+
+		[OP] 		1101 xxx xxx xxxxxx
+
+		[REGISTER] 	xxx [000,001,010,011,100,101,110,111] Destination
+					specifies any of the eight data registers
+
+		[OPMODE]	Byte	1101 xxx 000 xxxxxx
+					Word	1101 xxx 001 xxxxxx
+					Long	1101 xxx 010 xxxxxx
+
+		Example:
+			ADD.L D0,D1
+			1101 001 010 000 000
+--------------------------------------------------------------------------------
+ *	 ADDA <ea>, An:			 1101 [Register - 3bits][OPmode - 3bits][EA - 6bits]
+
+		Source + Destination -> Destination (ADDRESS ONLY)
+
+		1101 xxx xxx [xxx xxx]
+			 |R  |OPMODE |Effective Address
+
+		[OP] 		1101 xxx xxx xxxxxx
+
+		[REGISTER] 	xxx [000,001,010,011,100,101,110,111] Destination
+					specifies any of the eight data registers (ADDRESS ONLY)
+
+		[OPMODE]	Word	1101 xxx 011 xxxxxx
+					Long	1101 xxx 111 xxxxxx
+
+		Example:
+			ADDA.W D7,A6
+			1101 110 011 000 111
+--------------------------------------------------------------------------------
+ *	 CMP <ea>,Dn 			 1011 [Register - 3bits][OPmode - 3bits][EA - 6bits]
+
+ 		Destination - Source -> cc
+
+		1011 xxx xxx [xxx xxx]
+			 |R  |OPMODE |Effective Address
+
+		[OP] 		1011 xxx xxx xxxxxx
+
+		[REGISTER] 	(Dn) xxx [000,001,010,011,100,101,110,111] Destination
+					specifies any of the eight data registers
+
+		[OPMODE]	Byte	1011 xxx 000 xxxxxx
+					Word	1011 xxx 001 xxxxxx
+					Long	1011 xxx 010 xxxxxx
+
+		Example:
+			CMP.L D0,D1
+			1011 001 010 000 000
+--------------------------------------------------------------------------------
+ *	 DIVS 								1000 [Register - 3bits] 111 [EA - 6bits]
+
+		WORD:
+		1101 xxx 111 [xxx xxx]
+			 |R          |Effective Address
+
+		[OP] 		1000 xxx 111 xxxxxx
+
+		LONG:
+		0100 1100 01 [xxx xxx]
+
+--------------------------------------------------------------------------------
+ *	 LEA <ea>,An 						0100 [Register - 3bits] 111 [EA - 6bits]
+
+		<ea> -> An 
+		
+		0100 xxx 111 [xxx xxx]
+			 |R          |Effective Address
+
+		[OP] 		0100 xxx 111 xxxxxx
+
+ 		[REGISTER] 	(An) xxx [000,001,010,011,100,101,110,111] Destination
+					specifies any of the eight data registers (ADDRESS ONLY)
+
+		Example:
+			LEA $0000100A,A0
+			0100 000 111 111 001 	0000100A
+--------------------------------------------------------------------------------
+ *	 MULS			 					1100 [Register - 3bits] 111 [EA - 6bits]
+
+--------------------------------------------------------------------------------
+ *	 OR <ea>,Dn 		  	 1000 [Register - 3bits][OPmode - 3bits][EA - 6bits]
+
+		Source V Destination -> Destination
+
+		1000 xxx xxx [xxx xxx]
+			 |R  |OPMODE |Effective Address
+
+		[OP] 		1000 xxx xxx xxxxxx
+
+		[REGISTER] 	xxx [000,001,010,011,100,101,110,111] Destination
+					specifies any of the eight data registers
+
+		[OPMODE]	Byte	1000 xxx 000 xxxxxx
+					Word	1000 xxx 001 xxxxxx
+					Long	1000 xxx 010 xxxxxx
+
+		Example:
+
+--------------------------------------------------------------------------------
+ *	 SUB <ea>,Dn 	   		 1001 [Register - 3bits][OPmode - 3bits][EA - 6bits]
+
+		Source - Destination -> Destination
+
+		1001 xxx xxx [xxx xxx]
+			 |R  |OPMODE |Effective Address
+
+		[OP] 		1001 xxx xxx xxxxxx
+
+		[REGISTER] 	xxx [000,001,010,011,100,101,110,111] Destination
+					specifies any of the eight data registers
+
+		[OPMODE]	Byte	1001 xxx 000 xxxxxx
+					Word	1001 xxx 001 xxxxxx
+					Long	1001 xxx 010 xxxxxx
+
+		Example:
+			SUB.L D4,D2
+			1001 010 010 000 100
+
+
+
+
+--------------------------------------------------------------------------------
+Function arithAddr builds the following instructions:
+--------------------------------------------------------------------------------
+ *	 ADD Dn,<ea> 			 1101 [Register - 3bits][OPmode - 3bits][EA - 6bits]
+
+		[OPMODE]	Byte	1101 xxx 100 xxxxxx
+					Word	1101 xxx 101 xxxxxx
+					Long	1101 xxx 110 xxxxxx
+--------------------------------------------------------------------------------
+ *	 BCLR Dn,<ea> 						0000 [Register - 3bits] 110 [EA - 6bits]
+
+		0000 xxx 110 [xxx xxx]
+			 |R          |Effective Address
+
+		[OP] 		0000 xxx 110 xxxxxx
+
+		[REGISTER] 	(Dn) xxx [000,001,010,011,100,101,110,111] Destination
+					specifies any of the eight data registers
+
+		Example:
+ 
+--------------------------------------------------------------------------------
+ *	 OR Dn,<ea> 			 1000 [Register - 3bits][OPmode - 3bits][EA - 6bits]
+
+		[OPMODE]	Byte	1000 xxx 100 xxxxxx
+					Word	1000 xxx 101 xxxxxx
+					Long	1000 xxx 110 xxxxxx
+--------------------------------------------------------------------------------
+ *	 SUB Dn,<ea> 			 1001 [Register - 3bits][OPmode - 3bits][EA - 6bits]
+
+		[OPMODE]	Byte	1001 xxx 100 xxxxxx
+					Word	1001 xxx 101 xxxxxx
+					Long	1001 xxx 110 xxxxxx
+
+
+
+
+--------------------------------------------------------------------------------
+Function immedInst builds the following instructions:
+--------------------------------------------------------------------------------
+ *	 CMPI #<data>,<ea>						0000 1100 [SIZE - 2bits][EA - 6bits]
+
+		Destination – Immediate Data → cc
+
+		0000 1100 xx [xxx xxx]
+			      |SIZE  |Effective Address
+
+		[OP] 		0000 1100 xx xxxxxx
+
+		[SIZE]		Byte	0000 1100 00 xxxxxx
+					Word	0000 1100 01 xxxxxx
+					Long	0000 1100 10 xxxxxx
+
+		Example:
+			CMPI.L #10,D1
+			0000 1100 10 000 001 0000000A
+--------------------------------------------------------------------------------
+ *	 ORI #<data>,<ea>						0000 0000 [SIZE - 2bits][EA - 6bits]
+
+		Immediate Data V Destination → Destination
+
+		0000 0000 xx [xxx xxx]
+			      |SIZE  |Effective Address
+
+  		[OP] 		0000 0000 xx xxxxxx
+
+		[SIZE]		Byte	0000 0000 00 xxxxxx
+					Word	0000 0000 01 xxxxxx
+					Long	0000 0000 10 xxxxxx
+
+		Example:
+			ORI.B #7,D3
+			0000 0000 00 000 011 0007
+
+
+
+
+--------------------------------------------------------------------------------
+Function quickMath builds the following instructions:
+--------------------------------------------------------------------------------
+ *	 SUBQ (Subtract Quick):		0101 [DATA - 3bits] 1 [SIZE - 2bits][EA - 6bits]
+
+		0101 xxx 1 xx [xxx xxx]
+			 |DATA |SIZE  |Effective Address
+
+		[OP]	 	1001 xxx 1 xx xxxxxx
+
+		[DATA]		[xxx] 1-8 is only allowed
+					Three bits of immediate data; 1 – 7 represent immediate
+					values of 1 – 7, and zero represents eight.
+		
+		[SIZE]		Byte	0101 xxx 1 00 xxxxxx
+					Word	0101 xxx 1 01 xxxxxx
+					Long	0101 xxx 1 10 xxxxxx
+
+		Example:
+			SUBQ.L #8,A0
+			1001 000 1 10 001 000
+			
+			SUBQ.L #7,A0
+			1001 111 1 10 001 000
+
+
+
+
+--------------------------------------------------------------------------------
+Function branch builds the following instructions:
+--------------------------------------------------------------------------------
+ *   BRA [Branch Always]	  					 0110 0000 [Displacemnt - 8bits]
+
+ *	 BLT [Less Than]							 0110 1101 [Displacemnt - 8bits]
+
+ *	 BCS (BLO) [Carry Set]					  	 0110 0101 [Displacemnt - 8bits]
+
+ *	 BVC [Overflow Clear]						 0110 1000 [Displacemnt - 8bits]
+
+ *	 BGE [Greater or Equal]						 0110 1100 [Displacemnt - 8bits]
+
+
+
+
+--------------------------------------------------------------------------------
+Function shiftReg builds the following instructions:
+--------------------------------------------------------------------------------
+ *	 ASd	[Dx,Dy],[#<data>,Dy]
+ 			ASR 	1110 xxx 1 xx x 00 xxx
+ 			ASL 	1110 xxx 0 xx x 00 xxx
+--------------------------------------------------------------------------------
+ *	 LSd	[Dx,Dy],[#<data>,Dy]
+ 			LSR 	1110 xxx 1 xx x 01 xxx
+ 			LSL 	1110 xxx 0 xx x 01 xxx
+--------------------------------------------------------------------------------
+ *	 ROd	[Dx,Dy],[#<data>,Dy]
+ 			ROR 	1110 xxx 1 xx x 11 xxx
+ 			ROL 	1110 xxx 0 xx x 11 xxx
+--------------------------------------------------------------------------------
+
+		Destination Shifted By Count → Destination
+
+		[OP]	1110
+
+		[Count/Register - 3bits]
+		
+		[Direction - 1bit]
+
+			0 - Shift right
+			1 - Shift left
+		
+		[SIZE - 2bits]
+
+			Byte	1110 xxx x 00 x xx xxx
+			Word	1110 xxx x 01 x xx xxx
+			Long	1110 xxx x 10 x xx xxx
+
+		[i/r - 1bit]
+
+			0 - Count (1 - 8)
+			1 - Data Register (D0 - D7)
+
+		[Type - 2bits]
+
+			ASd 	1110 xxx x xx x 00 xxx
+			LSd 	1110 xxx x xx x 01 xxx
+			ROd 	1110 xxx x xx x 11 xxx
+
+		[Register - 3bits]
+
+
+
+
+--------------------------------------------------------------------------------
 MOVE, MOVEA, MOVEM
 --------------------------------------------------------------------------------
 MOVE
@@ -17,115 +365,8 @@ MOVEM
 	01001x001x
 	     |dr |size
 	        
---------------------------------------------------------------------------------
-ADD, ADDA
---------------------------------------------------------------------------------
-ADD: 	
-		Source + Destination -> Destination
-		ADD <ea>, Dn
-
-		[Instruction] 	1101
-
-		[Register]	   	xxx [000,001,010,011,100,101,110,111] Destination
-						specifies any of the eight data registers
-
-		[OP Mode]		B 000, W 001,L 010
-
-		[EA Mode]		Determines addressing mode
-
-		[EA Register]	Source
-
-		Example:
-			ADD.L D0,D1
-			1101 001 010 000 000
-
-	----------------------------
-	Size Key
-	----------------------------
-	Byte	1101 xxx 000 xxx xxx
-	Word	1101 xxx 001 xxx xxx
-	Long	1101 xxx 010 xxx xxx
-	----------------------------
 
 
-ADDA (Add Address):
-
-		Source + Destination -> Destination
-		ADDA <ea>, An
-
-		Example:
-			ADDA.W D7,A6
-			1101 110 011 000 111
-
-	----------------------------
-	Size Key
-	----------------------------
-	Word	1101 xxx 011 xxx xxx
-	Long	1101 xxx 111 xxx xxx
-	----------------------------
-
---------------------------------------------------------------------------------
-SUB, SUBQ
---------------------------------------------------------------------------------
-SUB (Subtract):
-
-
-	----------------------------
-	Size Key
-	----------------------------
-	Byte	1001 xxx 000 xxx xxx
-	Word	1001 xxx 001 xxx xxx
-	Long	1001 xxx 010 xxx xxx
-	----------------------------
-
-
-SUBQ (Subtract Quick):
-
-		0101 xxx 1 xx [xxx xxx]
-			 |DATA |size  |effective address
-
-		[Instruction] 	1001 xxx 1
-
-		[DATA]			[xxx] 1-8 is only allowed
-						Three bits of immediate data; 1 – 7 represent immediate
-						values of 1 – 7, and zero represents eight.
-		
-
-		Example:
-			SUBQ.L #8,A0
-			1001 000 1 10 001 000
-			
-			SUBQ.L #7,A0
-			1001 111 1 10 001 000
-
-	-----------------------------
-	Size Key
-	-----------------------------
-	Byte	0101 xxx 1 00 xxx xxx
-	Word	0101 xxx 1 01 xxx xxx
-	Long	0101 xxx 1 10 xxx xxx
-	-----------------------------
-
---------------------------------------------------------------------------------
-MULS, DIVS
---------------------------------------------------------------------------------
-MULS
-
-DIVS
---------------------------------------------------------------------------------
-LEA
-OR, ORI
-NEG
-EOR
-LSR, LSL
-ASR, ASL
-ROL, ROR
-BCLR
-CMP, CMPI
-Bcc (BCS, BGE, BLT, BVC)
-BRA, JSR, RTS
-
---------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
 Address     Hex				Binary							Assembly Code
@@ -156,4 +397,3 @@ Address     Hex				Binary							Assembly Code
 
 00001020 	4E01			0100 1110 0000 0001
 --------------------------------------------------------------------------------
-
