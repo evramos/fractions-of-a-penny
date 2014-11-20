@@ -34,8 +34,14 @@ LOOP        MOVE.L (A0)+,D1
             BEQ RTS 
 
 
+                              *  0100 1110 10 xx xxxx
+                              *  4E  
+                              * 
+
+
+
             TST.L D1          * Are we done yet? 
-            BNE HEXADECIMAL   * else noting (just data)
+            BNE HEXADECIMAL   * else noting (just DATA)
 
         
             SIMHALT           * halt simulator
@@ -52,7 +58,7 @@ RTS         LEA RTS_M,A1      * Loading address from NOP message into (A1)
 
 *-------------------------------------------------------------------------------
 * Display output of a single 16bit instruction (So far works with NOP only)
-* 
+* Written by: Matthew Ramos
 * Example output:
 *     '<OPERATION>  :  <BINARY>  :  <HEXADECIMAL>'
 *-------------------------------------------------------------------------------
@@ -122,7 +128,7 @@ NOP_M       DC.B  'NOP',0
 RTS_M       DC.B  'RTS',0
 SPACE       DC.B  ' :  ',0
 NEWLINE     DC.B  CR,LF,0
-SOURCE      DC.L  $4E71,$89ABCDEF,$4E75,$ABCD,0
+SOURCE      DC.L  $4E71,$89ABCDEF,$4E75,$ABCD,$%1010101010101010,0
 
     END    START        ; last line of source
 
