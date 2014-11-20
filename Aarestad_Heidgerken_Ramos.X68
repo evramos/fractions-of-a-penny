@@ -6,26 +6,29 @@
 *			   decode it into Assembly language instructions.  
 *-------------------------------------------------------------------------------
 
-            OPT   	CRE
-SOURCE_H    EQU     $0000A003
-SOURCE_B    EQU     %0100111001110001     * 0x4E71
-START 		EQU		$1000		
+            OPT   CRE
+SOURCE_H    EQU   $0000A003
+SOURCE_B    EQU   %0100111001110001       * 0x4E71
+START       EQU   $1000
+CR          EQU   $0D
+LF          EQU   $0A
 
 *-------------------------------------------------------------------------------
 
-		    ORG    START        * Program begins here
+		    ORG    START  * Program begins here
 
-            ; MOVE.W #SOURCE_B,D1     * 0x4E71  0100111001110001
-            LEA SOURCE,A1
+            LEA SOURCE,A0     * Loading the Source Code into (A0)
             
-LOOP        MOVE.L (A1)+,D1
+LOOP        MOVE.L (A0)+,D1
             
             MOVE.W D1,D3
-            ASR.W #8,D3
-            ASR.W #4,D3
+            LSR.W #8,D3
+            LSR.W #4,D3
             
             CMPI.B #%0100,D3
             BEQ NOP
+
+            TST.L D1          * Are we done yet? 
             BNE HEXADECIMAL   * else noting (just data)
 
         
@@ -59,6 +62,12 @@ BINARY      MOVE.B #15,D0     * Moving task 15 into Data Register 0
 HEXADECIMAL MOVE.B #15,D0     * Moving task 15 into Data Register 0 
             MOVE.B #16,D2     * Moving value 16 into Data Register 2 [base 16]
             TRAP #15          * Display an unsigned number in D1.L converted to number base 2 contained in D2.B
+
+
+            LEA NEWLINE,A1    * Creates a newline for the next instruction. Loading NEWLINE into (A1)
+            MOVE.B #14,D0     * Moving task 14 into Data Register 0
+            TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
+
 
             CLR.B D3          * Clears D3 and frees for future use
             BRA LOOP          * Branching Always to (LOOP)
@@ -100,9 +109,11 @@ TwoOp
 
 NOP_M       DC.B    'NOP',0
 SPACE       DC.B    ' :  ',0
-SOURCE      DC.L    $4E71,$AAAA,0
+NEWLINE     DC.B    CR,LF,0
+SOURCE      DC.L    $4E71,$89ABCDEF,$ABCD,0
 
     END    START        ; last line of source
+
 
 
 
