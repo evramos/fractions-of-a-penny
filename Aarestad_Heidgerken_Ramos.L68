@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.15.02
-Created On: 11/20/2014 2:43:28 PM
+Created On: 11/20/2014 2:51:47 PM
 
 00000000                             1  *-------------------------------------------------------------------------------
 00000000                             2  * Title      : Dissassembler
@@ -126,9 +126,9 @@ Created On: 11/20/2014 2:43:28 PM
 0000107E= 52 54 53 00              122  RTS_M       DC.B  'RTS',0
 00001082= 20 3A 20 20 00           123  SPACE       DC.B  ' :  ',0
 00001087= 0D 0A 00                 124  NEWLINE     DC.B  CR,LF,0
-0000108A= 00004E71 89ABCDEF ...    125  SOURCE      DC.L  $4E71,$89ABCDEF,$4E75,$ABCD,0
-0000109E                           126  
-0000109E                           127      END    START        ; last line of source
+0000108A= 00004E71 89ABCDEF ...    125  SOURCE      DC.L  $4E71,$89ABCDEF,$4E75,$ABCD,%1010101010101010,0
+000010A2                           126  
+000010A2                           127      END    START        ; last line of source
 
 No errors detected
 No warnings generated
