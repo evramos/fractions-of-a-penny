@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.15.02
-Created On: 11/20/2014 2:01:52 PM
+Created On: 11/20/2014 2:19:39 PM
 
 00000000                             1  *-------------------------------------------------------------------------------
 00000000                             2  * Title      : Dissassembler
@@ -23,7 +23,7 @@ Created On: 11/20/2014 2:01:52 PM
 00001000                            19  
 00001000  41F9 00001074             20              LEA SOURCE,A0     * Loading the Source Code into (A0)
 00001006                            21              
-00001006  2218                      22  LOOP        MOVE.L (A0)+,D1
+00001006  3218                      22  LOOP        MOVE.W (A0)+,D1
 00001008                            23              
 00001008  3601                      24              MOVE.W D1,D3
 0000100A  E04B                      25              LSR.W #8,D3
@@ -114,9 +114,9 @@ Created On: 11/20/2014 2:01:52 PM
 00001068= 4E 4F 50 00              110  NOP_M       DC.B    'NOP',0
 0000106C= 20 3A 20 20 00           111  SPACE       DC.B    ' :  ',0
 00001071= 0D 0A 00                 112  NEWLINE     DC.B    CR,LF,0
-00001074= 00004E71 89ABCDEF ...    113  SOURCE      DC.L    $4E71,$89ABCDEF,$ABCD,0
-00001084                           114  
-00001084                           115      END    START        ; last line of source
+00001074= 4E71 89AB CDEF A...      113  SOURCE      DC.W    $4E71,$89AB,$CDEF,$ABCD,0
+0000107E                           114  
+0000107E                           115      END    START        ; last line of source
 
 No errors detected
 No warnings generated
