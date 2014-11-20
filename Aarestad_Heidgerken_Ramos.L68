@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.15.02
-Created On: 11/20/2014 2:19:39 PM
+Created On: 11/20/2014 2:43:28 PM
 
 00000000                             1  *-------------------------------------------------------------------------------
 00000000                             2  * Title      : Dissassembler
@@ -18,105 +18,117 @@ Created On: 11/20/2014 2:19:39 PM
 00000000  =0000000A                 14  LF          EQU   $0A
 00000000                            15  
 00000000                            16  *-------------------------------------------------------------------------------
-00000000                            17  
-00001000                            18              ORG    START  * Program begins here
+00000000                            17                
+00001000                            18              ORG    START      * Program begins here
 00001000                            19  
-00001000  41F9 00001074             20              LEA SOURCE,A0     * Loading the Source Code into (A0)
+00001000  41F9 0000108A             20              LEA SOURCE,A0     * Loading the Source Code into (A0)
 00001006                            21              
-00001006  3218                      22  LOOP        MOVE.W (A0)+,D1
+00001006  2218                      22  LOOP        MOVE.L (A0)+,D1
 00001008                            23              
 00001008  3601                      24              MOVE.W D1,D3
 0000100A  E04B                      25              LSR.W #8,D3
 0000100C  E84B                      26              LSR.W #4,D3
 0000100E                            27              
-0000100E  0C03 0004                 28              CMPI.B #%0100,D3
-00001012  6700 000C                 29              BEQ NOP
-00001016                            30  
-00001016  4A81                      31              TST.L D1          * Are we done yet? 
-00001018  6600 0026                 32              BNE HEXADECIMAL   * else noting (just data)
-0000101C                            33  
-0000101C                            34          
-0000101C  FFFF FFFF                 35              SIMHALT           * halt simulator
-00001020                            36  
-00001020                            37  
-00001020  43F9 00001068             38  NOP         LEA NOP_M,A1      * Loading address from NOP message into (A1)
-00001026  6000 0002                 39              BRA DISPLAY_OPERATION
-0000102A                            40  
-0000102A                            41  
-0000102A                            42  *-------------------------------------------------------------------------------
-0000102A                            43  * Display output of a single 16bit instruction (So far works with NOP only)
-0000102A                            44  * 
-0000102A                            45  * Example output:
-0000102A                            46  *     '<OPERATION>  :  <BINARY>  :  <HEXADECIMAL>'
-0000102A                            47  *-------------------------------------------------------------------------------
-0000102A                            48  
-0000102A                            49  DISPLAY_OPERATION:
-0000102A                            50  
-0000102A  700E                      51  OPERATION   MOVE.L #14,D0     * Moving task 14 into Data Register 0
-0000102C  4E4F                      52              TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
-0000102E                            53  
-0000102E  6100 002A                 54              BSR Tab           * Displays a space between the OP & BINARY
-00001032                            55  
-00001032  103C 000F                 56  BINARY      MOVE.B #15,D0     * Moving task 15 into Data Register 0
-00001036  143C 0002                 57              MOVE.B #2,D2      * Moving value 2 into Data Register 2 [base 2]
-0000103A  4E4F                      58              TRAP #15          * Display an unsigned number in D1.L converted to number base 2 contained in D2.B
+0000100E                            28  
+0000100E  0C41 4E71                 29              CMPI.W #$4E71,D1  * Compares D1 if it is a NOP 
+00001012  6700 0014                 30              BEQ NOP
+00001016                            31  
+00001016                            32  
+00001016  0C41 4E75                 33              CMPI.W #$4E75,D1  * Compares D1 if it is a RTS
+0000101A  6700 0016                 34              BEQ RTS 
+0000101E                            35  
+0000101E                            36  
+0000101E  4A81                      37              TST.L D1          * Are we done yet? 
+00001020  6600 0030                 38              BNE HEXADECIMAL   * else noting (just data)
+00001024                            39  
+00001024                            40          
+00001024  FFFF FFFF                 41              SIMHALT           * halt simulator
+00001028                            42  
+00001028                            43  
+00001028                            44  *-------------------------------------------------------------------------------
+00001028                            45  
+00001028  43F9 0000107A             46  NOP         LEA NOP_M,A1      * Loading address from NOP message into (A1)
+0000102E  6000 000C                 47              BRA DISPLAY_OPERATION
+00001032                            48  
+00001032  43F9 0000107E             49  RTS         LEA RTS_M,A1      * Loading address from NOP message into (A1)
+00001038  6000 0002                 50              BRA DISPLAY_OPERATION
+0000103C                            51  
+0000103C                            52  
+0000103C                            53  *-------------------------------------------------------------------------------
+0000103C                            54  * Display output of a single 16bit instruction (So far works with NOP only)
+0000103C                            55  * 
+0000103C                            56  * Example output:
+0000103C                            57  *     '<OPERATION>  :  <BINARY>  :  <HEXADECIMAL>'
+0000103C                            58  *-------------------------------------------------------------------------------
 0000103C                            59  
-0000103C  6100 001C                 60              BSR Tab           * Displays a space between the BINARY & HEXADECIMAL
-00001040                            61  
-00001040  103C 000F                 62  HEXADECIMAL MOVE.B #15,D0     * Moving task 15 into Data Register 0 
-00001044  143C 0010                 63              MOVE.B #16,D2     * Moving value 16 into Data Register 2 [base 16]
-00001048  4E4F                      64              TRAP #15          * Display an unsigned number in D1.L converted to number base 2 contained in D2.B
-0000104A                            65  
-0000104A                            66  
-0000104A  43F9 00001071             67              LEA NEWLINE,A1    * Creates a newline for the next instruction. Loading NEWLINE into (A1)
-00001050  103C 000E                 68              MOVE.B #14,D0     * Moving task 14 into Data Register 0
-00001054  4E4F                      69              TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
-00001056                            70  
-00001056                            71  
-00001056  4203                      72              CLR.B D3          * Clears D3 and frees for future use
-00001058  60AC                      73              BRA LOOP          * Branching Always to (LOOP)
-0000105A                            74  
-0000105A  43F9 0000106C             75  TAB         LEA SPACE,A1      * Loading address from SPACE message into (A1)
-00001060  103C 000E                 76              MOVE.B #14,D0     * Moving task 14 into Data Register 0 
-00001064  4E4F                      77              TRAP #15          * Display string at (A1) without CR, LF.
-00001066  4E75                      78              RTS               * Returns from subroutine
-00001068                            79  
-00001068                            80  
-00001068                            81  *-------------------------------------------------------------------------------
-00001068                            82  * SubRoutine for handling One Operand Effective addressing.
-00001068                            83  * Written by: David Heidgerken
-00001068                            84  * Description.  16 bit Instruction will be passed to subroutine via the stack
-00001068                            85  * and will parse it to find which address mode and location is being used.
-00001068                            86  *-------------------------------------------------------------------------------
-00001068                            87  OneOpEA
-00001068                            88  
-00001068                            89  *-------------------------------------------------------------------------------
-00001068                            90  * SubRoutine for handling One Operand Displacement.
-00001068                            91  * Written by: David Heidgerken
-00001068                            92  * Description.  16 bit Instruction will be passed to subroutine via the stack
-00001068                            93  * and will parse the instruciton to determine the offset being used.
-00001068                            94  *-------------------------------------------------------------------------------
-00001068                            95  OneOpDis
-00001068                            96  
-00001068                            97  *-------------------------------------------------------------------------------
-00001068                            98  * SubRoutine for handling One Operand Effective addressing.
-00001068                            99  * Written by: David Heidgerken
-00001068                           100  * Description.  16 bit Instruction will be passed to subroutine via the stack
-00001068                           101  * and will parse the last 12 bits to determine the addressing mode and 
-00001068                           102  * locations of the data.
-00001068                           103  *-------------------------------------------------------------------------------
-00001068                           104  TwoOp
-00001068                           105  
-00001068                           106  
-00001068                           107  *-------------------------------------------------------------------------------
-00001068                           108  * Data section - Put variables and constants here
-00001068                           109  
-00001068= 4E 4F 50 00              110  NOP_M       DC.B    'NOP',0
-0000106C= 20 3A 20 20 00           111  SPACE       DC.B    ' :  ',0
-00001071= 0D 0A 00                 112  NEWLINE     DC.B    CR,LF,0
-00001074= 4E71 89AB CDEF A...      113  SOURCE      DC.W    $4E71,$89AB,$CDEF,$ABCD,0
-0000107E                           114  
-0000107E                           115      END    START        ; last line of source
+0000103C                            60  DISPLAY_OPERATION:
+0000103C                            61  
+0000103C  700E                      62  OPERATION   MOVE.L #14,D0     * Moving task 14 into Data Register 0
+0000103E  4E4F                      63              TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
+00001040                            64  
+00001040  6100 002A                 65              BSR Tab           * Displays a space between the OP & BINARY
+00001044                            66  
+00001044  103C 000F                 67  BINARY      MOVE.B #15,D0     * Moving task 15 into Data Register 0
+00001048  143C 0002                 68              MOVE.B #2,D2      * Moving value 2 into Data Register 2 [base 2]
+0000104C  4E4F                      69              TRAP #15          * Display an unsigned number in D1.L converted to number base 2 contained in D2.B
+0000104E                            70  
+0000104E  6100 001C                 71              BSR Tab           * Displays a space between the BINARY & HEXADECIMAL
+00001052                            72  
+00001052  103C 000F                 73  HEXADECIMAL MOVE.B #15,D0     * Moving task 15 into Data Register 0 
+00001056  143C 0010                 74              MOVE.B #16,D2     * Moving value 16 into Data Register 2 [base 16]
+0000105A  4E4F                      75              TRAP #15          * Display an unsigned number in D1.L converted to number base 2 contained in D2.B
+0000105C                            76  
+0000105C                            77  
+0000105C  43F9 00001087             78              LEA NEWLINE,A1    * Creates a newline for the next instruction. Loading NEWLINE into (A1)
+00001062  103C 000E                 79              MOVE.B #14,D0     * Moving task 14 into Data Register 0
+00001066  4E4F                      80              TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
+00001068                            81  
+00001068                            82  
+00001068  4203                      83              CLR.B D3          * Clears D3 and frees for future use
+0000106A  609A                      84              BRA LOOP          * Branching Always to (LOOP)
+0000106C                            85  
+0000106C  43F9 00001082             86  TAB         LEA SPACE,A1      * Loading address from SPACE message into (A1)
+00001072  103C 000E                 87              MOVE.B #14,D0     * Moving task 14 into Data Register 0 
+00001076  4E4F                      88              TRAP #15          * Display string at (A1) without CR, LF.
+00001078  4E75                      89              RTS               * Returns from subroutine
+0000107A                            90  
+0000107A                            91  
+0000107A                            92  *-------------------------------------------------------------------------------
+0000107A                            93  * SubRoutine for handling One Operand Effective addressing.
+0000107A                            94  * Written by: David Heidgerken
+0000107A                            95  * Description.  16 bit Instruction will be passed to subroutine via the stack
+0000107A                            96  * and will parse it to find which address mode and location is being used.
+0000107A                            97  *-------------------------------------------------------------------------------
+0000107A                            98  OneOpEA
+0000107A                            99  
+0000107A                           100  *-------------------------------------------------------------------------------
+0000107A                           101  * SubRoutine for handling One Operand Displacement.
+0000107A                           102  * Written by: David Heidgerken
+0000107A                           103  * Description.  16 bit Instruction will be passed to subroutine via the stack
+0000107A                           104  * and will parse the instruciton to determine the offset being used.
+0000107A                           105  *-------------------------------------------------------------------------------
+0000107A                           106  OneOpDis
+0000107A                           107  
+0000107A                           108  *-------------------------------------------------------------------------------
+0000107A                           109  * SubRoutine for handling One Operand Effective addressing.
+0000107A                           110  * Written by: David Heidgerken
+0000107A                           111  * Description.  16 bit Instruction will be passed to subroutine via the stack
+0000107A                           112  * and will parse the last 12 bits to determine the addressing mode and 
+0000107A                           113  * locations of the data.
+0000107A                           114  *-------------------------------------------------------------------------------
+0000107A                           115  TwoOp
+0000107A                           116  
+0000107A                           117  
+0000107A                           118  *-------------------------------------------------------------------------------
+0000107A                           119  * Data section - Put variables and constants here
+0000107A                           120  
+0000107A= 4E 4F 50 00              121  NOP_M       DC.B  'NOP',0
+0000107E= 52 54 53 00              122  RTS_M       DC.B  'RTS',0
+00001082= 20 3A 20 20 00           123  SPACE       DC.B  ' :  ',0
+00001087= 0D 0A 00                 124  NEWLINE     DC.B  CR,LF,0
+0000108A= 00004E71 89ABCDEF ...    125  SOURCE      DC.L  $4E71,$89ABCDEF,$4E75,$ABCD,0
+0000109E                           126  
+0000109E                           127      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -125,22 +137,24 @@ No warnings generated
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-BINARY              1032
+BINARY              1044
 CR                  D
-DISPLAY_OPERATION   102A
-HEXADECIMAL         1040
+DISPLAY_OPERATION   103C
+HEXADECIMAL         1052
 LF                  A
 LOOP                1006
-NEWLINE             1071
-NOP                 1020
-NOP_M               1068
-ONEOPDIS            1068
-ONEOPEA             1068
-OPERATION           102A
-SOURCE              1074
+NEWLINE             1087
+NOP                 1028
+NOP_M               107A
+ONEOPDIS            107A
+ONEOPEA             107A
+OPERATION           103C
+RTS                 1032
+RTS_M               107E
+SOURCE              108A
 SOURCE_B            4E71
 SOURCE_H            A003
-SPACE               106C
+SPACE               1082
 START               1000
-TAB                 105A
-TWOOP               1068
+TAB                 106C
+TWOOP               107A

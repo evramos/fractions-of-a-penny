@@ -14,8 +14,8 @@ CR          EQU   $0D
 LF          EQU   $0A
 
 *-------------------------------------------------------------------------------
-
-		    ORG    START  * Program begins here
+     	      
+            ORG    START      * Program begins here
 
             LEA SOURCE,A0     * Loading the Source Code into (A0)
             
@@ -25,8 +25,14 @@ LOOP        MOVE.L (A0)+,D1
             LSR.W #8,D3
             LSR.W #4,D3
             
-            CMPI.B #%0100,D3
+
+            CMPI.W #$4E71,D1  * Compares D1 if it is a NOP 
             BEQ NOP
+
+
+            CMPI.W #$4E75,D1  * Compares D1 if it is a RTS
+            BEQ RTS 
+
 
             TST.L D1          * Are we done yet? 
             BNE HEXADECIMAL   * else noting (just data)
@@ -35,7 +41,12 @@ LOOP        MOVE.L (A0)+,D1
             SIMHALT           * halt simulator
 
 
+*-------------------------------------------------------------------------------
+
 NOP         LEA NOP_M,A1      * Loading address from NOP message into (A1)
+            BRA DISPLAY_OPERATION
+
+RTS         LEA RTS_M,A1      * Loading address from NOP message into (A1)
             BRA DISPLAY_OPERATION
 
 
@@ -107,10 +118,11 @@ TwoOp
 *-------------------------------------------------------------------------------
 * Data section - Put variables and constants here
 
-NOP_M       DC.B    'NOP',0
-SPACE       DC.B    ' :  ',0
-NEWLINE     DC.B    CR,LF,0
-SOURCE      DC.L    $4E71,$89ABCDEF,$ABCD,0
+NOP_M       DC.B  'NOP',0
+RTS_M       DC.B  'RTS',0
+SPACE       DC.B  ' :  ',0
+NEWLINE     DC.B  CR,LF,0
+SOURCE      DC.L  $4E71,$89ABCDEF,$4E75,$ABCD,0
 
     END    START        ; last line of source
 
