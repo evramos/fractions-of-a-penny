@@ -304,16 +304,16 @@ Function branch builds the following instructions:
 Function shiftReg builds the following instructions:
 --------------------------------------------------------------------------------
  *	 ASd	[Dx,Dy],[#<data>,Dy]
- 			ASR 	1110 xxx 1 xx x 00 xxx
- 			ASL 	1110 xxx 0 xx x 00 xxx
+ 			ASR 	1110 xxx 0 xx x 00 xxx
+ 			ASL 	1110 xxx 1 xx x 00 xxx
 --------------------------------------------------------------------------------
  *	 LSd	[Dx,Dy],[#<data>,Dy]
- 			LSR 	1110 xxx 1 xx x 01 xxx
- 			LSL 	1110 xxx 0 xx x 01 xxx
+ 			LSR 	1110 xxx 0 xx x 01 xxx
+ 			LSL 	1110 xxx 1 xx x 01 xxx
 --------------------------------------------------------------------------------
  *	 ROd	[Dx,Dy],[#<data>,Dy]
- 			ROR 	1110 xxx 1 xx x 11 xxx
- 			ROL 	1110 xxx 0 xx x 11 xxx
+ 			ROR 	1110 xxx 0 xx x 11 xxx
+ 			ROL 	1110 xxx 1 xx x 11 xxx
 --------------------------------------------------------------------------------
 
 		Destination Shifted By Count → Destination
