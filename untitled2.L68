@@ -1,0 +1,190 @@
+00001006 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.15.02
+Created On: 11/19/2014 6:19:46 PM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Program : CSS 422 Final Project - 68k Disassembler
+00000000                             3  * Written by :
+00000000                             4  * Date :
+00000000                             5  * Description:
+00000000                             6  *
+00000000                             7  *-----------------------------------------------------------
+00000000                             8  
+00000000                             9  ********************* EQUate SECTION *************************
+00000000                            10  
+00000000  =000A0000                 11  stack EQU $000A0000 * Bottom of the stack.
+00000000  =0000001E                 12  lines EQU 30 * Number of lines to display per screen.
+00000000  =00000050                 13  maxlen EQU 80 * Maximum length for a single string.
+00000000                            14  
+00000000                            15  * TRAP #15 tasks
+00000000  =00000000                 16  lineout EQU 00 * Output a line to display with newline
+00000000  =00000001                 17  textout EQU 01 * Output a line to display w/0 newline
+00000000  =00000002                 18  keybdin EQU 02 * Read string from keyboard
+00000000                            19  * String stored at A1
+00000000                            20  * Length stored at D1.W (max 80)
+00000000  =00000400                 21  minaddr EQU $00000400 * Minimum bound for address entry
+00000000  =FFFFFFFF                 22  maxaddr EQU $FFFFFFFF * Maximum bound for address entry
+00000000                            23  
+00000000                            24  ********************* MAIN PROGRAM ***************************
+00000000                            25  
+00000000                            26  
+00001000                            27      ORG $1000
+00001000                            28  
+00001000  4FF9 000A0000             29      LEA stack, SP * Initialize Stack Pointer
+00001006                            30  
+00001006  103C 0000                 31  welcomeprmpt MOVE.B #lineout, D0 * Set up println for TRAP #15
+0000100A  3239 000011CC             32      MOVE.W welcome_lng, D1 * Give TRAP #15 the length of the string.
+00001010  43F9 000011B2             33      LEA welcome_txt, A1 * Prepare to print welcome message.
+00001016  4E4F                      34      TRAP #15 * Print Welcome Message.
+00001018                            35  
+00001018  4EB9 00001266             36      JSR getstartaddr * Prompt for and receive start addr.
+0000101E                            37  
+0000101E                            38  
+0000101E                            39  
+0000101E                            40  
+0000101E                            41  
+Line 42 ERROR: Invalid syntax
+0000101E                            42  STOP #$2700
+0000101E                            43  
+0000101E                            44  ******************** VARIABLES AND STRINGS ********************
+0000101E                            45  
+0000101E                            46  good_buffer DS.B maxlen
+0000106E= 0050                      47  goodbuffer_lng DC.W goodbuffer_lng-good_buffer
+00001070                            48  
+00001070                            49  bad_buffer DS.B maxlen
+000010C0= 0050                      50  badbuffer_lng DC.W badbuffer_lng-bad_buffer
+000010C2                            51  
+000010C2                            52  input_txt DS.B maxlen
+00001112                            53  input_lng DS.W input_lng-input_txt
+000011B2                            54  
+000011B2= 57 65 6C 63 6F 6D ...     55  welcome_txt DC.B 'Welcome. (More stuff here)'
+000011CC= 001A                      56  welcome_lng DC.W welcome_lng-welcome_txt
+000011CE                            57  
+000011CE= 50 6C 65 61 73 65 ...     58  start_pmt DC.B 'Please enter the address to begin decompiling: '
+000011FE= 0030                      59  start_lng DC.W start_lng-start_pmt
+00001200                            60  
+00001200= 50 6C 65 61 73 65 ...     61  end_pmt DC.B 'Please enter the address to end decompiling: '
+0000122E= 002E                      62  end_lng DC.W end_lng-end_pmt
+00001230                            63  
+00001230= 53 74 61 72 74 20 ...     64  starterr_txt DC.B 'Start address invalid.'
+00001246= 0016                      65  starterr_lng DC.W starterr_lng-starterr_txt
+00001248                            66  
+00001248= 45 6E 64 20 61 64 ...     67  enderr_txt DC.B 'End address invalid.'
+0000125C= 0014                      68  enderr_lng DC.W enderr_lng-enderr_txt
+0000125E                            69  
+0000125E= 44 41 54 41 3A 20         70  data_txt DC.B 'DATA: '
+00001264= 0006                      71  data_lng DC.W data_lng-data_txt
+00001266                            72  
+00001266                            73  *********************** I/O SUBROUTINES *********************
+00001266                            74  
+00001266                            75  * API for I/O Subroutines
+00001266                            76  * D0: TRAP 15 Task Number
+00001266                            77  * D1: Length of display string
+00001266                            78  * D2:
+00001266                            79  * D3:
+00001266                            80  * D4:
+00001266                            81  * D5:
+00001266                            82  * D6:
+00001266                            83  * D7:
+00001266                            84  
+00001266                            85  * A0:
+00001266                            86  * A1: Address location of input / output strings
+00001266                            87  * A2:
+00001266                            88  * A3:
+00001266                            89  * A4:
+00001266                            90  * A5:
+00001266                            91  * A6:
+00001266                            92  * A7: Stack Pointer.
+00001266                            93  
+00001266                            94  
+00001266                            95  ** getstartaddr Subroutine
+00001266                            96  
+00001266                            97  
+00001266                            98  
+00001266  103C 0001                 99  getstartaddr MOVE.B #textout, D0 * Ensure that println is selected
+0000126A  3238 11FE                100      MOVE.W start_lng, D1 * Give TRAP #15 the length of the string.
+0000126E  43F8 11CE                101      LEA start_pmt, A1 * Prepare to print start address prompt.
+00001272  4E4F                     102      TRAP #15 * Fire torpedo!
+00001274                           103  
+00001274  103C 0002                104  start_input MOVE.B #keybdin, D0 * Set up keyboard input for TRAP #15
+00001278  43F8 10C2                105      LEA input_txt, A1 * Store the input at input_txt
+0000127C  4E4F                     106      TRAP #15 * Fire torpedo!
+0000127E                           107  
+0000127E  4EB9 0000128A            108      JSR stringtonum * Convert the input to a number
+00001284                           109  
+Line 110 ERROR: Undefined symbol
+00001284  4EB9 004F052A            110      JSR validateaddr * Validate the address
+0000128A                           111  
+0000128A                           112  
+0000128A                           113  ** stringtonum Subroutine
+0000128A                           114  
+0000128A                           115  * API for stringtonum Subroutine
+0000128A                           116  * D0: (Unused in this subroutine)
+0000128A                           117  * D1: Length of display string
+0000128A                           118  * D2: Output number. $00000000 if error occured.
+0000128A                           119  * D3: Internal usage
+0000128A                           120  * D4:
+0000128A                           121  * D5:
+0000128A                           122  * D6:
+0000128A                           123  * D7:
+0000128A                           124  
+0000128A                           125  * A0:
+0000128A                           126  * A1: Pointer to head of ascii string
+0000128A                           127  * A2:
+0000128A                           128  * A3:
+0000128A                           129  * A4:
+0000128A                           130  * A5:
+0000128A                           131  * A6:
+0000128A                           132  * A7: Stack Pointer.
+0000128A                           133  
+0000128A  48E7 7040                134  stringtonum MOVEM.L D1/D2/D3/A1,-(SP) * Push used registers onto stack.
+0000128E  7400                     135      MOVEQ.L #0, D2 * Erase contents of D2.
+00001290                           136  
+00001290  7600                     137  strtonumloop MOVEQ.L #0, D3
+00001292                           138  
+00001292  4CDF 0206                139      MOVEM.L (SP)+,D1/D2/A1 * Restore previously used registers.
+00001296  4E75                     140      RTS * End of subroutine.
+00001298                           141  
+00001298                           142  ** validateaddr Subroutine
+00001298                           143  
+00001298                           144  
+00001298                           145      END welcomeprmpt 
+
+2 errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+BADBUFFER_LNG       10C0
+BAD_BUFFER          1070
+DATA_LNG            1264
+DATA_TXT            125E
+ENDERR_LNG          125C
+ENDERR_TXT          1248
+END_LNG             122E
+END_PMT             1200
+GETSTARTADDR        1266
+GOODBUFFER_LNG      106E
+GOOD_BUFFER         101E
+INPUT_LNG           1112
+INPUT_TXT           10C2
+KEYBDIN             2
+LINEOUT             0
+LINES               1E
+MAXADDR             FFFFFFFF
+MAXLEN              50
+MINADDR             400
+STACK               A0000
+STARTERR_LNG        1246
+STARTERR_TXT        1230
+START_INPUT         1274
+START_LNG           11FE
+START_PMT           11CE
+STRINGTONUM         128A
+STRTONUMLOOP        1290
+TEXTOUT             1
+WELCOMEPRMPT        1006
+WELCOME_LNG         11CC
+WELCOME_TXT         11B2

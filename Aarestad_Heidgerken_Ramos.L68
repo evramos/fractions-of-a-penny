@@ -1,0 +1,122 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.15.02
+Created On: 11/19/2014 7:41:03 PM
+
+00000000                             1  *-------------------------------------------------------------------------------
+00000000                             2  * Title      : Dissassembler
+00000000                             3  * Written by : Ryan Aarestad, David Heidgerken, Matthew Ramos
+00000000                             4  * Date       : Thursday November 6, 2014
+00000000                             5  * Description: Assembly language program that can read a string of binary and
+00000000                             6  *              decode it into Assembly language instructions.  
+00000000                             7  *-------------------------------------------------------------------------------
+00000000                             8  
+00000000                             9              OPT     CRE
+00000000  =00004E71                 10  SOURCE_H    EQU     $4E71
+00000000  =00004E71                 11  SOURCE_B    EQU     %0100111001110001
+00000000  =00001000                 12  START       EQU     $1000       
+00000000                            13  
+00000000                            14  *-------------------------------------------------------------------------------
+00000000                            15  
+00001000                            16              ORG    START                * Program begins here
+00001000                            17  
+00001000  323C 4E71                 18              MOVE.W #SOURCE_B,D1           * 0x4E71  0100111001110001
+00001004                            19              
+00001004                            20              
+00001004  3601                      21              MOVE.W D1,D3
+00001006  E043                      22              ASR.W #8,D3
+00001008  E843                      23              ASR.W #4,D3
+0000100A                            24              
+0000100A  0C03 0004                 25  LOOP        CMPI.B #%0100,D3
+0000100E  6700 0006                 26              BEQ DISPLAY
+00001012                            27                          
+00001012                            28              
+00001012                            29          
+00001012  FFFF FFFF                 30              SIMHALT                     * halt simulator
+00001016                            31  
+00001016                            32  *-------------------------------------------------------------------------------
+00001016  6100 0016                 33  DISPLAY     BSR OPERATION
+0000101A  6100 0036                 34              BSR TAB
+0000101E  6100 001A                 35              BSR BINARY
+00001022  6100 002E                 36              BSR TAB
+00001026  6100 001E                 37              BSR HEXADECIMAL
+0000102A                            38              
+0000102A  4203                      39              CLR.B D3
+0000102C  60DC                      40              BRA LOOP
+0000102E                            41  
+0000102E                            42              
+0000102E  43F9 00001060             43  OPERATION   LEA NOP,A1
+00001034  700E                      44              MOVE.L #14,D0
+00001036  4E4F                      45              TRAP #15
+00001038  4E75                      46              RTS
+0000103A                            47  
+0000103A  103C 000F                 48  BINARY      MOVE.B #15,D0
+0000103E  143C 0002                 49              MOVE.B #2,D2
+00001042  4E4F                      50              TRAP #15
+00001044  4E75                      51              RTS
+00001046                            52  
+00001046  103C 000F                 53  HEXADECIMAL MOVE.B #15,D0
+0000104A  143C 0010                 54              MOVE.B #16,D2
+0000104E  4E4F                      55              TRAP #15
+00001050  4E75                      56              RTS
+00001052                            57  
+00001052  43F9 00001064             58  TAB         LEA SPACE,A1
+00001058  103C 000E                 59              MOVE.B #14,D0
+0000105C  4E4F                      60              TRAP #15
+0000105E  4E75                      61              RTS   
+00001060                            62  
+00001060                            63  
+00001060                            64  *-------------------------------------------------------------------------------
+00001060                            65  * SubRoutine for handling One Operand Effective addressing.
+00001060                            66  * Written by: David Heidgerken
+00001060                            67  * Description.  16 bit Instruction will be passed to subroutine via the stack
+00001060                            68  * and will parse it to find which address mode and location is being used.
+00001060                            69  *-------------------------------------------------------------------------------
+00001060                            70  OneOpEA
+00001060                            71  
+00001060                            72  *-------------------------------------------------------------------------------
+00001060                            73  * SubRoutine for handling One Operand Displacement.
+00001060                            74  * Written by: David Heidgerken
+00001060                            75  * Description.  16 bit Instruction will be passed to subroutine via the stack
+00001060                            76  * and will parse the instruciton to determine the offset being used.
+00001060                            77  *-------------------------------------------------------------------------------
+00001060                            78  OneOpDis
+00001060                            79  
+00001060                            80  *-------------------------------------------------------------------------------
+00001060                            81  * SubRoutine for handling One Operand Effective addressing.
+00001060                            82  * Written by: David Heidgerken
+00001060                            83  * Description.  16 bit Instruction will be passed to subroutine via the stack
+00001060                            84  * and will parse the last 12 bits to determine the addressing mode and 
+00001060                            85  * locations of the data.
+00001060                            86  *-------------------------------------------------------------------------------
+00001060                            87  TwoOp
+00001060                            88  
+00001060                            89  
+00001060                            90  *-------------------------------------------------------------------------------
+00001060                            91  * Data section - Put variables and constants here
+00001060                            92  
+00001060= 4E 4F 50 00               93  NOP         DC.B    'NOP',0
+00001064= 20 3A 20 20 00            94  SPACE       DC.B    ' :  ',0
+00001069                            95  
+00001069                            96      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+BINARY              103A
+DISPLAY             1016
+HEXADECIMAL         1046
+LOOP                100A
+NOP                 1060
+ONEOPDIS            1060
+ONEOPEA             1060
+OPERATION           102E
+SOURCE_B            4E71
+SOURCE_H            4E71
+SPACE               1064
+START               1000
+TAB                 1052
+TWOOP               1060
