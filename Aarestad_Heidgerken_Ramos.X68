@@ -20,41 +20,118 @@ LF          EQU   $0A
             LEA SOURCE,A0     * Loading the Source Code into (A0)
             
 LOOP        MOVE.L (A0)+,D1
+
+            MOVE.L D1,D3
+
+            *-------------------------------------------------------------------
+            * NOP (No Operation)                      0100 1110 0111 0001 0x4E71
+
+            CMPI.L #$4E71,D3  * Compares D1 if it is a NOP 
+            BNE RTS
+
+            LEA NOP_M,A1      * Loading address from NOP message into (A1)
+            MOVE.L #14,D0     * Moving task 14 into Data Register 0
+            TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
+
+            BRA DISPLAY_BINARY_HEXADECIMAL
+        
+            *-------------------------------------------------------------------
+RTS         * RTS (Return)                            0100 1110 0111 0101 0x4E75
+
+            CMPI.L #$4E75,D3  * Compares D1 if it is a RTS
+            BNE JSR
             
-            MOVE.W D1,D3
-            LSR.W #8,D3
-            LSR.W #4,D3
+            LEA RTS_M,A1      * Loading address from NOP message into (A1)
+            MOVE.L #14,D0     * Moving task 14 into Data Register 0
+            TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
+
+            BRA DISPLAY_BINARY_HEXADECIMAL
+
+            *-------------------------------------------------------------------
+JSR         * JSR <ea>                                 0100 1110 10 [EA - 6bits]
+
+            AND.W #$4E80,D3   * Bitmask of JSR [0100 1110 10xx xxxx] 0x4E80
+            CMPI.L #$4E80,D3  * Compares D1 if it is a RTS
+            ; BNE NEG
+            BNE DATA
+
+
+            LEA JSR_M,A1      * Loading address from NOP message into (A1)
+            MOVE.L #14,D0     * Moving task 14 into Data Register 0
+            TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
+
+            ; Pass code to EA 
+
+            BRA DISPLAY_BINARY_HEXADECIMAL
+
+            *-------------------------------------------------------------------
+; NEG         * NEG <ea>                      0100 0100 [Size - 2bits][EA - 6bits]
+
+;             MOVE.L D1,D3      * Reset Data Register 3 from preivous bitmask
+
+;             AND.W #$4480,D3   * Bitmask of NEG [0100 0100 xxxx xxxx] 0x4480
+;             CMPI.L #$4480,D3  * Compares D1 if it is a RTS
+;             BNE ADD
+
+;             LEA NEG_M,A1      * Loading address from NEG message into (A1)
+;             MOVE.L #14,D0     * Moving task 14 into Data Register 0
+;             TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
+
+;             MOVE.L D1,D3      * Reset Data Register 3 from preivous bitmask
+
+;             * Checking what the 2 bit size is, wheather it is (B,W,L) 
+;             AND.W #40,D3      * Bitmask [xxxx xxxx 01xx xxxx]
+;             BEQ   * 01 1
+
+;             * 00 0 BLT
+;             * 10 2 BGT
+
+;             ; Pass code to EA 
+
+;             BRA DISPLAY_BINARY_HEXADECIMAL
+
+;             *-------------------------------------------------------------------
+; ADD         * ADD <ea>,Dn    1101 [Register - 3bits][OPmode - 3bits][EA - 6bits]
+;             * ADD Dn,<ea>
+;             * ADDA <ea>,An
+
+;             MOVE.L D1,D3      * Reset Data Register 3 from preivous bitmask
             
+;             AND.W #$D000,D3   * Bitmask of ADD [1101 xxx xxx xxx xxx] 0xD000
+;             CMPI.L #$D000,D3  * Compares D1 if it is a RTS
+;             BNE CMP
 
-            CMPI.W #$4E71,D1  * Compares D1 if it is a NOP 
-            BEQ NOP
+; ;             * Checks if the OP is ADD/ADDA
+; ;             MOVE.L D1,D3      * Reset Data Register 3 from preivous bitmask
+; ;             AND.W #$D080,D3   * Bitmask of ADD [1101 xxx 010 xxx xxx] 0xD080
 
+; ;             BGT ADDA
 
-            CMPI.W #$4E75,D1  * Compares D1 if it is a RTS
-            BEQ RTS 
+; ; ADDA
 
+;             LEA ADD_M,A1      * Loading address from ADD message into (A1)
+;             MOVE.L #14,D0     * Moving task 14 into Data Register 0
+;             TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
 
-                              *  0100 1110 10 xx xxxx
-                              *  4E  
-                              * 
+;             ; Pass code to EA 
 
+;             BRA DISPLAY_BINARY_HEXADECIMAL
 
+;             *-------------------------------------------------------------------
+; CMP         * CMP <ea>,Dn    1011 [Register - 3bits][OPmode - 3bits][EA - 6bits]
 
-            TST.L D1          * Are we done yet? 
+;             MOVE.L D1,D3      * Reset Data Register 3 from preivous bitmask
+
+;             AND.W #$B000,D3   * Bitmask of ADD [1011 xxx xxx xxxxxx] 0xB000
+;             CMPI.L #$B000,D3  * Compares D1 if it is a RTS
+;             BNE DATA
+
+            *-------------------------------------------------------------------
+DATA        TST.L D1          * Are we done yet? 
             BNE HEXADECIMAL   * else noting (just DATA)
 
         
             SIMHALT           * halt simulator
-
-
-*-------------------------------------------------------------------------------
-
-NOP         LEA NOP_M,A1      * Loading address from NOP message into (A1)
-            BRA DISPLAY_OPERATION
-
-RTS         LEA RTS_M,A1      * Loading address from NOP message into (A1)
-            BRA DISPLAY_OPERATION
-
 
 *-------------------------------------------------------------------------------
 * Display output of a single 16bit instruction (So far works with NOP only)
@@ -63,10 +140,7 @@ RTS         LEA RTS_M,A1      * Loading address from NOP message into (A1)
 *     '<OPERATION>  :  <BINARY>  :  <HEXADECIMAL>'
 *-------------------------------------------------------------------------------
 
-DISPLAY_OPERATION:
-
-OPERATION   MOVE.L #14,D0     * Moving task 14 into Data Register 0
-            TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
+DISPLAY_BINARY_HEXADECIMAL:
 
             BSR Tab           * Displays a space between the OP & BINARY
 
@@ -86,7 +160,7 @@ HEXADECIMAL MOVE.B #15,D0     * Moving task 15 into Data Register 0
             TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
 
 
-            CLR.B D3          * Clears D3 and frees for future use
+            CLR.L D3          * Clears D3 and frees for future use
             BRA LOOP          * Branching Always to (LOOP)
 
 TAB         LEA SPACE,A1      * Loading address from SPACE message into (A1)
@@ -126,11 +200,20 @@ TwoOp
 
 NOP_M       DC.B  'NOP',0
 RTS_M       DC.B  'RTS',0
+JSR_M       DC.B  'JSR ',0
+NEG_M       DC.B  'NEG',0
 SPACE       DC.B  ' :  ',0
+
+Byte_M      DC.B  '.B ',0
+Word_M      DC.B  '.W ',0
+Long_M      DC.B  '.L ',0
+
 NEWLINE     DC.B  CR,LF,0
-SOURCE      DC.L  $4E71,$89ABCDEF,$4E75,$ABCD,$%1010101010101010,0
+SOURCE      DC.L  $4E71,$89ABCDEF,$4E75,$ABCD,%1010101010101010,0
 
     END    START        ; last line of source
+
+
 
 
 
