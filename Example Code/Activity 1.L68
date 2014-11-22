@@ -1,0 +1,88 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.15.02
+Created On: 11/4/2014 10:37:17 AM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      : Activity 1
+00000000                             3  * Written by : Matthew Everett Christopher Ramos
+00000000                             4  * Date       : Saturday November 1, 2014
+00000000                             5  * Description: Favorite Final Fantasy VIII Song
+00000000                             6  *-----------------------------------------------------------
+00001000                             7  START    ORG $1000                 
+00001000                             8          
+00001000  303C 000E                  9           move.w #14,d0        Set up printing strings
+00001004  45F9 0000116E             10           lea addrlist,a2      Start of our list
+0000100A                            11          
+0000100A  325A                      12  LOOP     movea.w (a2)+,a1        
+0000100C  3409                      13           move.w a1,d2         D2 is a temp
+0000100E                            14          
+0000100E  B47C 0000                 15           cmp #0,d2            Compare to NULL
+00001012  6700 0006                 16           beq DONE             If NULL, jump to end of program
+00001016                            17                   
+00001016  4E4F                      18           trap #15             Otherwise print and keep going
+00001018  60F0                      19           bra LOOP
+0000101A                            20          
+0000101A  103C 0009                 21  DONE     move.b  #9,d0
+0000101E  4E4F                      22           trap    #15          Halt sumulator
+00001020                            23  
+00001020                            24  *-----------------------------------------------------------
+00001020                            25  * dc (define constant) is used to place data in memory
+00001020                            26  
+00001020= 4E 6F 62 75 6F 20 ...     27  artist    dc.b   'Nobuo Uematsu',CR,LF,0                  Artist Name
+00001030= 22 4C 69 62 65 72 ...     28  song      dc.b   '"Liberi Fatali"',CR,LF,0                Music Title
+00001042                            29  
+00001042= 46 69 74 68 6F 73 ...     30  chorusA   dc.b   'Fithos Lusec Wecos Vinosec',CR,LF,0
+0000105F= 45 78 63 69 74 61 ...     31  chorusB   dc.b   'Excitate vos e somno, liberi ',0
+0000107D= 41 72 64 65 6E 74 ...     32  chorusC   dc.b   'Ardente veritate',CR,LF,0
+00001090                            33  
+00001090= 6D 65 69 0D 0A 43 ...     34  verseA    dc.b   'mei',CR,LF,'Cunae sunt non',CR,LF,0
+000010A6= 66 61 74 61 6C 69 ...     35  verseB    dc.b   'fatali',CR,LF,'Somnus est non',CR,LF,0
+000010BF= 56 65 6E 69 20 68 ...     36  verseC    dc.b   'Veni hortum veritatis',CR,LF 
+000010D6= 48 6F 72 74 69 20 ...     37            dc.b   'Horti verna veritatis',CR,LF,0
+000010EE= 56 61 6C 65 74 65 ...     38  verseD    dc.b   'Valete liberi',CR,LF
+000010FD= 44 69 65 62 75 73 ...     39            dc.b   'Diebus fatalibus',CR,LF,0
+00001110                            40            
+00001110= 53 75 72 67 69 74 ...     41  lineA     dc.b   'Surgite',CR,LF,'Invenite',CR,LF,0
+00001124= 55 72 69 74 65 20 ...     42  lineB     dc.b   'Urite mala mundi',CR,LF,0
+00001137= 49 6E 63 65 6E 64 ...     43  lineC     dc.b   'Incendite tenebras mundi',CR,LF,0
+00001152                            44  
+00001152= 54 68 61 6E 6B 20 ...     45  goodbye   dc.b   'Thank you for listening!',0
+0000116B= 0D 0A 00                  46  nwln      dc.b   '',CR,LF,0                              New Line         
+0000116E                            47  
+0000116E= 1020 1030 116B 1...       48  addrlist  dc.w   artist,song,nwln,chorusA,chorusA,chorusA,nwln
+0000117C= 105F 1090 105F 1...       49            dc.w   chorusB,verseA,chorusB,verseB,nwln,lineA,nwln
+0000118A= 10BF 116B 107D 1...       50            dc.w   verseC,nwln,chorusC,lineB,chorusC,lineC,nwln
+00001198= 10EE 116B 10EE 1...       51            dc.w   verseD,nwln,verseD,nwln,chorusA,nwln,goodbye,0
+000011A8                            52  
+000011A8  =0000000D                 53  CR    EQU $0d
+000011A8  =0000000A                 54  LF    EQU $0a
+000011A8                            55  
+000011A8                            56      END    START             ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+ADDRLIST            116E
+ARTIST              1020
+CHORUSA             1042
+CHORUSB             105F
+CHORUSC             107D
+CR                  D
+DONE                101A
+GOODBYE             1152
+LF                  A
+LINEA               1110
+LINEB               1124
+LINEC               1137
+LOOP                100A
+NWLN                116B
+SONG                1030
+START               1000
+VERSEA              1090
+VERSEB              10A6
+VERSEC              10BF
+VERSED              10EE
