@@ -112,7 +112,7 @@ Function arithReg builds the following instructions:
 		[OP] 		1000 xxx 111 xxxxxx
 
 		LONG:
-		0100 1100 01 [xxx xxx]
+		0100 110 001 [xxx xxx]
 
 --------------------------------------------------------------------------------
  *	 LEA <ea>,An 						0100 [Register - 3bits] 111 [EA - 6bits]
