@@ -1,0 +1,62 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.15.02
+Created On: 11/22/2014 6:30:52 PM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :
+00000000                             3  * Written by :
+00000000                             4  * Date       :
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00000000                             7      
+00000000  =0000000D                  8  CR          EQU   $0D
+00000000  =0000000A                  9  LF          EQU   $0A
+00001000                            10      ORG    $1000
+00001000                            11  START:                  ; first instruction of program
+00001000                            12  
+00001000                            13  * Put program code here
+00001000                            14  
+00001000  47F9 00001034             15              LEA ENGLISH,A3    * Loading the english list into (A3)
+00001006                            16  
+00001006  43D3                      17  LOOP        LEA (A3),A1
+00001008  700E                      18              MOVE.L #14,D0     * Moving task 14 into Data Register 0
+0000100A  4E4F                      19              TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
+0000100C  6100 0014                 20              BSR RETURN
+00001010                            21              
+00001010  584B                      22              ADDA.W #4,A3
+00001012                            23  
+00001012  4A53                      24              TST.W (A3)
+00001014  6700 0004                 25              BEQ END
+00001018  60EC                      26              BRA LOOP
+0000101A                            27  
+0000101A  4E72 2700                 28  END         STOP #$2700
+0000101E                            29  
+0000101E  FFFF FFFF                 30      SIMHALT             ; halt simulator
+00001022                            31  
+00001022                            32  * Put variables and constants here
+00001022                            33  
+00001022  43F9 00001030             34  RETURN      LEA NEWLINE,A1    * Creates a newline for the next instruction. Loading NEWLINE into (A1)
+00001028  103C 000E                 35              MOVE.B #14,D0     * Moving task 14 into Data Register 0
+0000102C  4E4F                      36              TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
+0000102E  4E75                      37              RTS
+00001030                            38  
+00001030= 0D 0A 00                  39  NEWLINE     DC.B  CR,LF,0
+00001033                            40  
+00001034= 4144 4400 4120 2...       41  ENGLISH     DC.W 'ADD','A  ','ADD','JSR','RTS','NOP','NEG',0
+00001052                            42      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+CR                  D
+END                 101A
+ENGLISH             1034
+LF                  A
+LOOP                1006
+NEWLINE             1030
+RETURN              1022
+START               1000
