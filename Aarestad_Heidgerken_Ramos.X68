@@ -6,109 +6,122 @@
 *			   decode it into Assembly language instructions.  
 *-------------------------------------------------------------------------------
 
-            OPT   CRE
-            
-CR          EQU   $0D
-LF          EQU   $0A
-START       EQU   $1000
-EXIT        EQU   $2700        * Simulator stop code
-WORD        EQU   2            * Advance by a word
+			OPT   CRE
 
-*-------------------------------------------------------------------------------
-* A0: Designated for SOURCE
+CR			EQU   $0D
+LF			EQU   $0A
+START		EQU   $1000			* Program starting address
+EXIT		EQU   $2700			* Simulator stoping code
+WORD		EQU   2				* Advance by a word
+
+*----------------------- Address Register / Data Register ----------------------
+* A0: Designated for Source Code
 * A1: Designated for Displaying text
-* A2: Current Mask
-* A3: English OP
+* A2: Designated for BITMASK list
+* A3: Designated for English Translation list
 * A4: 
 * A5: 
 * A6: 
 *
 * D0: Designated for task code values
-* D1: Main 16bits copy of the instructions
+* D1: Main 16bits copy of the instructions (PRINT)
 * D2: Designated for n Base (while using task 15)
-* D3: Temporary 16bits for bitmasking
+* D3: Temporary 16-bits for bitmask compression
 * D4: 
 * D5: 
 * D6: 
-*-------------------------------------------------------------------------------
+* D7: 
+*
 
-            ORG    START      * Program begins here
+*------------------------ Main Program / Starting Point ------------------------
 
-            LEA SOURCE_C,A0   * Loading the source code into (A0)
+			ORG    START		* Program begins here
 
-RESET       LEA BITMASK,A2    * Loading the bitmask list into (A2)
-            LEA ENGLISH,A3    * Loading the english list into (A3)
+			LEA SOURCE_C,A0		* Loading the source code into address register 0
 
-*-------------------------------------------------------------------------------
-LOOP        MOVE.W (A0),D3
+RESET		* Resets the list of bitmasks & english to the begining
 
-            AND.W (A2),D3     * Loads current bitmask with current instruction
-
-            CMP.W (A2),D3     * Compares the current bitmask to Data Register 3
-
-            BNE NEXT
-
-            MOVEA.W (A3),A1     * Loading address from NOP message into (A1)
-            MOVE.L #14,D0     * Moving task 14 into Data Register 0
-            TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
-
-            MOVE.W (A0),D1
-            BSR DISPLAY_BINARY_HEXADECIMAL
-            
-            BRA SHIFT
-
-NEXT        ADDA.W #WORD,A2
-            ADDA.W #WORD,A3
-            ; MOVE.W (A3)+,D3
-
-
-            TST.W (A2)        * End of bitmask
-            BNE LOOP
-
-SHIFT       ADDA.W #WORD,A0   * Shifts to the next set of instructions
-
-            TST.W (A0)
-            BEQ END
-
-            BRA RESET
-
-
-END         STOP #EXIT
-
-            SIMHALT           * halt simulator
-
+			LEA BITMASK,A2 		* Loading the bitmask list into address register 2
+			LEA ENGLISH,A3 		* Loading the english list into address register 3
 
 *-------------------------------------------------------------------------------
+* Comments here
+
+LOOP 		MOVE.W (A0),D3  	* Makes a temp of the current 16-bits into data register 3
+
+			AND.W (A2),D3		* AND the current bitmask with current instruction
+
+			CMP.W (A2),D3		* Compares the current bitmask in (A2) with D3
+
+			BNE NEXT 			* No Match found branch to NEXT 
+
+			*************************************
+			* Pass the remaining code/part to EA
+			*************************************
+
+			MOVEA.W (A3),A1		* Loading address from NOP message into (A1)
+
+			MOVE.L #14,D0		* Moving task 14 into Data Register 0
+			TRAP #15			* Display the NULL terminated string at (A1) without CR, LF
+
+
+			MOVE.W (A0),D1		* Moves the current 16-bits into D1.  
+
+
+			BSR DISPLAY_BINARY_HEXADECIMAL	* Display the 16-bits in base 2 & 16
+
+			BRA SHIFT 			* After the work is done, shift to the next
+								* 16-bits of the source code
+
+*---------------------- Advancing  Bitmask & English list ----------------------
+* Comments here
+
+NEXT		ADDA.W #WORD,A2		* Shifts to the next bitmask
+			ADDA.W #WORD,A3		* Shifts to the next OP Name
+
+			TST.W (A3)			* Did I reach the end of the English list?
+			BNE LOOP			* Go back to LOOP and test the new bitmask
+
+SHIFT		ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
+
+			TST.W (A0)			* Checks to see if you reached the end of instructions
+			BEQ END 			* Branches to end the program 
+			BRA RESET 			* Resets the bitmask & english lists
+
+END			STOP #EXIT
+
+			SIMHALT				* halt simulator
+
+*----------------------------- Display Subroutine ------------------------------
 * Display output of a single 16bit instruction (So far works with NOP only)
 * Written by: Matthew Ramos
-* Example output:
-*     '<OPERATION>  :  <BINARY>  :  <HEXADECIMAL>'
-*-------------------------------------------------------------------------------
+* Example output:	'<OPERATION>  :  <BINARY>  :  <HEXADECIMAL>'
+*
 
 DISPLAY_BINARY_HEXADECIMAL:
 
-*            BSR Tab           * Displays a space between the OP & BINARY
-*
-*BINARY      MOVE.B #15,D0     * Moving task 15 into Data Register 0
-*            MOVE.B #2,D2      * Moving value 2 into Data Register 2 [base 2]
-*            TRAP #15          * Display an unsigned number in D1.L converted to number base 2 contained in D2.B
+; 			BSR Tab				* Displays a space between the OP & BINARY
 
-            BSR Tab           * Displays a space between the BINARY & HEXADECIMAL
+; BINARY		MOVE.B #15,D0		* Moving task 15 into Data Register 0
+; 			MOVE.B #2,D2		* Moving value 2 into Data Register 2 [base 2]
+; 			TRAP #15			* Display an unsigned number in D1.L converted to number base 2 contained in D2.B
 
-HEXADECIMAL MOVE.B #15,D0     * Moving task 15 into Data Register 0 
-            MOVE.B #16,D2     * Moving value 16 into Data Register 2 [base 16]
-            TRAP #15          * Display an unsigned number in D1.L converted to number base 2 contained in D2.B
+			BSR Tab				* Displays a space between the BINARY & HEXADECIMAL
+
+HEXADECIMAL MOVE.B #15,D0		* Moving task 15 into Data Register 0 
+			MOVE.B #16,D2		* Moving value 16 into Data Register 2 [base 16]
+			TRAP #15			* Display an unsigned number in D1.L converted to number base 2 contained in D2.B
 
 
-            LEA NEWLINE,A1    * Creates a newline for the next instruction. Loading NEWLINE into (A1)
-            MOVE.B #14,D0     * Moving task 14 into Data Register 0
-            TRAP #15          * Display the NULL terminated string at (A1) without CR, LF
-            RTS
-           
-TAB         LEA SPACE,A1      * Loading address from SPACE message into (A1)
-            MOVE.B #14,D0     * Moving task 14 into Data Register 0 
-            TRAP #15          * Display string at (A1) without CR, LF.
-            RTS               * Returns from subroutine
+			LEA NEWLINE,A1		* Creates a newline for the next instruction. Loading NEWLINE into (A1)
+			MOVE.B #14,D0		* Moving task 14 into Data Register 0
+			TRAP #15			* Display the NULL terminated string at (A1) without CR, LF
+			RTS
+
+TAB			LEA SPACE,A1		* Loading address from SPACE message into (A1)
+			MOVE.B #14,D0		* Moving task 14 into Data Register 0 
+			TRAP #15			* Display string at (A1) without CR, LF.
+			RTS					* Returns from subroutine
 
 
 *-------------------------------------------------------------------------------
@@ -137,34 +150,76 @@ OneOpDis
 TwoOp
 
 
-*-------------------------------------------------------------------------------
-* Data section - Put variables and constants here
 
-SPACE       DC.B  ' :  ',0
-NEWLINE     DC.B  CR,LF,0
+*-------------------------------- Data Section ---------------------------------
 
-Byte_M      DC.B  '.B ',0
-Word_M      DC.B  '.W ',0
-Long_M      DC.B  '.L ',0
+SPACE		DC.B  ' :  ',0
+NEWLINE		DC.B  CR,LF,0
 
-ANDA_M      DC.B  'ADDA',0
-AND_M       DC.B  'ADD',0
-JSR_M       DC.B  'JSR',0
-RTS_M       DC.B  'RTS',0
-NOP_M       DC.B  'NOP',0
-NEG_M       DC.B  'NEG',0
+Byte_M		DC.B  '.B ',0
+Word_M		DC.B  '.W ',0
+Long_M		DC.B  '.L ',0
 
-SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$4E71,$4E75
-;                  RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   NOP   RTS
-            DC.W  $4487,0
-;                  NEG
+*----------------------------- English Translation -----------------------------
 
-BITMASK     DC.W $D0C0,$D000,$4E80,$4E75,$4E71,$4400,0
-ENGLISH     DC.W ANDA_M,AND_M,JSR_M,RTS_M,NOP_M,NEG_M,0
+ROL_M		DC.B	'ROL',0		* Tested	0xE118
+LSL_M		DC.B	'LSL',0		* Tested	0xE108
+ASL_M		DC.B	'ASL',0		* Tested	0xE100
+ROR_M		DC.B	'ROR',0		* Tested	0xE018
+LSR_M		DC.B	'LSR',0		* Tested	0xE008
+ASR_M		DC.B	'ASR',0		* Tested	0xE000
+ANDA_M		DC.B	'ADDA',0	* Tested	0xD0C0
+ADD_M		DC.B	'ADD',0		* Tested	0xD000
+MULS_M		DC.B	'MULS',0				0xC1C0
+CMP_M		DC.B	'CMP',0					0xB000
+SUB_M		DC.B	'SUB',0					0x9000
+DIVS_M		DC.B	'DIVS',0				0x81C0
+OR_M		DC.B	'OR',0					0x8000
+BLT_M		DC.B	'BLT',0					0x6D00
+BGE_M		DC.B	'BGE',0					0x6C00
+BVC_M		DC.B	'BVC',0					0x6800
+BCS_M		DC.B	'BCS',0					0x6500
+BRA_M		DC.B	'BRA',0					0x6000
+SUBQ_M		DC.B	'SUBQ',0				0x5100
+JSR_M		DC.B	'JSR',0		* Tested	0x4E80
+RTS_M		DC.B	'RTS',0		* Tested	0x4E75
+NOP_M		DC.B	'NOP',0		* Tested	0x4E71
+; MOVEM_M		DC.B	'MOVEM',0
+NEG_M		DC.B	'NEG',0		* Tested	0x4400
+LEA_M		DC.B	'LEA',0					0x41C0
+; MOVEA.L_M	DC.B	'MOVEA.L',0
+; MOVE.W_M	DC.B	'MOVE.W',0
+; MOVEA.L_M	DC.B	'MOVEA.L',0
+; MOVE.L_M	DC.B	'MOVE.L',0
+; MOVE.B_M	DC.B	'MOVE.B',0
+CMPI_M		DC.B	'CMPI',0				0x0C00
+BCLR_M		DC.B	'BCLR',0				0x01C0
+ORI_M		DC.B	'ORI',0					0x0000
 
-    END    START        ; last line of source
+*-------------------------- English Translation List ---------------------------
+* The values for this constant are set to move in parallel with those of
+* the constant BITMASK via steps at label NEXT.
+
+ENGLISH		DC.W ROL_M,LSL_M,ASL_M,ROR_M,LSR_M,ASR_M,ANDA_M,ADD_M,MULS_M,CMP_M
+			DC.W SUB_M,DIVS_M,OR_M,BLT_M,BGE_M,BVC_M,BCS_M,BRA_M,SUBQ_M,JSR_M
+			DC.W RTS_M,NOP_M,NEG_M,LEA_M,CMPI_M,BCLR_M,ORI_M,0
 
 
+*--------------------------- Bitmask Translation List --------------------------
+BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
+			DC.W $9000,$81C0,$8100,$6D00,$6C00,$6800,$6500,$6000,$5100,$4E80
+			DC.W $4E75,$4E71,$4400,$41C0,$0C00,$01C0,$0000,0
+
+
+*--------------------------------- Source Code ---------------------------------
+SOURCE_C	DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$4E71,$4E75
+;				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   NOP   RTS
+			DC.W  $EE45,$E6AA,$AAAA,$E439,$EF45,$E7AA,$E539
+;				   ASR   LSR   ERROR ROR   ASL   LSL   ROL
+			DC.W  $E539,$E7AA,$EF45,$E439,$BBBB,$E6AA,$EE45,0
+;				   ROL   LSL   ASL   ROR   ERROR LSR   ASR
+
+	END		START				* last line of source
 
 *~Font name~Courier New~
 *~Font size~10~
