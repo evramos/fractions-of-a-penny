@@ -1,6 +1,5 @@
 
 68K Instructions to Disassemble:
-
 --------------------------------------------------------------------------------
 Function zeroOp builds the following instructions:
 --------------------------------------------------------------------------------
@@ -9,10 +8,6 @@ Function zeroOp builds the following instructions:
  *	 NOP			 		0100 1110 0111 0001		0x4E71
 
  *	 RTS 					0100 1110 0111 0101 	0x4E75
-
-
-
-
 
 --------------------------------------------------------------------------------
 Function oneOp builds the following instructions:
@@ -39,16 +34,11 @@ Function oneOp builds the following instructions:
 					Word	01000100 01 xxxxxx 	0x4440
 					Long	01000100 10 xxxxxx 	0x4480
 
-		Example:
-
-
-
-
 --------------------------------------------------------------------------------
 Function arithReg builds the following instructions:
 --------------------------------------------------------------------------------
- *	 ADD <ea>,Dn:  			 1101 [Register - 3bits][OPmode - 3bits][EA - 6bits]
-
+ *	 ADD <ea>,Dn  			 1101 [Register - 3bits][OPmode - 3bits][EA - 6bits]
+ *	 ADD Dn,<ea> 
 		Source + Destination -> Destination
 
 		1101 xxx xxx [xxx xxx]
@@ -59,13 +49,19 @@ Function arithReg builds the following instructions:
 		[REGISTER] 	xxx [000,001,010,011,100,101,110,111] Destination
 					specifies any of the eight data registers
 
-		[OPMODE]	Byte	1101 xxx 000 xxxxxx
+		[OPMODE] 	ADD <ea>,Dn
+					Byte	1101 xxx 000 xxxxxx
 					Word	1101 xxx 001 xxxxxx
 					Long	1101 xxx 010 xxxxxx
 
+					ADD Dn,<ea>
+					Byte	1101 xxx 100 xxxxxx
+					Word	1101 xxx 101 xxxxxx
+					Long	1101 xxx 110 xxxxxx
 		Example:
 			ADD.L D0,D1
 			1101 001 010 000 000
+			
 --------------------------------------------------------------------------------
  *	 ADDA <ea>, An:			 1101 [Register - 3bits][OPmode - 3bits][EA - 6bits]
 
@@ -94,6 +90,7 @@ Function arithReg builds the following instructions:
 			 |R  |OPMODE |Effective Address
 
 		[OP] 		1011 xxx xxx xxxxxx
+					1011 101 110 111011
 
 		[REGISTER] 	(Dn) xxx [000,001,010,011,100,101,110,111] Destination
 					specifies any of the eight data registers
@@ -153,7 +150,11 @@ Function arithReg builds the following instructions:
 					Word	1000 xxx 001 xxxxxx
 					Long	1000 xxx 010 xxxxxx
 
-		Example:
+*	 OR Dn,<ea> 			 1000 [Register - 3bits][OPmode - 3bits][EA - 6bits]
+
+		[OPMODE]	Byte	1000 xxx 100 xxxxxx
+					Word	1000 xxx 101 xxxxxx
+					Long	1000 xxx 110 xxxxxx
 
 --------------------------------------------------------------------------------
  *	 SUB <ea>,Dn 	   		 1001 [Register - 3bits][OPmode - 3bits][EA - 6bits]
@@ -176,17 +177,15 @@ Function arithReg builds the following instructions:
 			SUB.L D4,D2
 			1001 010 010 000 100
 
+ *	 SUB Dn,<ea> 			 1001 [Register - 3bits][OPmode - 3bits][EA - 6bits]
 
+		[OPMODE]	Byte	1001 xxx 100 xxxxxx
+					Word	1001 xxx 101 xxxxxx
+					Long	1001 xxx 110 xxxxxx
 
 
 --------------------------------------------------------------------------------
 Function arithAddr builds the following instructions:
---------------------------------------------------------------------------------
- *	 ADD Dn,<ea> 			 1101 [Register - 3bits][OPmode - 3bits][EA - 6bits]
-
-		[OPMODE]	Byte	1101 xxx 100 xxxxxx
-					Word	1101 xxx 101 xxxxxx
-					Long	1101 xxx 110 xxxxxx
 --------------------------------------------------------------------------------
  *	 BCLR Dn,<ea> 						0000 [Register - 3bits] 110 [EA - 6bits]
 
@@ -200,21 +199,6 @@ Function arithAddr builds the following instructions:
 
 		Example:
  
---------------------------------------------------------------------------------
- *	 OR Dn,<ea> 			 1000 [Register - 3bits][OPmode - 3bits][EA - 6bits]
-
-		[OPMODE]	Byte	1000 xxx 100 xxxxxx
-					Word	1000 xxx 101 xxxxxx
-					Long	1000 xxx 110 xxxxxx
---------------------------------------------------------------------------------
- *	 SUB Dn,<ea> 			 1001 [Register - 3bits][OPmode - 3bits][EA - 6bits]
-
-		[OPMODE]	Byte	1001 xxx 100 xxxxxx
-					Word	1001 xxx 101 xxxxxx
-					Long	1001 xxx 110 xxxxxx
-
-
-
 
 --------------------------------------------------------------------------------
 Function immedInst builds the following instructions:
@@ -254,8 +238,6 @@ Function immedInst builds the following instructions:
 			0000 0000 00 000 011 0007
 
 
-
-
 --------------------------------------------------------------------------------
 Function quickMath builds the following instructions:
 --------------------------------------------------------------------------------
@@ -282,8 +264,6 @@ Function quickMath builds the following instructions:
 			1001 111 1 10 001 000
 
 
-
-
 --------------------------------------------------------------------------------
 Function branch builds the following instructions:
 --------------------------------------------------------------------------------
@@ -296,8 +276,6 @@ Function branch builds the following instructions:
  *	 BVC [Overflow Clear]						 0110 1000 [Displacemnt - 8bits]
 
  *	 BGE [Greater or Equal]						 0110 1100 [Displacemnt - 8bits]
-
-
 
 
 --------------------------------------------------------------------------------
@@ -346,8 +324,15 @@ Function shiftReg builds the following instructions:
 
 		[Register - 3bits]
 
+		Example:
 
+			ASR 1110 1110 0100 0101 	$EE45
+			LSR 1110 0110 1010 1010 	$E6AA
+ 			ROR 1110 0100 0011 1001 	$E439
 
+ 			ASL 1110 1111 0100 0101 	$EF45
+			LSL 1110 0111 1010 1010 	$E7AA
+ 			ROL 1110 0101 0011 1001 	$E539
 
 --------------------------------------------------------------------------------
 MOVE, MOVEA, MOVEM
@@ -365,8 +350,6 @@ MOVEM
 	01001x001x
 	     |dr |size
 	        
-
-
 
 --------------------------------------------------------------------------------
 Address     Hex				Binary							Assembly Code
