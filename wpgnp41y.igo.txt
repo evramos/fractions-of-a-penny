@@ -1,0 +1,34 @@
+﻿Merge branch 'master' into FatBobby
+
+Conflicts:
+	Aarestad_Heidgerken_Ramos.X68
+	OP to Binary.xlsx
+#
+# It looks like you may be committing a merge.
+# If this is not correct, please remove the file
+#	.git/MERGE_HEAD
+# and try again.
+
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+# On branch FatBobby
+# Your branch is up-to-date with 'origin/FatBobby'.
+#
+# All conflicts fixed but you are still merging.
+#
+# Changes to be committed:
+#	new file:   Aarestad_Heidgerken_Ramos.L68
+#	new file:   Aarestad_Heidgerken_Ramos.S68
+#	modified:   Aarestad_Heidgerken_Ramos.X68
+#	modified:   Example Code/Activity 1.L68
+#	modified:   Example Code/Activity 1.S68
+#	modified:   Example Code/Activity 1.X68
+#	modified:   Example Code/Activity 2.L68
+#	modified:   Example Code/Activity 2.S68
+#	modified:   Example Code/Activity 2.X68
+#	modified:   Example Code/Countdown.X68
+#	modified:   Example Code/Matrix Multiplication.X68
+#	modified:   Example Code/Simulating Multiplication via Addition.X68
+#
+
