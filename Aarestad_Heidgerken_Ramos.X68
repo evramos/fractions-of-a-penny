@@ -59,7 +59,6 @@ LOOP        MOVE.W (A0),D3
 
 NEXT        ADDA.W #WORD,A2
             ADDA.W #WORD,A3
-            ; MOVE.W (A3)+,D3
 
 
             TST.W (A2)        * End of bitmask

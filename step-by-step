@@ -35,9 +35,9 @@ Function oneOp builds the following instructions:
 
 		[OP] 		01000100 xx xxxxxx
 
-		[SIZE]		Byte	01000100 00 xxxxxx
-					Word	01000100 01 xxxxxx
-					Long	01000100 10 xxxxxx
+		[SIZE]		Byte	01000100 00 xxxxxx 	0x4400
+					Word	01000100 01 xxxxxx 	0x4440
+					Long	01000100 10 xxxxxx 	0x4480
 
 		Example:
 
@@ -79,7 +79,7 @@ Function arithReg builds the following instructions:
 		[REGISTER] 	xxx [000,001,010,011,100,101,110,111] Destination
 					specifies any of the eight data registers (ADDRESS ONLY)
 
-		[OPMODE]	Word	1101 xxx 011 xxxxxx
+		[OPMODE]	Word	1101 xxx0 11xx xxxx
 					Long	1101 xxx 111 xxxxxx
 
 		Example:
