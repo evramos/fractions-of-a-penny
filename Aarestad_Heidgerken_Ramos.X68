@@ -167,16 +167,18 @@ LSR_M		DC.B	'LSR',0		* Tested	0xE008
 ASR_M		DC.B	'ASR',0		* Tested	0xE000
 ANDA_M		DC.B	'ADDA',0	* Tested	0xD0C0
 ADD_M		DC.B	'ADD',0		* Tested	0xD000
-MULS_M		DC.B	'MULS',0				0xC1C0
+MULS_M		DC.B	'MULS',0	* Issue		0xC1C0		Not sure if corrent bitmask
 CMP_M		DC.B	'CMP',0					0xB000
 SUB_M		DC.B	'SUB',0					0x9000
-DIVS_M		DC.B	'DIVS',0				0x81C0
+DIVS_M		DC.B	'DIVS',0	* Issue		0x81C0		Not sure if corrent bitmask
 OR_M		DC.B	'OR',0					0x8000
-BLT_M		DC.B	'BLT',0					0x6D00
-BGE_M		DC.B	'BGE',0					0x6C00
+
+BLT_M		DC.B	'BLT',0					0x6D00		May need to make branching
+BGE_M		DC.B	'BGE',0					0x6C00		its own subroutine loop
 BVC_M		DC.B	'BVC',0					0x6800
 BCS_M		DC.B	'BCS',0					0x6500
 BRA_M		DC.B	'BRA',0					0x6000
+
 SUBQ_M		DC.B	'SUBQ',0				0x5100
 JSR_M		DC.B	'JSR',0		* Tested	0x4E80
 RTS_M		DC.B	'RTS',0		* Tested	0x4E75
