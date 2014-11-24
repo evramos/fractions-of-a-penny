@@ -14,6 +14,10 @@ START		EQU   $1000			* Program starting address
 EXIT		EQU   $2700			* Simulator stoping code
 WORD		EQU   2				* Advance by a word
 
+BITMASK8	EQU	  $00FF
+BITMASK4    EQU	  $0F
+BITMASK3	EQU   $07
+
 *----------------------- Address Register / Data Register ----------------------
 * A0: Designated for Source Code
 * A1: Designated for Displaying text
@@ -124,27 +128,54 @@ TAB			LEA SPACE,A1		* Loading address from SPACE message into (A1)
 *-------------------------------------------------------------------------------
 * SubRoutine for handling One Operand Effective addressing.
 * Written by: David Heidgerken
-* Description.  16 bit Instruction will be passed to subroutine via the stack
+* Description.  16 bit Instruction will be passed to subroutine via D7
 * and will parse it to find which address mode and location is being used.
-*-------------------------------------------------------------------------------
-OneOpEA
+*D6 used for Register value, D5 is EA Mode
+*-----------------------------------------------------------------------------
+OneOpEA		MOVE.B	#BITMASK3, D6	;move primative 3 bit mask into D3 
+			MOVE.B	#BITMASK3, D5	;move primative 3 bitmask into D4
+			LSL.W	3,D5			;shift mask left 3 times
+			
+			AND.W	D7,D6			;and D7 and D3 store in D3 Register
+			AND.W	D7,D5			;and D7 and D4 store in D4 Mode
+			
+			BSR						;return to calling instruction
+			
+
 
 *-------------------------------------------------------------------------------
 * SubRoutine for handling One Operand Displacement.
 * Written by: David Heidgerken
-* Description.  16 bit Instruction will be passed to subroutine via the stack
-* and will parse the instruciton to determine the offset being used.
+* Description.  16 bit Instruction will be passed to subroutine via D7
+* and will parse the instruciton to determine the offset being usedstored in D3
 *-------------------------------------------------------------------------------
-OneOpDis
+OneOpDis	MOVE.B	#BITMASK8, D6	;move 8bitmask into D6
+			AND.L	D7,D6			;and D7 with D6(Offset)
+			
 
 *-------------------------------------------------------------------------------
 * SubRoutine for handling One Operand Effective addressing.
 * Written by: David Heidgerken
-* Description.  16 bit Instruction will be passed to subroutine via the stack
+* Description.  16 bit Instruction will be passed to subroutine via D7
 * and will parse the last 12 bits to determine the addressing mode and 
 * locations of the data.
 *-------------------------------------------------------------------------------
-TwoOp
+TwoOp		MOVE.B	#BITMASK3, D6	;move primative 3 bit mask into D6
+			MOVE.B	#BITMASK3, D5	;move primative 3 bitmask into D5
+			MOVE.B	#BITMASK3, D4	;move primative 3 bit mask into D4
+			MOVE.B	#BITMASK3, D3	;move primative 3 bit mask into D3
+			
+			LSL.W	3,D5			;shift mask left 3 times
+			LSL.W	6,D4			;shift mask left 3 times
+			LSL.W	6,D3			;shift mask left 3 times
+			LSL.W	6,D3			;shift mask left 3 times
+			
+			AND.L	D7,D6			;and D7 with D6 DestRegister
+			AND.L	D7,D6			;and D7 with D5	DestMode
+			AND.L	D7,D6			;and D7 with D4 SrcMode
+			AND.L	D7,D6			;and D7 with D3 SrcRegister
+			
+			BSR
 
 
 
