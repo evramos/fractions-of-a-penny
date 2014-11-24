@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.15.02
-Created On: 11/23/2014 1:29:22 PM
+Created On: 11/23/2014 11:14:45 PM
 
 00000000                             1  *-------------------------------------------------------------------------------
 00000000                             2  * Title      : Dissassembler
@@ -41,11 +41,11 @@ Created On: 11/23/2014 1:29:22 PM
 00000000                            37  
 00001000                            38              ORG    START        * Program begins here
 00001000                            39  
-00001000  41F9 00001166             40              LEA SOURCE_C,A0     * Load the source code into address register 0
+00001000  41F9 00001152             40              LEA SOURCE_C,A0     * Load the source code into address register 0
 00001006                            41  
 00001006                            42  RESET_MASK  * Resets the list of bitmasks & english to the begining
 00001006                            43  
-00001006  45F9 0000112E             44              LEA BITMASK,A2      * Load the bitmask list into address register 2
+00001006  45F9 00001124             44              LEA BITMASK,A2      * Load the bitmask list into address register 2
 0000100C  47F9 000010F6             45              LEA ENGLISH,A3      * Load the english list into address register 3
 00001012                            46  
 00001012                            47  *-------------------------------------------------------------------------------
@@ -171,56 +171,60 @@ Created On: 11/23/2014 1:29:22 PM
 00001099= 41 53 52 00              167  ASR_M       DC.B    'ASR',0     * Tested    0xE000
 0000109D= 41 44 44 41 00           168  ANDA_M      DC.B    'ADDA',0    * Tested    0xD0C0
 000010A2= 41 44 44 00              169  ADD_M       DC.B    'ADD',0     * Tested    0xD000
-000010A6= 4D 55 4C 53 00           170  MULS_M      DC.B    'MULS',0                0xC1C0
+000010A6= 4D 55 4C 53 00           170  MULS_M      DC.B    'MULS',0    * Issue     0xC1C0      Not sure if corrent bitmask
 000010AB= 43 4D 50 00              171  CMP_M       DC.B    'CMP',0                 0xB000
 000010AF= 53 55 42 00              172  SUB_M       DC.B    'SUB',0                 0x9000
-000010B3= 44 49 56 53 00           173  DIVS_M      DC.B    'DIVS',0                0x81C0
+000010B3= 44 49 56 53 00           173  DIVS_M      DC.B    'DIVS',0    * Issue     0x81C0      Not sure if corrent bitmask
 000010B8= 4F 52 00                 174  OR_M        DC.B    'OR',0                  0x8000
-000010BB= 42 4C 54 00              175  BLT_M       DC.B    'BLT',0                 0x6D00
-000010BF= 42 47 45 00              176  BGE_M       DC.B    'BGE',0                 0x6C00
-000010C3= 42 56 43 00              177  BVC_M       DC.B    'BVC',0                 0x6800
-000010C7= 42 43 53 00              178  BCS_M       DC.B    'BCS',0                 0x6500
-000010CB= 42 52 41 00              179  BRA_M       DC.B    'BRA',0                 0x6000
-000010CF= 53 55 42 51 00           180  SUBQ_M      DC.B    'SUBQ',0                0x5100
-000010D4= 4A 53 52 00              181  JSR_M       DC.B    'JSR',0     * Tested    0x4E80
-000010D8= 52 54 53 00              182  RTS_M       DC.B    'RTS',0     * Tested    0x4E75
-000010DC= 4E 4F 50 00              183  NOP_M       DC.B    'NOP',0     * Tested    0x4E71
-000010E0                           184  ; MOVEM_M       DC.B    'MOVEM',0
-000010E0= 4E 45 47 00              185  NEG_M       DC.B    'NEG',0     * Tested    0x4400
-000010E4= 4C 45 41 00              186  LEA_M       DC.B    'LEA',0                 0x41C0
-000010E8                           187  ; MOVEA.L_M DC.B    'MOVEA.L',0
-000010E8                           188  ; MOVE.W_M  DC.B    'MOVE.W',0
+000010BB                           175  
+000010BB= 42 4C 54 00              176  BLT_M       DC.B    'BLT',0                 0x6D00      May need to make branching
+000010BF= 42 47 45 00              177  BGE_M       DC.B    'BGE',0                 0x6C00      its own subroutine loop
+000010C3= 42 56 43 00              178  BVC_M       DC.B    'BVC',0                 0x6800
+000010C7= 42 43 53 00              179  BCS_M       DC.B    'BCS',0                 0x6500
+000010CB= 42 52 41 00              180  BRA_M       DC.B    'BRA',0                 0x6000
+000010CF                           181  
+000010CF= 53 55 42 51 00           182  SUBQ_M      DC.B    'SUBQ',0                0x5100
+000010D4= 4A 53 52 00              183  JSR_M       DC.B    'JSR',0     * Tested    0x4E80
+000010D8= 52 54 53 00              184  RTS_M       DC.B    'RTS',0     * Tested    0x4E75
+000010DC= 4E 4F 50 00              185  NOP_M       DC.B    'NOP',0     * Tested    0x4E71
+000010E0                           186  ; MOVEM_M       DC.B    'MOVEM',0
+000010E0= 4E 45 47 00              187  NEG_M       DC.B    'NEG',0     * Tested    0x4400
+000010E4= 4C 45 41 00              188  LEA_M       DC.B    'LEA',0                 0x41C0
 000010E8                           189  ; MOVEA.L_M DC.B    'MOVEA.L',0
-000010E8                           190  ; MOVE.L_M  DC.B    'MOVE.L',0
-000010E8                           191  ; MOVE.B_M  DC.B    'MOVE.B',0
-000010E8= 43 4D 50 49 00           192  CMPI_M      DC.B    'CMPI',0                0x0C00
-000010ED= 42 43 4C 52 00           193  BCLR_M      DC.B    'BCLR',0                0x01C0
-000010F2= 4F 52 49 00              194  ORI_M       DC.B    'ORI',0                 0x0000
-000010F6                           195  
-000010F6                           196  *-------------------------- English Translation List ---------------------------
-000010F6                           197  * The values for this constant are set to move in parallel with those of
-000010F6                           198  * the constant BITMASK via steps at label NEXT_MASK.
-000010F6                           199  
-000010F6= 1085 1089 108D 1...      200  ENGLISH     DC.W ROL_M,LSL_M,ASL_M,ROR_M,LSR_M,ASR_M,ANDA_M,ADD_M,MULS_M,CMP_M
-0000110A= 10AF 10B3 10B8 1...      201              DC.W SUB_M,DIVS_M,OR_M,BLT_M,BGE_M,BVC_M,BCS_M,BRA_M,SUBQ_M,JSR_M
-0000111E= 10D8 10DC 10E0 1...      202              DC.W RTS_M,NOP_M,NEG_M,LEA_M,CMPI_M,BCLR_M,ORI_M,0
-0000112E                           203  
-0000112E                           204  
-0000112E                           205  *--------------------------- Bitmask Translation List --------------------------
-0000112E= E118 E108 E100 E...      206  BITMASK     DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
-00001142= 9000 81C0 8100 6...      207              DC.W $9000,$81C0,$8100,$6D00,$6C00,$6800,$6500,$6000,$5100,$4E80
-00001156= 4E75 4E71 4400 4...      208              DC.W $4E75,$4E71,$4400,$41C0,$0C00,$01C0,$0000,0
-00001166                           209  
-00001166                           210  
-00001166                           211  *--------------------------------- Source Code ---------------------------------
-00001166= 4E75 D6C7 4EB8 4...      212  SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$4E71,$4E75
-0000117A                           213  ;                  RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   NOP   RTS
-0000117A= EE45 E6AA AAAA E...      214              DC.W  $EE45,$E6AA,$AAAA,$E439,$EF45,$E7AA,$E539
-00001188                           215  ;                  ASR   LSR   ERROR ROR   ASL   LSL   ROL
-00001188= E539 E7AA EF45 E...      216              DC.W  $E539,$E7AA,$EF45,$E439,$BBBB,$E6AA,$EE45,$85C3,0
-0000119A                           217  ;                  ROL   LSL   ASL   ROR   ERROR LSR   ASR   DIVS
-0000119A                           218  
-0000119A                           219      END     START               * last line of source
+000010E8                           190  ; MOVE.W_M  DC.B    'MOVE.W',0
+000010E8                           191  ; MOVEA.L_M DC.B    'MOVEA.L',0
+000010E8                           192  ; MOVE.L_M  DC.B    'MOVE.L',0
+000010E8                           193  ; MOVE.B_M  DC.B    'MOVE.B',0
+000010E8= 43 4D 50 49 00           194  CMPI_M      DC.B    'CMPI',0                0x0C00
+000010ED= 42 43 4C 52 00           195  BCLR_M      DC.B    'BCLR',0                0x01C0
+000010F2= 4F 52 49 00              196  ORI_M       DC.B    'ORI',0                 0x0000
+000010F6                           197  
+000010F6                           198  *-------------------------- English Translation List ---------------------------
+000010F6                           199  * The values for this constant are set to move in parallel with those of
+000010F6                           200  * the constant BITMASK via steps at label NEXT_MASK.
+000010F6                           201  
+000010F6= 1085 1089 108D 1...      202  ENGLISH     DC.W ROL_M,LSL_M,ASL_M,ROR_M,LSR_M,ASR_M,ANDA_M,ADD_M,MULS_M,CMP_M
+0000110A= 10AF 10B3 10B8           203              DC.W SUB_M,DIVS_M,OR_M *,BLT_M,BGE_M,BVC_M,BCS_M,BRA_M,
+00001110= 10CF 10D4                204              DC.W SUBQ_M,JSR_M
+00001114= 10D8 10DC 10E0 1...      205              DC.W RTS_M,NOP_M,NEG_M,LEA_M,CMPI_M,BCLR_M,ORI_M,0
+00001124                           206  
+00001124                           207  
+00001124                           208  *--------------------------- Bitmask Translation List --------------------------
+00001124= E118 E108 E100 E...      209  BITMASK     DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
+00001138= 9000 81C0 8000           210              DC.W $9000,$81C0,$8000 *,$6D00,$6C00,$6800,$6500,$6000,
+0000113E= 5100 4E80                211              DC.W $5100,$4E80
+00001142= 4E75 4E71 4400 4...      212              DC.W $4E75,$4E71,$4400,$41C0,$0C00,$01C0,$0000,0
+00001152                           213  
+00001152                           214  
+00001152                           215  *--------------------------------- Source Code ---------------------------------
+00001152= 4E75 D6C7 4EB8 4...      216  SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$4E71,$4E75
+00001166                           217  ;                  RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   NOP   RTS
+00001166= EE45 E6AA AAAA E...      218              DC.W  $EE45,$E6AA,$AAAA,$E439,$EF45,$E7AA,$E539
+00001174                           219  ;                  ASR   LSR   ERROR ROR   ASL   LSL   ROL
+00001174= E539 E7AA EF45 E...      220              DC.W  $E539,$E7AA,$EF45,$E439,$BBBB,$E6AA,$EE45,$85C3,0
+00001186                           221  ;                  ROL   LSL   ASL   ROR   ERROR LSR   ASR   DIVS
+00001186                           222  
+00001186                           223      END     START               * last line of source
 
 No errors detected
 No warnings generated
@@ -236,7 +240,7 @@ ASR_M               1099
 BCLR_M              10ED
 BCS_M               10C7
 BGE_M               10BF
-BITMASK             112E
+BITMASK             1124
 BLT_M               10BB
 BRA_M               10CB
 BVC_M               10C3
@@ -271,7 +275,7 @@ ROL_M               1085
 ROR_M               1091
 RTS_M               10D8
 SHIFT               1034
-SOURCE_C            1166
+SOURCE_C            1152
 SPACE               1070
 START               1000
 SUBQ_M              10CF
