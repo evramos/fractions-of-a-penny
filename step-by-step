@@ -278,6 +278,8 @@ Function branch builds the following instructions:
  *	 BGE [Greater or Equal]						 0110 1100 [Displacemnt - 8bits]
 
 
+
+
 --------------------------------------------------------------------------------
 Function shiftReg builds the following instructions:
 --------------------------------------------------------------------------------
