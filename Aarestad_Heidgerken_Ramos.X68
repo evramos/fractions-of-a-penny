@@ -41,8 +41,8 @@ BITMASK3	EQU   $07
 
 			ORG    START		* Program begins here
 
-			LEA HEADER,A1 		* Load Dissassembler header message into A1 
-			MOVE.B #13,D0 		* Move task 13 into Data Register 2
+			LEA HEADER,A1		* Load Dissassembler header message into A1 
+			MOVE.B #13,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) with CR, LF.
 
 			LEA SOURCE_C,A0		* Load the source code into address register 0
@@ -60,6 +60,9 @@ INIT_OP		* Resets the list of bitmasks & english to the begining
 			LEA BITMASK,A2		* Load the bitmask list into address register 2
 			LEA TASK_OP,A3		* Load the OP task list into address register 3
 
+			MOVE.L A0,D1		* Moving the current 16-bits address into data register 1
+			MOVE.B #3,D0		* Moving task 3 into Data Register 0 
+			TRAP #15			* Display signed number in D1.L in decimal in smallest field. 
 
 LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 
@@ -67,14 +70,9 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 
 			CMP.W (A2),D3		* Compares the current bitmask in (A2) with D3
 			BNE NEXT_MASK		* No Match found branch to the NEXT_MASK
-
-			MOVE.L A0,D1		* Moving the current 16-bits address into data register 1
-			MOVE.B #3,D0		* Moving task 3 into Data Register 0 
-			TRAP #15			* Display signed number in D1.L in decimal in smallest field. 
 			
 			MOVE.B #11,D0 		* Moving task 11 into Data Register 0
-			MOVE.W POSITION,D1
-			ADDQ.W #1,POSITION
+			MOVE.W POSITION,D1  * Sets up the desired position
 			TRAP #15			* Position the cursor at [0Axx] x - any number
 
 			MOVEA.W (A3),A3		* Moves the task address into the same (An)
@@ -83,6 +81,7 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 			MOVE.L #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
 
+			MOVE.W (A0),D2		* Reloads the orignal 16-bits as a temp again
 			BSR DISPLAY_HEX		* Display the current 16-bits in Hexadecimal
 
 			BRA SHIFT			* Shifts to the next 16-bits of the source code
@@ -97,16 +96,20 @@ NEXT_MASK	ADDA.W #WORD,A2		* Shifts to the next bitmask
 
 SHIFT		ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 
+			ADDQ.W #1,POSITION  *** VERY IMPORTANT: Shifts the position by 1 ***
+
 			TST.W (A0)			* Checks to see if you reached the end of the instructions
 			BNE INIT_OP			* (!=) Resets the bitmask & OP task lists
 			RTS					* Returns from subroutine
 
 
 ************************ Display Hexadecimal Subroutine ************************
-* Displays an output of a single 16-bit instruction as a hexadecimal value 
+* Displays an output of a single 16-bit instruction as a hexadecimal value
 * Take that prof. Nash (mostly Kim), I didn't want to use task #15 anyway
 
-DISPLAY_HEX MOVE.B #11,D0 		* Moving task 11 into Data Register 0
+*** IMPORTANT *** Load the value that you wish to display in hexadecimal in D2
+
+DISPLAY_HEX MOVE.B #11,D0		* Moving task 11 into Data Register 0
 			ADDI #$2200,D1
 			TRAP #15			* Position the cursor at [2Cxx] x - any number
 
@@ -114,19 +117,18 @@ DISPLAY_HEX MOVE.B #11,D0 		* Moving task 11 into Data Register 0
 			MOVE.B #14,D0
 			TRAP #15
 
-			MOVE.W (A0),D2		* Reloads the orignal 16-bits as a temp again
-
 RESET_HEX	LEA HEX_BITMASK,A2
 			LEA HEX_VALUE,A3
 
-			ROL #4,D2			Shifts to read the next hexadecimal digit
-			BSR LOOP_HEX
-			ROL #4,D2
-			BSR LOOP_HEX
-			ROL #4,D2
-			BSR LOOP_HEX
-			ROL #4,D2
-			BSR LOOP_HEX
+			ROL #4,D2			* Shifts to read the next hexadecimal digit
+			BSR LOOP_HEX		* Branch towards the loop of hex thingy
+
+			ROL #4,D2 			* I HATE THIS, SO MUCH REPEATING CODE
+			BSR LOOP_HEX		* I TRIED EVERYTHING WITHOUT USING ANOTHER
+			ROL #4,D2 			* DATA REGISTER. THAT IS SUCH A WASTE... GOSH
+			BSR LOOP_HEX		* SO I'M GOING TO LEAVE THIS HERE, BECUASE I 
+			ROL #4,D2 			* REALLY DON"T CARE. TOO MUCH TIME WAS WASTED
+			BSR LOOP_HEX		* ANNND YES!! NO MORE BAD CODE (IT WORKS DEAL)
 			
 			LEA NEWLINE,A1		* Creates a newline for the next instruction. Loading NEWLINE into (A1)
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
@@ -370,16 +372,17 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 			DC.W $4E75,$4E71,$4880,$4400,$41C0,$3040,$3000,$2040,$2000,$1000
 			DC.W $0C00,$01C0,$0000,0
 
-
 *--------------------------------- Source Code ---------------------------------
 SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$4E71,$4E75
 ;				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   NOP   RTS
 			DC.W  $AAAA,$EE45,$E6AA,$E439,$2646,$EF45,$E7AA,$E539,$303C
 ;				   ERROR ASR   LSR   ROR   MOVEA ASL   LSL   ROL   MOVE.W
-			DC.W  $E539,$E7AA,$EF45,$E439,$BBBB,$E6AA,$EE45,$85C3,$0001,0
-;				   ROL   LSL   ASL   ROR   ERROR LSR   ASR   DIVS  TEST
+			DC.W  $E539,$60AB,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$0001,0
+;				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  TEST
 
 	END		START				* last line of source
+
+
 
 
 *~Font name~Courier New~
