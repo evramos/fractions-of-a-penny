@@ -14,8 +14,8 @@ START		EQU   $1000			* Program starting address
 EXIT		EQU   $2700			* Simulator stoping code
 WORD		EQU   $0002			* Advance address by a word
 
-BITMASK8	EQU	  $00FF
-BITMASK4    EQU	  $0F
+BITMASK8	EQU   $00FF
+BITMASK4	EQU   $0F
 BITMASK3	EQU   $07
 
 *----------------------- Address Register / Data Register ----------------------
