@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.15.02
-Created On: 11/29/2014 6:25:17 PM
+Created On: 11/30/2014 3:06:40 AM
 
 00000000                             1  *-------------------------------------------------------------------------------
 00000000                             2  * Title      : Dissassembler
@@ -45,15 +45,15 @@ Created On: 11/29/2014 6:25:17 PM
 00000000                            41  
 00001000                            42              ORG    START        * Program begins here
 00001000                            43  
-00001000  43F9 0000131C             44              LEA HEADER,A1       * Load Dissassembler header message into A1 
+00001000  43F9 00001330             44              LEA HEADER,A1       * Load Dissassembler header message into A1 
 00001006  103C 000D                 45              MOVE.B #13,D0       * Move task 13 into Data Register 0
 0000100A  4E4F                      46              TRAP #15            * Display the string at (A1) with CR, LF.
 0000100C                            47  
-0000100C  41F9 000013DA             48              LEA SOURCE_C,A0     * Load the source code into address register 0
+0000100C  41F9 000013EE             48              LEA SOURCE_C,A0     * Load the source code into address register 0
 00001012                            49  
 00001012  6100 000E                 50              BSR INIT_OP         * Hunts down each Operation code like a mad man
 00001016                            51  
-00001016  33FC 0A01 0000134E        52              MOVE.W #$0A01,POSITION  *** TEST - RESET POSITION ***
+00001016  33FC 0A01 00001362        52              MOVE.W #$0A01,POSITION  *** TEST - RESET POSITION ***
 0000101E  4E72 2700                 53              STOP #EXIT          * Halt Simulator
 00001022                            54  
 00001022                            55  
@@ -62,443 +62,454 @@ Created On: 11/29/2014 6:25:17 PM
 00001022                            58  INIT_OP     * Resets the list of bitmasks & english to the begining
 00001022                            59  
 00001022  3408                      60              MOVE.W A0,D2        * Moving the current 16-bits address into D2
-00001024  6100 006A                 61              BSR DISPLAY_HEX 
-00001028                            62  
-00001028  45F9 00001396             63              LEA BITMASK,A2      * Load the bitmask list into address register 2
-0000102E  47F9 00001352             64              LEA TASK_OP,A3      * Load the OP task list into address register 3
-00001034                            65  
-00001034                            66  
-00001034  3610                      67  LOOP_OP     MOVE.W (A0),D3      * Move the current 16-bits into data register 3
-00001036                            68  
-00001036  C652                      69              AND.W (A2),D3       * AND the current bitmask with temp instruction
-00001038                            70  
-00001038  B652                      71              CMP.W (A2),D3       * Compares the current bitmask in (A2) with D3
-0000103A  6600 0028                 72              BNE NEXT_MASK       * No Match found branch to the NEXT_MASK
-0000103E                            73              
-0000103E  103C 000B                 74              MOVE.B #11,D0       * Moving task 11 into Data Register 0
-00001042  3239 0000134E             75              MOVE.W POSITION,D1  * Sets up the desired position
-00001048  4E4F                      76              TRAP #15            * Position the cursor at [0Axx] x - any number
-0000104A                            77  
-0000104A  3653                      78              MOVEA.W (A3),A3     * Moves the task address into the same (An)
-0000104C                            79  
-0000104C  4E93                      80              JSR (A3)            * Jumps to the current task subroutine from A3
-0000104E                            81              ; JMP (A3)          * Jumps to the current task subroutine from A3
-0000104E                            82  
-0000104E  3410                      83  RETURN      MOVE.W (A0),D2      * Reloads the orignal 16-bits as a temp again
-00001050  6100 0028                 84              BSR DISPLAY_INT     * Display the current 16-bits in Hexadecimal
-00001054                            85  
-00001054  43F9 0000134B             86              LEA NEWLINE,A1      * Loading NEWLINE into (A1) for next instruction
-0000105A  103C 000E                 87              MOVE.B #14,D0       * Moving task 14 into Data Register 0
-0000105E  4E4F                      88              TRAP #15            * Display the string at (A1) without CR, LF
-00001060                            89  
-00001060  6000 000A                 90              BRA SHIFT           * Shifts to the next 16-bits of the source code
-00001064                            91  
-00001064                            92  *---------------------- Advancing Bitmask & OP Task list -----------------------
-00001064                            93  
-00001064  544A                      94  NEXT_MASK   ADDA.W #WORD,A2     * Shifts to the next bitmask
-00001066  544B                      95              ADDA.W #WORD,A3     * Shifts to the next OP Name
-00001068                            96  
-00001068  4A53                      97              TST.W (A3)          * Did I reach the end of the English list?
-0000106A  66C8                      98              BNE LOOP_OP         * Go back to LOOP_OP and test the new bitmask
-0000106C                            99  
-0000106C  5448                     100  SHIFT       ADDA.W #WORD,A0     * Shifts to the next set of 16-bits instruction
-0000106E                           101  
-0000106E  5279 0000134E            102              ADDQ.W #1,POSITION  *** VERY IMPORTANT: Shifts the position by 1 ***
-00001074                           103  
-00001074  4A50                     104              TST.W (A0)          * See if you reached the end of the instructions
-00001076  66AA                     105              BNE INIT_OP         * (!=) Resets the bitmask & OP task lists
-00001078  4E75                     106              RTS                 * Returns from subroutine
-0000107A                           107  
-0000107A                           108  
-0000107A                           109  ************************ Display Hexadecimal Subroutine ************************
-0000107A                           110  * Displays an output of a single 16-bit instruction as a hexadecimal value
-0000107A                           111  * Take that prof. Nash (mostly Kim), I didn't want to use task #15 anyway
-0000107A                           112  
-0000107A                           113  *** IMPORTANT *** Load the value that you wish to display in hexadecimal in D2
-0000107A                           114      
+00001024                            61  
+00001024                            62              ; ROL.L #8,D2       * IN THE CASE WE NEED TO PRINT THE WHOLE 
+00001024                            63              ; ROL.L #8,D2       * ADDRESS IN MEMORY
+00001024                            64              ; BSR DISPLAY_HEX   
+00001024                            65              ; ROL.L #8,D2
+00001024                            66              ; ROL.L #8,D2
+00001024                            67  
+00001024  6100 006A                 68              BSR DISPLAY_HEX 
+00001028                            69  
+00001028  45F9 000013AA             70              LEA BITMASK,A2      * Load the bitmask list into address register 2
+0000102E  47F9 00001366             71              LEA TASK_OP,A3      * Load the OP task list into address register 3
+00001034                            72  
+00001034                            73  
+00001034  3610                      74  LOOP_OP     MOVE.W (A0),D3      * Move the current 16-bits into data register 3
+00001036                            75  
+00001036  C652                      76              AND.W (A2),D3       * AND the current bitmask with temp instruction
+00001038                            77  
+00001038  B652                      78              CMP.W (A2),D3       * Compares the current bitmask in (A2) with D3
+0000103A  6600 0028                 79              BNE NEXT_MASK       * No Match found branch to the NEXT_MASK
+0000103E                            80              
+0000103E  103C 000B                 81              MOVE.B #11,D0       * Moving task 11 into Data Register 0
+00001042  3239 00001362             82              MOVE.W POSITION,D1  * Sets up the desired position
+00001048  4E4F                      83              TRAP #15            * Position the cursor at [0Axx] x - any number
+0000104A                            84  
+0000104A  3653                      85              MOVEA.W (A3),A3     * Moves the task address into the same (An)
+0000104C                            86  
+0000104C  4E93                      87              JSR (A3)            * Jumps to the current task subroutine from A3
+0000104E                            88              ; JMP (A3)          * Jumps to the current task subroutine from A3
+0000104E                            89  
+0000104E  3410                      90  RETURN      MOVE.W (A0),D2      * Reloads the orignal 16-bits as a temp again
+00001050  6100 0028                 91              BSR DISPLAY_INT     * Display the current 16-bits in Hexadecimal
+00001054                            92  
+00001054  43F9 0000135F             93              LEA NEWLINE,A1      * Loading NEWLINE into (A1) for next instruction
+0000105A  103C 000E                 94              MOVE.B #14,D0       * Moving task 14 into Data Register 0
+0000105E  4E4F                      95              TRAP #15            * Display the string at (A1) without CR, LF
+00001060                            96  
+00001060  6000 000A                 97              BRA SHIFT           * Shifts to the next 16-bits of the source code
+00001064                            98  
+00001064                            99  *---------------------- Advancing Bitmask & OP Task list -----------------------
+00001064                           100  
+00001064  544A                     101  NEXT_MASK   ADDA.W #WORD,A2     * Shifts to the next bitmask
+00001066  544B                     102              ADDA.W #WORD,A3     * Shifts to the next OP Name
+00001068                           103  
+00001068  4A53                     104              TST.W (A3)          * Did I reach the end of the English list?
+0000106A  66C8                     105              BNE LOOP_OP         * Go back to LOOP_OP and test the new bitmask
+0000106C                           106  
+0000106C  5448                     107  SHIFT       ADDA.W #WORD,A0     * Shifts to the next set of 16-bits instruction
+0000106E                           108  
+0000106E  5279 00001362            109              ADDQ.W #1,POSITION  *** VERY IMPORTANT: Shifts the position by 1 ***
+00001074                           110  
+00001074  4A50                     111              TST.W (A0)          * See if you reached the end of the instructions
+00001076  66AA                     112              BNE INIT_OP         * (!=) Resets the bitmask & OP task lists
+00001078  4E75                     113              RTS                 * Returns from subroutine
+0000107A                           114  
 0000107A                           115  
-0000107A  103C 000B                116  DISPLAY_INT MOVE.B #11,D0       * Moving task 11 into Data Register 0
-0000107E  0641 2200                117              ADDI #$2200,D1
-00001082  4E4F                     118              TRAP #15            * Position the cursor at [2Cxx] x - any number
-00001084                           119  
-00001084  43F9 00001348            120              LEA INIT_HEX,A1
-0000108A  103C 000E                121              MOVE.B #14,D0
-0000108E  4E4F                     122              TRAP #15
-00001090                           123  
-00001090  45F9 000010DC            124  DISPLAY_HEX LEA HEX_BITMASK,A2
-00001096  47F9 000010FC            125              LEA HEX_VALUE,A3
-0000109C                           126  
-0000109C  E95A                     127              ROL #4,D2           * Shifts to read the next hexadecimal digit
-0000109E  6100 0016                128              BSR LOOP_HEX        * Branch towards the loop of hex thingy
-000010A2                           129  
-000010A2  E95A                     130              ROL #4,D2           * I HATE THIS, SO MUCH REPEATING CODE
-000010A4  6100 0010                131              BSR LOOP_HEX        * I TRIED EVERYTHING WITHOUT USING ANOTHER
-000010A8  E95A                     132              ROL #4,D2           * DATA REGISTER. THAT IS SUCH A WASTE... GOSH
-000010AA  6100 000A                133              BSR LOOP_HEX        * SO I'M GOING TO LEAVE THIS HERE, BECUASE I 
-000010AE  E95A                     134              ROL #4,D2           * REALLY DON"T CARE. TOO MUCH TIME WAS WASTED
-000010B0  6100 0004                135              BSR LOOP_HEX        * ANNND YES!! NO MORE BAD CODE (IT WORKS DEAL)
-000010B4                           136  
-000010B4  4E75                     137              RTS                 * Returns from subroutine
-000010B6                           138  
-000010B6  3602                     139  LOOP_HEX    MOVE.W D2,D3        * Move the current 16-bits into data register 3
-000010B8  C652                     140              AND.W (A2),D3       * AND the current bitmask with temp instruction
-000010BA  B652                     141              CMP.W (A2),D3       * Compares the current bitmask in (A2) with D3
-000010BC  6600 0018                142              BNE NEXT_HEX
-000010C0                           143  
-000010C0  43D3                     144              LEA (A3),A1
-000010C2  103C 000E                145              MOVE.B #14,D0
-000010C6  4E4F                     146              TRAP #15
-000010C8                           147              
-000010C8  45F9 000010DC            148              LEA HEX_BITMASK,A2
-000010CE  47F9 000010FC            149              LEA HEX_VALUE,A3
-000010D4  4E75                     150              RTS                 * Returns from subroutine
-000010D6                           151  
-000010D6  544A                     152  NEXT_HEX    ADDA.W #WORD,A2     * Shifts to the next binary
-000010D8  544B                     153              ADDA.W #WORD,A3     * Shifts to the next hexadecimal char
-000010DA  60DA                     154              BRA LOOP_HEX        * Go back to LOOP and test the new bitmask
-000010DC                           155  
-000010DC= 000F 000E 000D 0...      156  HEX_BITMASK DC.W $F,$E,$D,$C,$B,$A,$9,$8,$7,$6,$5,$4,$3,$2,$1,$0
-000010FC= 4600 4500 4400 4...      157  HEX_VALUE   DC.W 'F','E','D','C','B','A','9','8','7','6','5','4','3','2','1','0'
-0000111C                           158  
-0000111C                           159  
-0000111C                           160  ************************* Effective Address Algorithm **************************
-0000111C                           161  *-------------------------------------------------------------------------------
-0000111C                           162  * SubRoutine for handling One Operand Effective addressing.
-0000111C                           163  * Written by: David Heidgerken
-0000111C                           164  * Description.  16 bit Instruction will be passed to subroutine via D7
-0000111C                           165  * and will parse it to find which address mode and location is being used.
-0000111C                           166  *D6 used for Register value, D5 is EA Mode
-0000111C                           167  *-----------------------------------------------------------------------------
-0000111C                           168  ; OneOpEA       MOVE.B  #BITMASK3, D6   ;move primative 3 bit mask into D3 
-0000111C                           169  ;           MOVE.B  #BITMASK3, D5   ;move primative 3 bitmask into D4
-0000111C                           170  ;           LSL.W   3,D5            ;shift mask left 3 times
-0000111C                           171              
-0000111C                           172  ;           AND.W   D7,D6           ;and D7 and D3 store in D3 Register
-0000111C                           173  ;           AND.W   D7,D5           ;and D7 and D4 store in D4 Mode
-0000111C                           174              
-0000111C                           175              ; BSR                       ;return to calling instruction
-0000111C                           176              
-0000111C                           177  
-0000111C                           178  *-------------------------------------------------------------------------------
-0000111C                           179  * SubRoutine for handling One Operand Displacement.
-0000111C                           180  * Written by: David Heidgerken
-0000111C                           181  * Description.  16 bit Instruction will be passed to subroutine via D7
-0000111C                           182  * and will parse the instruciton to determine the offset being usedstored in D3
-0000111C                           183  *-------------------------------------------------------------------------------
-0000111C                           184  ; OneOpDis  MOVE.B  #BITMASK8, D6   ;move 8bitmask into D6
-0000111C                           185  ;           AND.L   D7,D6           ;and D7 with D6(Offset)
-0000111C                           186              
-0000111C                           187  
-0000111C                           188  *-------------------------------------------------------------------------------
-0000111C                           189  * SubRoutine for handling One Operand Effective addressing.
-0000111C                           190  * Written by: David Heidgerken
-0000111C                           191  * Description.  16 bit Instruction will be passed to subroutine via D7
-0000111C                           192  * and will parse the last 12 bits to determine the addressing mode and 
-0000111C                           193  * locations of the data.
-0000111C                           194  *-------------------------------------------------------------------------------
-0000111C                           195  ; TwoOp     MOVE.B  #BITMASK3, D6   ;move primative 3 bit mask into D6
-0000111C                           196  ;           MOVE.B  #BITMASK3, D5   ;move primative 3 bitmask into D5
-0000111C                           197  ;           MOVE.B  #BITMASK3, D4   ;move primative 3 bit mask into D4
-0000111C                           198  ;           MOVE.B  #BITMASK3, D3   ;move primative 3 bit mask into D3
-0000111C                           199              
-0000111C                           200  ;           LSL.W   3,D5            ;shift mask left 3 times
-0000111C                           201  ;           LSL.W   6,D4            ;shift mask left 3 times
-0000111C                           202  ;           LSL.W   6,D3            ;shift mask left 3 times
-0000111C                           203  ;           LSL.W   6,D3            ;shift mask left 3 times
-0000111C                           204              
-0000111C                           205  ;           AND.L   D7,D6           ;and D7 with D6 DestRegister
-0000111C                           206  ;           AND.L   D7,D6           ;and D7 with D5 DestMode
-0000111C                           207  ;           AND.L   D7,D6           ;and D7 with D4 SrcMode
-0000111C                           208  ;           AND.L   D7,D6           ;and D7 with D3 SrcRegister
-0000111C                           209              
-0000111C                           210              ; BSR
-0000111C                           211  
-0000111C                           212  
-0000111C                           213  
-0000111C                           214  
-0000111C                           215  ******************** OP-CODE: Individual Task Subroutine Set *******************
-0000111C                           216  
-0000111C                           217  *-------------------------------------------------
-0000111C= 52 4F 4C 00              218  ROL_M       DC.B    'ROL',0     * Tested    0xE118
-00001120  43F8 111C                219  ROL_T       LEA ROL_M,A1
-00001124  700E                     220              MOVE.L #14,D0       * Moving task 14 into Data Register 0
-00001126  4E4F                     221              TRAP #15            * Display the string at (A1) without CR, LF
-00001128  4E75                     222              RTS
-0000112A                           223              ; BRA RETURN
-0000112A                           224  *-------------------------------------------------
-0000112A= 4C 53 4C 00              225  LSL_M       DC.B    'LSL',0     * Tested    0xE108
-0000112E  43F8 112A                226  LSL_T       LEA LSL_M,A1
-00001132  700E                     227              MOVE.L #14,D0
-00001134  4E4F                     228              TRAP #15
-00001136  4E75                     229              RTS
-00001138                           230              ; BRA RETURN
-00001138                           231  *-------------------------------------------------
-00001138= 41 53 4C 00              232  ASL_M       DC.B    'ASL',0     * Tested    0xE100
-0000113C  43F8 1138                233  ASL_T       LEA ASL_M,A1
-00001140  700E                     234              MOVE.L #14,D0
-00001142  4E4F                     235              TRAP #15
-00001144  4E75                     236              RTS
-00001146                           237              ; BRA RETURN            
-00001146                           238  *-------------------------------------------------
-00001146= 52 4F 52 00              239  ROR_M       DC.B    'ROR',0     * Tested    0xE018
-0000114A  43F8 1146                240  ROR_T       LEA ROR_M,A1
-0000114E  700E                     241              MOVE.L #14,D0
-00001150  4E4F                     242              TRAP #15
-00001152  4E75                     243              RTS
-00001154                           244              ; BRA RETURN
-00001154                           245  *-------------------------------------------------
-00001154= 4C 53 52 00              246  LSR_M       DC.B    'LSR',0     * Tested    0xE008
-00001158  43F8 1154                247  LSR_T       LEA LSR_M,A1
-0000115C  700E                     248              MOVE.L #14,D0
-0000115E  4E4F                     249              TRAP #15
-00001160  4E75                     250              RTS
-00001162                           251              ; BRA RETURN
-00001162                           252  *-------------------------------------------------
-00001162= 41 53 52 00              253  ASR_M       DC.B    'ASR',0     * Tested    0xE000
-00001166  43F8 1162                254  ASR_T       LEA ASR_M,A1
-0000116A  700E                     255              MOVE.L #14,D0
-0000116C  4E4F                     256              TRAP #15
-0000116E  4E75                     257              RTS
-00001170                           258              ; BRA RETURN
-00001170                           259  *-------------------------------------------------
-00001170= 41 44 44 41 00           260  ANDA_M      DC.B    'ADDA',0    * Tested    0xD0C0
-00001176  43F8 1170                261  ANDA_T      LEA ANDA_M,A1
-0000117A  700E                     262              MOVE.L #14,D0
-0000117C  4E4F                     263              TRAP #15
-0000117E  4E75                     264              RTS
-00001180                           265              ; BRA RETURN
-00001180                           266  *-------------------------------------------------
-00001180= 41 44 44 00              267  ADD_M       DC.B    'ADD',0     * Tested    0xD000
-00001184  43F8 1180                268  ADD_T       LEA ADD_M,A1
-00001188  700E                     269              MOVE.L #14,D0
-0000118A  4E4F                     270              TRAP #15
-0000118C  4E75                     271              RTS
-0000118E                           272              ; BRA RETURN
-0000118E                           273  *-------------------------------------------------
-0000118E= 4D 55 4C 53 00           274  MULS_M      DC.B    'MULS',0    * Issue     0xC1C0
-00001194  43F8 118E                275  MULS_T      LEA MULS_M,A1
-00001198  700E                     276              MOVE.L #14,D0
-0000119A  4E4F                     277              TRAP #15
-0000119C  4E75                     278              RTS
-0000119E                           279              ; BRA RETURN
-0000119E                           280  *-------------------------------------------------
-0000119E= 43 4D 50 00              281  CMP_M       DC.B    'CMP',0                 0xB000
-000011A2  43F8 119E                282  CMP_T       LEA CMP_M,A1
-000011A6  700E                     283              MOVE.L #14,D0
-000011A8  4E4F                     284              TRAP #15
-000011AA  4E75                     285              RTS
-000011AC                           286              ; BRA RETURN
-000011AC                           287  *-------------------------------------------------
-000011AC= 53 55 42 00              288  SUB_M       DC.B    'SUB',0                 0x9000
-000011B0  43F8 11AC                289  SUB_T       LEA SUB_M,A1
-000011B4  700E                     290              MOVE.L #14,D0
-000011B6  4E4F                     291              TRAP #15
-000011B8  4E75                     292              RTS
-000011BA                           293              ; BRA RETURN
-000011BA                           294  *-------------------------------------------------
-000011BA= 44 49 56 53 00           295  DIVS_M      DC.B    'DIVS',0    * Issue     0x81C0
-000011C0  43F8 11BA                296  DIVS_T      LEA DIVS_M,A1
-000011C4  700E                     297              MOVE.L #14,D0
-000011C6  4E4F                     298              TRAP #15
-000011C8  4E75                     299              RTS
-000011CA                           300              ; BRA RETURN
-000011CA                           301  *-------------------------------------------------
-000011CA= 4F 52 00                 302  OR_M        DC.B    'OR',0                  0x8000
-000011CE  43F8 11CA                303  OR_T        LEA OR_M,A1
-000011D2  700E                     304              MOVE.L #14,D0
-000011D4  4E4F                     305              TRAP #15
-000011D6  4E75                     306              RTS
-000011D8                           307              ; BRA RETURN
-000011D8                           308  *-------------------------------------------------
-000011D8= 42 4C 54 00              309  BLT_M       DC.B    'BLT',0                 0x6D00
-000011DC  43F8 11D8                310  BLT_T       LEA BLT_M,A1
-000011E0  700E                     311              MOVE.L #14,D0
-000011E2  4E4F                     312              TRAP #15
-000011E4  4E75                     313              RTS
-000011E6                           314              ; BRA RETURN
-000011E6                           315  *-------------------------------------------------
-000011E6= 42 47 45 00              316  BGE_M       DC.B    'BGE',0                 0x6C00
-000011EA  43F8 11E6                317  BGE_T       LEA BGE_M,A1
-000011EE  700E                     318              MOVE.L #14,D0
-000011F0  4E4F                     319              TRAP #15
-000011F2  4E75                     320              RTS
-000011F4                           321              ; BRA RETURN
-000011F4                           322  *-------------------------------------------------
-000011F4= 42 56 43 00              323  BVC_M       DC.B    'BVC',0                 0x6800
-000011F8  43F8 11F4                324  BVC_T       LEA BVC_M,A1
-000011FC  700E                     325              MOVE.L #14,D0
-000011FE  4E4F                     326              TRAP #15
-00001200  4E75                     327              RTS
-00001202                           328              ; BRA RETURN
-00001202                           329  *-------------------------------------------------
-00001202= 42 43 53 00              330  BCS_M       DC.B    'BCS',0                 0x6500
-00001206  43F8 1202                331  BCS_T       LEA BCS_M,A1
-0000120A  700E                     332              MOVE.L #14,D0
-0000120C  4E4F                     333              TRAP #15
-0000120E  4E75                     334              RTS
-00001210                           335              ; BRA RETURN
-00001210                           336  *-------------------------------------------------
-00001210= 42 52 41 20 00           337  BRA_M       DC.B    'BRA ',0                0x6000
-00001216  43F8 1210                338  BRA_T       LEA BRA_M,A1
-0000121A  700E                     339              MOVE.L #14,D0
-0000121C  4E4F                     340              TRAP #15
-0000121E                           341  
-0000121E  3410                     342              MOVE.W (A0),D2      * Moving the current 16-bits address into D2
-00001220  C47C 00FF                343              AND.W #BITMASK8,D2
-00001224                           344  
-00001224  E142                     345              ASL.W #8, D2
-00001226  E042                     346              ASR.W #8, D2
-00001228                           347  
-00001228                           348              ; ADD.W A0,D2
-00001228                           349  
-00001228  6100 FE66                350              BSR DISPLAY_HEX 
-0000122C                           351              
-0000122C  4E75                     352              RTS
-0000122E                           353              ; BRA RETURN
-0000122E                           354  *-------------------------------------------------
-0000122E= 53 55 42 51 00           355  SUBQ_M      DC.B    'SUBQ',0                0x5100
-00001234  43F8 122E                356  SUBQ_T      LEA SUBQ_M,A1
-00001238  700E                     357              MOVE.L #14,D0
-0000123A  4E4F                     358              TRAP #15
-0000123C  4E75                     359              RTS
-0000123E                           360              ; BRA RETURN
-0000123E                           361  *-------------------------------------------------
-0000123E= 4A 53 52 00              362  JSR_M       DC.B    'JSR',0     * Tested    0x4E80
-00001242  43F8 123E                363  JSR_T       LEA JSR_M,A1
-00001246  700E                     364              MOVE.L #14,D0
-00001248  4E4F                     365              TRAP #15
-0000124A  4E75                     366              RTS
-0000124C                           367              ; BRA RETURN
-0000124C                           368  *-------------------------------------------------
-0000124C= 52 54 53 00              369  RTS_M       DC.B    'RTS',0     * Tested    0x4E75
-00001250  43F8 124C                370  RTS_T       LEA RTS_M,A1
-00001254  700E                     371              MOVE.L #14,D0
-00001256  4E4F                     372              TRAP #15
-00001258  4E75                     373              RTS
-0000125A                           374              ; BRA RETURN
-0000125A                           375  *-------------------------------------------------
-0000125A= 4E 4F 50 00              376  NOP_M       DC.B    'NOP',0     * Tested    0x4E71
-0000125E  43F8 125A                377  NOP_T       LEA NOP_M,A1
-00001262  700E                     378              MOVE.L #14,D0
-00001264  4E4F                     379              TRAP #15
-00001266  4E75                     380              RTS
-00001268                           381              ; BRA RETURN
-00001268                           382  *-------------------------------------------------
-00001268= 4D 4F 56 45 4D 00        383  MOVEM_M     DC.B    'MOVEM',0               0x4880
-0000126E  43F8 1268                384  MOVEM_T     LEA MOVEM_M,A1
-00001272  700E                     385              MOVE.L #14,D0
-00001274  4E4F                     386              TRAP #15
-00001276  4E75                     387              RTS
-00001278                           388              ; BRA RETURN
-00001278                           389  *-------------------------------------------------
-00001278= 4E 45 47 00              390  NEG_M       DC.B    'NEG',0     * Tested    0x4400
-0000127C  43F8 1278                391  NEG_T       LEA NEG_M,A1
-00001280  700E                     392              MOVE.L #14,D0
-00001282  4E4F                     393              TRAP #15
-00001284  4E75                     394              RTS
-00001286                           395              ; BRA RETURN
-00001286                           396  *-------------------------------------------------
-00001286= 4C 45 41 00              397  LEA_M       DC.B    'LEA',0                 0x41C0
-0000128A  43F8 1286                398  LEA_T       LEA LEA_M,A1
-0000128E  700E                     399              MOVE.L #14,D0
-00001290  4E4F                     400              TRAP #15
-00001292  4E75                     401              RTS
-00001294                           402              ; BRA RETURN
-00001294                           403  *-------------------------------------------------
-00001294= 4D 4F 56 45 41 2E ...    404  MOAW_M      DC.B    'MOVEA.W',0             0x3040
-0000129C  43F8 1294                405  MOAW_T      LEA MOAW_M,A1
-000012A0  700E                     406              MOVE.L #14,D0
-000012A2  4E4F                     407              TRAP #15
-000012A4  4E75                     408              RTS
-000012A6                           409              ; BRA RETURN
-000012A6                           410  *-------------------------------------------------
-000012A6= 4D 4F 56 45 2E 57 00     411  MOW_M       DC.B    'MOVE.W',0              0x3000
-000012AE  43F8 12A6                412  MOW_T       LEA MOW_M,A1
-000012B2  700E                     413              MOVE.L #14,D0
-000012B4  4E4F                     414              TRAP #15
-000012B6  4E75                     415              RTS
-000012B8                           416              ; BRA RETURN
-000012B8                           417  *-------------------------------------------------
-000012B8= 4D 4F 56 45 41 2E ...    418  MOAL_M      DC.B    'MOVEA.L',0             0x2040
-000012C0  43F8 12B8                419  MOAL_T      LEA MOAL_M,A1
-000012C4  700E                     420              MOVE.L #14,D0
-000012C6  4E4F                     421              TRAP #15
-000012C8  4E75                     422              RTS
-000012CA                           423              ; BRA RETURN
-000012CA                           424  *-------------------------------------------------
-000012CA= 4D 4F 56 45 2E 4C 00     425  MOL_M       DC.B    'MOVE.L',0              0x2000
-000012D2  43F8 12CA                426  MOL_T       LEA MOL_M,A1
-000012D6  700E                     427              MOVE.L #14,D0
-000012D8  4E4F                     428              TRAP #15
-000012DA  4E75                     429              RTS
-000012DC                           430              ; BRA RETURN
-000012DC                           431  *-------------------------------------------------
-000012DC= 4D 4F 56 45 2E 42 00     432  MOB_M       DC.B    'MOVE.B',0              0x1000
-000012E4  43F8 12DC                433  MOB_T       LEA MOB_M,A1
-000012E8  700E                     434              MOVE.L #14,D0
-000012EA  4E4F                     435              TRAP #15
-000012EC  4E75                     436              RTS
-000012EE                           437              ; BRA RETURN
-000012EE                           438  *-------------------------------------------------
-000012EE= 43 4D 50 49 00           439  CMPI_M      DC.B    'CMPI',0                0x0C00
-000012F4  43F8 12EE                440  CMPI_T      LEA CMPI_M,A1
-000012F8  700E                     441              MOVE.L #14,D0
-000012FA  4E4F                     442              TRAP #15
-000012FC  4E75                     443              RTS
-000012FE                           444              ; BRA RETURN
-000012FE                           445  *-------------------------------------------------
-000012FE= 42 43 4C 52 00           446  BCLR_M      DC.B    'BCLR',0                0x01C0
-00001304  43F8 12FE                447  BCLR_T      LEA BCLR_M,A1
-00001308  700E                     448              MOVE.L #14,D0
-0000130A  4E4F                     449              TRAP #15
-0000130C  4E75                     450              RTS
-0000130E                           451              ; BRA RETURN
-0000130E                           452  *-------------------------------------------------
-0000130E= 4F 52 49 00              453  ORI_M       DC.B    'ORI',0                 0x0000
-00001312  43F8 130E                454  ORI_T       LEA ORI_M,A1
-00001316  700E                     455              MOVE.L #14,D0
-00001318  4E4F                     456              TRAP #15
-0000131A  4E75                     457              RTS
-0000131C                           458              ; BRA RETURN
-0000131C                           459  
-0000131C                           460  *-------------------------------- Data Section ---------------------------------
-0000131C                           461  
-0000131C= 41 44 44 52 45 53 ...    462  HEADER      DC.B 'ADDRESS   OP-CODE OPERAND          INSTRUCTION', 0 
-00001348= 30 78 00                 463  INIT_HEX    DC.B '0x',0
-0000134B= 0D 0A 00                 464  NEWLINE     DC.B  CR,LF,0
-0000134E= 0A01 0000                465  POSITION    DC.W  $0A01,0
-00001352                           466  
-00001352                           467  ; Byte_M        DC.B  '.B ',0
-00001352                           468  ; Word_M        DC.B  '.W ',0
-00001352                           469  ; Long_M        DC.B  '.L ',0
-00001352                           470  
-00001352                           471  *---------------------------- Task Operation List ------------------------------
-00001352                           472  * The values for this constant are set to move in parallel with those of
-00001352                           473  * the constant BITMASK via steps at label NEXT_MASK.
-00001352                           474  
-00001352= 1120 112E 113C 1...      475  TASK_OP     DC.W ROL_T,LSL_T,ASL_T,ROR_T,LSR_T,ASR_T,ANDA_T,ADD_T,MULS_T,CMP_T
-00001366= 11B0 11C0 11CE 1...      476              DC.W SUB_T,DIVS_T,OR_T,BLT_T,BGE_T,BVC_T,BCS_T,BRA_T,SUBQ_T,JSR_T
-0000137A= 1250 125E 126E 1...      477              DC.W RTS_T,NOP_T,MOVEM_T,NEG_T,LEA_T,MOAW_T,MOW_T,MOAL_T,MOL_T,MOB_T
-0000138E= 12F4 1304 1312 0000      478              DC.W CMPI_T,BCLR_T,ORI_T,0
-00001396                           479  
-00001396                           480  *--------------------------- Bitmask Translation List --------------------------
-00001396= E118 E108 E100 E...      481  BITMASK     DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
-000013AA= 9000 81C0 8000 6...      482              DC.W $9000,$81C0,$8000,$6D00,$6C00,$6800,$6500,$6000,$5100,$4E80
-000013BE= 4E75 4E71 4880 4...      483              DC.W $4E75,$4E71,$4880,$4400,$41C0,$3040,$3000,$2040,$2000,$1000
-000013D2= 0C00 01C0 0000 0000      484              DC.W $0C00,$01C0,$0000,0
-000013DA                           485  
-000013DA                           486  *--------------------------------- Source Code ---------------------------------
-000013DA= 4E75 D6C7 4EB8 4...      487  SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$4E71,$4E75
-000013EE                           488  ;                  RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   NOP   RTS
-000013EE= AAAA EE45 E6AA E...      489              DC.W  $AAAA,$EE45,$E6AA,$E439,$2646,$EF45,$E7AA,$E539,$303C
-00001400                           490  ;                  ERROR ASR   LSR   ROR   MOVEA ASL   LSL   ROL   MOVE.W
-00001400= E539 6078 EF45 6...      491              DC.W  $E539,$6078,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$0001,0
-00001414                           492  ;                  ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  TEST
-00001414                           493  
-00001414                           494  ; SOURCE_C  DC.W    $1401,$1401,$60FC,$1401,0
-00001414                           495  
-00001414                           496  
-00001414                           497      END     START               * last line of source
+0000107A                           116  ************************ Display Hexadecimal Subroutine ************************
+0000107A                           117  * Displays an output of a single 16-bit instruction as a hexadecimal value
+0000107A                           118  * Take that prof. Nash (mostly Kim), I didn't want to use task #15 anyway
+0000107A                           119  
+0000107A                           120  *** IMPORTANT *** Load the value that you wish to display in hexadecimal in D2
+0000107A                           121      
+0000107A                           122  
+0000107A  103C 000B                123  DISPLAY_INT MOVE.B #11,D0       * Moving task 11 into Data Register 0
+0000107E  0641 2200                124              ADDI #$2200,D1
+00001082  4E4F                     125              TRAP #15            * Position the cursor at [2Cxx] x - any number
+00001084                           126  
+00001084  43F9 0000135C            127              LEA INIT_HEX,A1
+0000108A  103C 000E                128              MOVE.B #14,D0
+0000108E  4E4F                     129              TRAP #15
+00001090                           130  
+00001090  45F9 000010DC            131  DISPLAY_HEX LEA HEX_BITMASK,A2
+00001096  47F9 000010FC            132              LEA HEX_VALUE,A3
+0000109C                           133  
+0000109C  E95A                     134              ROL #4,D2           * Shifts to read the next hexadecimal digit
+0000109E  6100 0016                135              BSR LOOP_HEX        * Branch towards the loop of hex thingy
+000010A2                           136  
+000010A2  E95A                     137              ROL #4,D2           * I HATE THIS, SO MUCH REPEATING CODE
+000010A4  6100 0010                138              BSR LOOP_HEX        * I TRIED EVERYTHING WITHOUT USING ANOTHER
+000010A8  E95A                     139              ROL #4,D2           * DATA REGISTER. THAT IS SUCH A WASTE... GOSH
+000010AA  6100 000A                140              BSR LOOP_HEX        * SO I'M GOING TO LEAVE THIS HERE, BECUASE I 
+000010AE  E95A                     141              ROL #4,D2           * REALLY DON"T CARE. TOO MUCH TIME WAS WASTED
+000010B0  6100 0004                142              BSR LOOP_HEX        * ANNND YES!! NO MORE BAD CODE (IT WORKS DEAL)
+000010B4                           143  
+000010B4  4E75                     144              RTS                 * Returns from subroutine
+000010B6                           145  
+000010B6  3602                     146  LOOP_HEX    MOVE.W D2,D3        * Move the current 16-bits into data register 3
+000010B8  C652                     147              AND.W (A2),D3       * AND the current bitmask with temp instruction
+000010BA  B652                     148              CMP.W (A2),D3       * Compares the current bitmask in (A2) with D3
+000010BC  6600 0018                149              BNE NEXT_HEX
+000010C0                           150  
+000010C0  43D3                     151              LEA (A3),A1
+000010C2  103C 000E                152              MOVE.B #14,D0
+000010C6  4E4F                     153              TRAP #15
+000010C8                           154              
+000010C8  45F9 000010DC            155              LEA HEX_BITMASK,A2
+000010CE  47F9 000010FC            156              LEA HEX_VALUE,A3
+000010D4  4E75                     157              RTS                 * Returns from subroutine
+000010D6                           158  
+000010D6  544A                     159  NEXT_HEX    ADDA.W #WORD,A2     * Shifts to the next binary
+000010D8  544B                     160              ADDA.W #WORD,A3     * Shifts to the next hexadecimal char
+000010DA  60DA                     161              BRA LOOP_HEX        * Go back to LOOP and test the new bitmask
+000010DC                           162  
+000010DC= 000F 000E 000D 0...      163  HEX_BITMASK DC.W $F,$E,$D,$C,$B,$A,$9,$8,$7,$6,$5,$4,$3,$2,$1,$0
+000010FC= 4600 4500 4400 4...      164  HEX_VALUE   DC.W 'F','E','D','C','B','A','9','8','7','6','5','4','3','2','1','0'
+0000111C                           165  
+0000111C                           166  
+0000111C                           167  ************************ 8-Bit Displacement Subroutine *************************
+0000111C                           168  
+0000111C                           169  DISPLACEMENT
+0000111C                           170  
+0000111C  700E                     171              MOVE.L #14,D0
+0000111E  4E4F                     172              TRAP #15
+00001120                           173  
+00001120                           174  
+00001120  3410                     175              MOVE.W (A0),D2      * Moving the current 16-bits address into D2
+00001122                           176  
+00001122  C47C 00FF                177              AND.W #BITMASK8,D2
+00001126                           178  
+00001126  5442                     179              ADDQ #2,D2
+00001128                           180  
+00001128  0082 FFFFFF00            181              ORI.L #$FFFFFF00,D2
+0000112E                           182  
+0000112E  D488                     183              ADD.L A0,D2
+00001130                           184  
+00001130  6100 FF5E                185              BSR DISPLAY_HEX 
+00001134                           186  
+00001134  4E75                     187              RTS
+00001136                           188  
+00001136                           189  
+00001136                           190  ************************* Effective Address Algorithm **************************
+00001136                           191  *-------------------------------------------------------------------------------
+00001136                           192  * SubRoutine for handling One Operand Effective addressing.
+00001136                           193  * Written by: David Heidgerken
+00001136                           194  * Description.  16 bit Instruction will be passed to subroutine via D7
+00001136                           195  * and will parse it to find which address mode and location is being used.
+00001136                           196  *D6 used for Register value, D5 is EA Mode
+00001136                           197  *-----------------------------------------------------------------------------
+00001136                           198  ; OneOpEA       MOVE.B  #BITMASK3, D6   ;move primative 3 bit mask into D3 
+00001136                           199  ;           MOVE.B  #BITMASK3, D5   ;move primative 3 bitmask into D4
+00001136                           200  ;           LSL.W   3,D5            ;shift mask left 3 times
+00001136                           201              
+00001136                           202  ;           AND.W   D7,D6           ;and D7 and D3 store in D3 Register
+00001136                           203  ;           AND.W   D7,D5           ;and D7 and D4 store in D4 Mode
+00001136                           204              
+00001136                           205              ; BSR                       ;return to calling instruction
+00001136                           206              
+00001136                           207  
+00001136                           208  *-------------------------------------------------------------------------------
+00001136                           209  * SubRoutine for handling One Operand Displacement.
+00001136                           210  * Written by: David Heidgerken
+00001136                           211  * Description.  16 bit Instruction will be passed to subroutine via D7
+00001136                           212  * and will parse the instruciton to determine the offset being usedstored in D3
+00001136                           213  *-------------------------------------------------------------------------------
+00001136                           214  ; OneOpDis  MOVE.B  #BITMASK8, D6   ;move 8bitmask into D6
+00001136                           215  ;           AND.L   D7,D6           ;and D7 with D6(Offset)
+00001136                           216              
+00001136                           217  
+00001136                           218  *-------------------------------------------------------------------------------
+00001136                           219  * SubRoutine for handling One Operand Effective addressing.
+00001136                           220  * Written by: David Heidgerken
+00001136                           221  * Description.  16 bit Instruction will be passed to subroutine via D7
+00001136                           222  * and will parse the last 12 bits to determine the addressing mode and 
+00001136                           223  * locations of the data.
+00001136                           224  *-------------------------------------------------------------------------------
+00001136                           225  ; TwoOp     MOVE.B  #BITMASK3, D6   ;move primative 3 bit mask into D6
+00001136                           226  ;           MOVE.B  #BITMASK3, D5   ;move primative 3 bitmask into D5
+00001136                           227  ;           MOVE.B  #BITMASK3, D4   ;move primative 3 bit mask into D4
+00001136                           228  ;           MOVE.B  #BITMASK3, D3   ;move primative 3 bit mask into D3
+00001136                           229              
+00001136                           230  ;           LSL.W   3,D5            ;shift mask left 3 times
+00001136                           231  ;           LSL.W   6,D4            ;shift mask left 3 times
+00001136                           232  ;           LSL.W   6,D3            ;shift mask left 3 times
+00001136                           233  ;           LSL.W   6,D3            ;shift mask left 3 times
+00001136                           234              
+00001136                           235  ;           AND.L   D7,D6           ;and D7 with D6 DestRegister
+00001136                           236  ;           AND.L   D7,D6           ;and D7 with D5 DestMode
+00001136                           237  ;           AND.L   D7,D6           ;and D7 with D4 SrcMode
+00001136                           238  ;           AND.L   D7,D6           ;and D7 with D3 SrcRegister
+00001136                           239              
+00001136                           240              ; BSR
+00001136                           241  
+00001136                           242  
+00001136                           243  
+00001136                           244  
+00001136                           245  ******************** OP-CODE: Individual Task Subroutine Set *******************
+00001136                           246  
+00001136                           247  *-------------------------------------------------
+00001136= 52 4F 4C 00              248  ROL_M       DC.B    'ROL',0     * Tested    0xE118
+0000113A  43F8 1136                249  ROL_T       LEA ROL_M,A1
+0000113E  700E                     250              MOVE.L #14,D0       * Moving task 14 into Data Register 0
+00001140  4E4F                     251              TRAP #15            * Display the string at (A1) without CR, LF
+00001142  4E75                     252              RTS
+00001144                           253              ; BRA RETURN
+00001144                           254  *-------------------------------------------------
+00001144= 4C 53 4C 00              255  LSL_M       DC.B    'LSL',0     * Tested    0xE108
+00001148  43F8 1144                256  LSL_T       LEA LSL_M,A1
+0000114C  700E                     257              MOVE.L #14,D0
+0000114E  4E4F                     258              TRAP #15
+00001150  4E75                     259              RTS
+00001152                           260              ; BRA RETURN
+00001152                           261  *-------------------------------------------------
+00001152= 41 53 4C 00              262  ASL_M       DC.B    'ASL',0     * Tested    0xE100
+00001156  43F8 1152                263  ASL_T       LEA ASL_M,A1
+0000115A  700E                     264              MOVE.L #14,D0
+0000115C  4E4F                     265              TRAP #15
+0000115E  4E75                     266              RTS
+00001160                           267              ; BRA RETURN            
+00001160                           268  *-------------------------------------------------
+00001160= 52 4F 52 00              269  ROR_M       DC.B    'ROR',0     * Tested    0xE018
+00001164  43F8 1160                270  ROR_T       LEA ROR_M,A1
+00001168  700E                     271              MOVE.L #14,D0
+0000116A  4E4F                     272              TRAP #15
+0000116C  4E75                     273              RTS
+0000116E                           274              ; BRA RETURN
+0000116E                           275  *-------------------------------------------------
+0000116E= 4C 53 52 00              276  LSR_M       DC.B    'LSR',0     * Tested    0xE008
+00001172  43F8 116E                277  LSR_T       LEA LSR_M,A1
+00001176  700E                     278              MOVE.L #14,D0
+00001178  4E4F                     279              TRAP #15
+0000117A  4E75                     280              RTS
+0000117C                           281              ; BRA RETURN
+0000117C                           282  *-------------------------------------------------
+0000117C= 41 53 52 00              283  ASR_M       DC.B    'ASR',0     * Tested    0xE000
+00001180  43F8 117C                284  ASR_T       LEA ASR_M,A1
+00001184  700E                     285              MOVE.L #14,D0
+00001186  4E4F                     286              TRAP #15
+00001188  4E75                     287              RTS
+0000118A                           288              ; BRA RETURN
+0000118A                           289  *-------------------------------------------------
+0000118A= 41 44 44 41 00           290  ANDA_M      DC.B    'ADDA',0    * Tested    0xD0C0
+00001190  43F8 118A                291  ANDA_T      LEA ANDA_M,A1
+00001194  700E                     292              MOVE.L #14,D0
+00001196  4E4F                     293              TRAP #15
+00001198  4E75                     294              RTS
+0000119A                           295              ; BRA RETURN
+0000119A                           296  *-------------------------------------------------
+0000119A= 41 44 44 00              297  ADD_M       DC.B    'ADD',0     * Tested    0xD000
+0000119E  43F8 119A                298  ADD_T       LEA ADD_M,A1
+000011A2  700E                     299              MOVE.L #14,D0
+000011A4  4E4F                     300              TRAP #15
+000011A6  4E75                     301              RTS
+000011A8                           302              ; BRA RETURN
+000011A8                           303  *-------------------------------------------------
+000011A8= 4D 55 4C 53 00           304  MULS_M      DC.B    'MULS',0    * Issue     0xC1C0
+000011AE  43F8 11A8                305  MULS_T      LEA MULS_M,A1
+000011B2  700E                     306              MOVE.L #14,D0
+000011B4  4E4F                     307              TRAP #15
+000011B6  4E75                     308              RTS
+000011B8                           309              ; BRA RETURN
+000011B8                           310  *-------------------------------------------------
+000011B8= 43 4D 50 00              311  CMP_M       DC.B    'CMP',0                 0xB000
+000011BC  43F8 11B8                312  CMP_T       LEA CMP_M,A1
+000011C0  700E                     313              MOVE.L #14,D0
+000011C2  4E4F                     314              TRAP #15
+000011C4  4E75                     315              RTS
+000011C6                           316              ; BRA RETURN
+000011C6                           317  *-------------------------------------------------
+000011C6= 53 55 42 00              318  SUB_M       DC.B    'SUB',0                 0x9000
+000011CA  43F8 11C6                319  SUB_T       LEA SUB_M,A1
+000011CE  700E                     320              MOVE.L #14,D0
+000011D0  4E4F                     321              TRAP #15
+000011D2  4E75                     322              RTS
+000011D4                           323              ; BRA RETURN
+000011D4                           324  *-------------------------------------------------
+000011D4= 44 49 56 53 00           325  DIVS_M      DC.B    'DIVS',0    * Issue     0x81C0
+000011DA  43F8 11D4                326  DIVS_T      LEA DIVS_M,A1
+000011DE  700E                     327              MOVE.L #14,D0
+000011E0  4E4F                     328              TRAP #15
+000011E2  4E75                     329              RTS
+000011E4                           330              ; BRA RETURN
+000011E4                           331  *-------------------------------------------------
+000011E4= 4F 52 00                 332  OR_M        DC.B    'OR',0                  0x8000
+000011E8  43F8 11E4                333  OR_T        LEA OR_M,A1
+000011EC  700E                     334              MOVE.L #14,D0
+000011EE  4E4F                     335              TRAP #15
+000011F0  4E75                     336              RTS
+000011F2                           337              ; BRA RETURN
+000011F2                           338  *-------------------------------------------------
+000011F2= 42 4C 54 20 00           339  BLT_M       DC.B    'BLT ',0                0x6D00
+000011F8  43F8 11F2                340  BLT_T       LEA BLT_M,A1
+000011FC  6100 FF1E                341              BSR DISPLACEMENT
+00001200  4E75                     342              RTS
+00001202                           343  *-------------------------------------------------
+00001202= 42 47 45 20 00           344  BGE_M       DC.B    'BGE ',0                0x6C00
+00001208  43F8 1202                345  BGE_T       LEA BGE_M,A1
+0000120C  6100 FF0E                346              BSR DISPLACEMENT
+00001210  4E75                     347              RTS
+00001212                           348  *-------------------------------------------------
+00001212= 42 56 43 20 00           349  BVC_M       DC.B    'BVC ',0                0x6800
+00001218  43F8 1212                350  BVC_T       LEA BVC_M,A1
+0000121C  6100 FEFE                351              BSR DISPLACEMENT
+00001220  4E75                     352              RTS
+00001222                           353  *-------------------------------------------------
+00001222= 42 43 53 20 00           354  BCS_M       DC.B    'BCS ',0                0x6500
+00001228  43F8 1222                355  BCS_T       LEA BCS_M,A1
+0000122C  6100 FEEE                356              BSR DISPLACEMENT
+00001230  4E75                     357              RTS
+00001232                           358  *-------------------------------------------------
+00001232= 42 52 41 20 00           359  BRA_M       DC.B    'BRA ',0                0x6000
+00001238  43F8 1232                360  BRA_T       LEA BRA_M,A1
+0000123C  6100 FEDE                361              BSR DISPLACEMENT
+00001240  4E75                     362              RTS
+00001242                           363  *-------------------------------------------------
+00001242= 53 55 42 51 00           364  SUBQ_M      DC.B    'SUBQ',0                0x5100
+00001248  43F8 1242                365  SUBQ_T      LEA SUBQ_M,A1
+0000124C  700E                     366              MOVE.L #14,D0
+0000124E  4E4F                     367              TRAP #15
+00001250  4E75                     368              RTS
+00001252                           369              ; BRA RETURN
+00001252                           370  *-------------------------------------------------
+00001252= 4A 53 52 00              371  JSR_M       DC.B    'JSR',0     * Tested    0x4E80
+00001256  43F8 1252                372  JSR_T       LEA JSR_M,A1
+0000125A  700E                     373              MOVE.L #14,D0
+0000125C  4E4F                     374              TRAP #15
+0000125E  4E75                     375              RTS
+00001260                           376              ; BRA RETURN
+00001260                           377  *-------------------------------------------------
+00001260= 52 54 53 00              378  RTS_M       DC.B    'RTS',0     * Tested    0x4E75
+00001264  43F8 1260                379  RTS_T       LEA RTS_M,A1
+00001268  700E                     380              MOVE.L #14,D0
+0000126A  4E4F                     381              TRAP #15
+0000126C  4E75                     382              RTS
+0000126E                           383              ; BRA RETURN
+0000126E                           384  *-------------------------------------------------
+0000126E= 4E 4F 50 00              385  NOP_M       DC.B    'NOP',0     * Tested    0x4E71
+00001272  43F8 126E                386  NOP_T       LEA NOP_M,A1
+00001276  700E                     387              MOVE.L #14,D0
+00001278  4E4F                     388              TRAP #15
+0000127A  4E75                     389              RTS
+0000127C                           390              ; BRA RETURN
+0000127C                           391  *-------------------------------------------------
+0000127C= 4D 4F 56 45 4D 00        392  MOVEM_M     DC.B    'MOVEM',0               0x4880
+00001282  43F8 127C                393  MOVEM_T     LEA MOVEM_M,A1
+00001286  700E                     394              MOVE.L #14,D0
+00001288  4E4F                     395              TRAP #15
+0000128A  4E75                     396              RTS
+0000128C                           397              ; BRA RETURN
+0000128C                           398  *-------------------------------------------------
+0000128C= 4E 45 47 00              399  NEG_M       DC.B    'NEG',0     * Tested    0x4400
+00001290  43F8 128C                400  NEG_T       LEA NEG_M,A1
+00001294  700E                     401              MOVE.L #14,D0
+00001296  4E4F                     402              TRAP #15
+00001298  4E75                     403              RTS
+0000129A                           404              ; BRA RETURN
+0000129A                           405  *-------------------------------------------------
+0000129A= 4C 45 41 00              406  LEA_M       DC.B    'LEA',0                 0x41C0
+0000129E  43F8 129A                407  LEA_T       LEA LEA_M,A1
+000012A2  700E                     408              MOVE.L #14,D0
+000012A4  4E4F                     409              TRAP #15
+000012A6  4E75                     410              RTS
+000012A8                           411              ; BRA RETURN
+000012A8                           412  *-------------------------------------------------
+000012A8= 4D 4F 56 45 41 2E ...    413  MOAW_M      DC.B    'MOVEA.W',0             0x3040
+000012B0  43F8 12A8                414  MOAW_T      LEA MOAW_M,A1
+000012B4  700E                     415              MOVE.L #14,D0
+000012B6  4E4F                     416              TRAP #15
+000012B8  4E75                     417              RTS
+000012BA                           418              ; BRA RETURN
+000012BA                           419  *-------------------------------------------------
+000012BA= 4D 4F 56 45 2E 57 00     420  MOW_M       DC.B    'MOVE.W',0              0x3000
+000012C2  43F8 12BA                421  MOW_T       LEA MOW_M,A1
+000012C6  700E                     422              MOVE.L #14,D0
+000012C8  4E4F                     423              TRAP #15
+000012CA  4E75                     424              RTS
+000012CC                           425              ; BRA RETURN
+000012CC                           426  *-------------------------------------------------
+000012CC= 4D 4F 56 45 41 2E ...    427  MOAL_M      DC.B    'MOVEA.L',0             0x2040
+000012D4  43F8 12CC                428  MOAL_T      LEA MOAL_M,A1
+000012D8  700E                     429              MOVE.L #14,D0
+000012DA  4E4F                     430              TRAP #15
+000012DC  4E75                     431              RTS
+000012DE                           432              ; BRA RETURN
+000012DE                           433  *-------------------------------------------------
+000012DE= 4D 4F 56 45 2E 4C 00     434  MOL_M       DC.B    'MOVE.L',0              0x2000
+000012E6  43F8 12DE                435  MOL_T       LEA MOL_M,A1
+000012EA  700E                     436              MOVE.L #14,D0
+000012EC  4E4F                     437              TRAP #15
+000012EE  4E75                     438              RTS
+000012F0                           439              ; BRA RETURN
+000012F0                           440  *-------------------------------------------------
+000012F0= 4D 4F 56 45 2E 42 00     441  MOB_M       DC.B    'MOVE.B',0              0x1000
+000012F8  43F8 12F0                442  MOB_T       LEA MOB_M,A1
+000012FC  700E                     443              MOVE.L #14,D0
+000012FE  4E4F                     444              TRAP #15
+00001300  4E75                     445              RTS
+00001302                           446              ; BRA RETURN
+00001302                           447  *-------------------------------------------------
+00001302= 43 4D 50 49 00           448  CMPI_M      DC.B    'CMPI',0                0x0C00
+00001308  43F8 1302                449  CMPI_T      LEA CMPI_M,A1
+0000130C  700E                     450              MOVE.L #14,D0
+0000130E  4E4F                     451              TRAP #15
+00001310  4E75                     452              RTS
+00001312                           453              ; BRA RETURN
+00001312                           454  *-------------------------------------------------
+00001312= 42 43 4C 52 00           455  BCLR_M      DC.B    'BCLR',0                0x01C0
+00001318  43F8 1312                456  BCLR_T      LEA BCLR_M,A1
+0000131C  700E                     457              MOVE.L #14,D0
+0000131E  4E4F                     458              TRAP #15
+00001320  4E75                     459              RTS
+00001322                           460              ; BRA RETURN
+00001322                           461  *-------------------------------------------------
+00001322= 4F 52 49 00              462  ORI_M       DC.B    'ORI',0                 0x0000
+00001326  43F8 1322                463  ORI_T       LEA ORI_M,A1
+0000132A  700E                     464              MOVE.L #14,D0
+0000132C  4E4F                     465              TRAP #15
+0000132E  4E75                     466              RTS
+00001330                           467              ; BRA RETURN
+00001330                           468  
+00001330                           469  *-------------------------------- Data Section ---------------------------------
+00001330                           470  
+00001330= 41 44 44 52 45 53 ...    471  HEADER      DC.B 'ADDRESS   OP-CODE OPERAND          INSTRUCTION', 0 
+0000135C= 30 78 00                 472  INIT_HEX    DC.B '0x',0
+0000135F= 0D 0A 00                 473  NEWLINE     DC.B  CR,LF,0
+00001362= 0A01 0000                474  POSITION    DC.W  $0A01,0
+00001366                           475  
+00001366                           476  ; Byte_M        DC.B  '.B ',0
+00001366                           477  ; Word_M        DC.B  '.W ',0
+00001366                           478  ; Long_M        DC.B  '.L ',0
+00001366                           479  
+00001366                           480  *---------------------------- Task Operation List ------------------------------
+00001366                           481  * The values for this constant are set to move in parallel with those of
+00001366                           482  * the constant BITMASK via steps at label NEXT_MASK.
+00001366                           483  
+00001366= 113A 1148 1156 1...      484  TASK_OP     DC.W ROL_T,LSL_T,ASL_T,ROR_T,LSR_T,ASR_T,ANDA_T,ADD_T,MULS_T,CMP_T
+0000137A= 11CA 11DA 11E8 1...      485              DC.W SUB_T,DIVS_T,OR_T,BLT_T,BGE_T,BVC_T,BCS_T,BRA_T,SUBQ_T,JSR_T
+0000138E= 1264 1272 1282 1...      486              DC.W RTS_T,NOP_T,MOVEM_T,NEG_T,LEA_T,MOAW_T,MOW_T,MOAL_T,MOL_T,MOB_T
+000013A2= 1308 1318 1326 0000      487              DC.W CMPI_T,BCLR_T,ORI_T,0
+000013AA                           488  
+000013AA                           489  *--------------------------- Bitmask Translation List --------------------------
+000013AA= E118 E108 E100 E...      490  BITMASK     DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
+000013BE= 9000 81C0 8000 6...      491              DC.W $9000,$81C0,$8000,$6D00,$6C00,$6800,$6500,$6000,$5100,$4E80
+000013D2= 4E75 4E71 4880 4...      492              DC.W $4E75,$4E71,$4880,$4400,$41C0,$3040,$3000,$2040,$2000,$1000
+000013E6= 0C00 01C0 0000 0000      493              DC.W $0C00,$01C0,$0000,0
+000013EE                           494  
+000013EE                           495  *--------------------------------- Source Code ---------------------------------
+000013EE                           496  ;SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$4E71,$4E75
+000013EE                           497  ;                  RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   NOP   RTS
+000013EE                           498  ;           DC.W  $AAAA,$EE45,$E6AA,$E439,$2646,$EF45,$E7AA,$E539,$303C
+000013EE                           499  ;                  ERROR ASR   LSR   ROR   MOVEA ASL   LSL   ROL   MOVE.W
+000013EE                           500  ;           DC.W  $E539,$6078,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$0001,0
+000013EE                           501  ;                  ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  TEST
+000013EE                           502  
+000013EE                           503  ; SOURCE_C  DC.W    $4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$6500,0
+000013EE                           504  
+000013EE= 2803 6FFC 6EFC 6...      505  SOURCE_C    DC.W    $2803,$6FFC,$6EFC,$6DFC,$6CFC,$6BFC,$6AFC,$69FC,$68FC,$67FC
+00001402= 66FC 65FC 64FC 6...      506              DC.W    $66FC,$65FC,$64FC,$63FC,$62FC,0
+0000140E                           507  
+0000140E                           508      END     START               * last line of source
 
 No errors detected
 No warnings generated
@@ -507,95 +518,96 @@ No warnings generated
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-ADD_M               1180
-ADD_T               1184
-ANDA_M              1170
-ANDA_T              1176
-ASL_M               1138
-ASL_T               113C
-ASR_M               1162
-ASR_T               1166
-BCLR_M              12FE
-BCLR_T              1304
-BCS_M               1202
-BCS_T               1206
-BGE_M               11E6
-BGE_T               11EA
-BITMASK             1396
+ADD_M               119A
+ADD_T               119E
+ANDA_M              118A
+ANDA_T              1190
+ASL_M               1152
+ASL_T               1156
+ASR_M               117C
+ASR_T               1180
+BCLR_M              1312
+BCLR_T              1318
+BCS_M               1222
+BCS_T               1228
+BGE_M               1202
+BGE_T               1208
+BITMASK             13AA
 BITMASK3            7
 BITMASK4            F
 BITMASK8            FF
-BLT_M               11D8
-BLT_T               11DC
-BRA_M               1210
-BRA_T               1216
-BVC_M               11F4
-BVC_T               11F8
-CMPI_M              12EE
-CMPI_T              12F4
-CMP_M               119E
-CMP_T               11A2
+BLT_M               11F2
+BLT_T               11F8
+BRA_M               1232
+BRA_T               1238
+BVC_M               1212
+BVC_T               1218
+CMPI_M              1302
+CMPI_T              1308
+CMP_M               11B8
+CMP_T               11BC
 CR                  D
+DISPLACEMENT        111C
 DISPLAY_HEX         1090
 DISPLAY_INT         107A
-DIVS_M              11BA
-DIVS_T              11C0
+DIVS_M              11D4
+DIVS_T              11DA
 EXIT                2700
-HEADER              131C
+HEADER              1330
 HEX_BITMASK         10DC
 HEX_VALUE           10FC
-INIT_HEX            1348
+INIT_HEX            135C
 INIT_OP             1022
-JSR_M               123E
-JSR_T               1242
-LEA_M               1286
-LEA_T               128A
+JSR_M               1252
+JSR_T               1256
+LEA_M               129A
+LEA_T               129E
 LF                  A
 LOOP_HEX            10B6
 LOOP_OP             1034
-LSL_M               112A
-LSL_T               112E
-LSR_M               1154
-LSR_T               1158
-MOAL_M              12B8
-MOAL_T              12C0
-MOAW_M              1294
-MOAW_T              129C
-MOB_M               12DC
-MOB_T               12E4
-MOL_M               12CA
-MOL_T               12D2
-MOVEM_M             1268
-MOVEM_T             126E
-MOW_M               12A6
-MOW_T               12AE
-MULS_M              118E
-MULS_T              1194
-NEG_M               1278
-NEG_T               127C
-NEWLINE             134B
+LSL_M               1144
+LSL_T               1148
+LSR_M               116E
+LSR_T               1172
+MOAL_M              12CC
+MOAL_T              12D4
+MOAW_M              12A8
+MOAW_T              12B0
+MOB_M               12F0
+MOB_T               12F8
+MOL_M               12DE
+MOL_T               12E6
+MOVEM_M             127C
+MOVEM_T             1282
+MOW_M               12BA
+MOW_T               12C2
+MULS_M              11A8
+MULS_T              11AE
+NEG_M               128C
+NEG_T               1290
+NEWLINE             135F
 NEXT_HEX            10D6
 NEXT_MASK           1064
-NOP_M               125A
-NOP_T               125E
-ORI_M               130E
-ORI_T               1312
-OR_M                11CA
-OR_T                11CE
-POSITION            134E
+NOP_M               126E
+NOP_T               1272
+ORI_M               1322
+ORI_T               1326
+OR_M                11E4
+OR_T                11E8
+POSITION            1362
 RETURN              104E
-ROL_M               111C
-ROL_T               1120
-ROR_M               1146
-ROR_T               114A
-RTS_M               124C
-RTS_T               1250
+ROL_M               1136
+ROL_T               113A
+ROR_M               1160
+ROR_T               1164
+RTS_M               1260
+RTS_T               1264
 SHIFT               106C
-SOURCE_C            13DA
+SOURCE_C            13EE
 START               1000
-SUBQ_M              122E
-SUBQ_T              1234
-SUB_M               11AC
-SUB_T               11B0
-TASK_OP             1352
+SUBQ_M              1242
+SUBQ_T              1248
+SUB_M               11C6
+SUB_T               11CA
+TASK_OP             1366
 WORD                2

@@ -58,6 +58,13 @@ BITMASK3	EQU   $0007
 INIT_OP		* Resets the list of bitmasks & english to the begining
 
 			MOVE.W A0,D2		* Moving the current 16-bits address into D2
+
+			; ROL.L #8,D2 		* IN THE CASE WE NEED TO PRINT THE WHOLE 
+			; ROL.L #8,D2 		* ADDRESS IN MEMORY
+			; BSR DISPLAY_HEX	
+			; ROL.L #8,D2
+			; ROL.L #8,D2
+
 			BSR DISPLAY_HEX	
 
 			LEA BITMASK,A2		* Load the bitmask list into address register 2
@@ -155,6 +162,29 @@ NEXT_HEX	ADDA.W #WORD,A2		* Shifts to the next binary
 
 HEX_BITMASK	DC.W $F,$E,$D,$C,$B,$A,$9,$8,$7,$6,$5,$4,$3,$2,$1,$0
 HEX_VALUE	DC.W 'F','E','D','C','B','A','9','8','7','6','5','4','3','2','1','0'
+
+
+************************ 8-Bit Displacement Subroutine *************************
+
+DISPLACEMENT
+
+			MOVE.L #14,D0
+			TRAP #15
+
+
+			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
+
+			AND.W #BITMASK8,D2
+
+            ADDQ #2,D2
+
+			ORI.L #$FFFFFF00,D2
+
+			ADD.L A0,D2
+
+			BSR DISPLAY_HEX	
+
+			RTS
 
 
 ************************* Effective Address Algorithm **************************
@@ -306,51 +336,30 @@ OR_T		LEA OR_M,A1
 			RTS
 			; BRA RETURN
 *-------------------------------------------------
-BLT_M		DC.B	'BLT',0					0x6D00
+BLT_M		DC.B	'BLT ',0				0x6D00
 BLT_T		LEA BLT_M,A1
-			MOVE.L #14,D0
-			TRAP #15
+			BSR DISPLACEMENT
 			RTS
-			; BRA RETURN
 *-------------------------------------------------
-BGE_M		DC.B	'BGE',0					0x6C00
+BGE_M		DC.B	'BGE ',0				0x6C00
 BGE_T		LEA BGE_M,A1
-			MOVE.L #14,D0
-			TRAP #15
+			BSR DISPLACEMENT
 			RTS
-			; BRA RETURN
 *-------------------------------------------------
-BVC_M		DC.B	'BVC',0					0x6800
+BVC_M		DC.B	'BVC ',0				0x6800
 BVC_T		LEA BVC_M,A1
-			MOVE.L #14,D0
-			TRAP #15
+			BSR DISPLACEMENT
 			RTS
-			; BRA RETURN
 *-------------------------------------------------
-BCS_M		DC.B	'BCS',0					0x6500
+BCS_M		DC.B	'BCS ',0				0x6500
 BCS_T		LEA BCS_M,A1
-			MOVE.L #14,D0
-			TRAP #15
+			BSR DISPLACEMENT
 			RTS
-			; BRA RETURN
 *-------------------------------------------------
 BRA_M		DC.B	'BRA ',0				0x6000
 BRA_T		LEA BRA_M,A1
-			MOVE.L #14,D0
-			TRAP #15
-
-			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
-			AND.W #BITMASK8,D2
-
-			ASL.W #8, D2
-			ASR.W #8, D2
-
-			; ADD.W A0,D2
-
-			BSR DISPLAY_HEX	
-			
+			BSR DISPLACEMENT
 			RTS
-			; BRA RETURN
 *-------------------------------------------------
 SUBQ_M		DC.B	'SUBQ',0				0x5100
 SUBQ_T		LEA SUBQ_M,A1
@@ -484,22 +493,19 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 			DC.W $0C00,$01C0,$0000,0
 
 *--------------------------------- Source Code ---------------------------------
-SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$4E71,$4E75
-;				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   NOP   RTS
- 			DC.W  $AAAA,$EE45,$E6AA,$E439,$2646,$EF45,$E7AA,$E539,$303C
-;				   ERROR ASR   LSR   ROR   MOVEA ASL   LSL   ROL   MOVE.W
- 			DC.W  $E539,$6078,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$0001,0
-;				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  TEST
+;SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$4E71,$4E75
+; 				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   NOP   RTS
+;  			DC.W  $AAAA,$EE45,$E6AA,$E439,$2646,$EF45,$E7AA,$E539,$303C
+; 				   ERROR ASR   LSR   ROR   MOVEA ASL   LSL   ROL   MOVE.W
+;  			DC.W  $E539,$6078,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$0001,0
+; 				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  TEST
 
-; SOURCE_C	DC.W 	$1401,$1401,$60FC,$1401,0
+; SOURCE_C	DC.W 	$4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$6500,0
 
+SOURCE_C	DC.W 	$2803,$6FFC,$6EFC,$6DFC,$6CFC,$6BFC,$6AFC,$69FC,$68FC,$67FC
+			DC.W 	$66FC,$65FC,$64FC,$63FC,$62FC,0
 
 	END		START				* last line of source
-
-
-
-
-
 
 
 
