@@ -15,8 +15,8 @@ EXIT		EQU   $2700			* Simulator stoping code
 WORD		EQU   $0002			* Advance address by a word
 
 BITMASK8	EQU   $00FF
-BITMASK4	EQU   $0F
-BITMASK3	EQU   $07
+BITMASK4	EQU   $000F
+BITMASK3	EQU   $0007
 
 *----------------------- Address Register / Data Register ----------------------
 * A0: Designated for Source Code
@@ -49,7 +49,7 @@ BITMASK3	EQU   $07
 
 			BSR INIT_OP			* Hunts down each Operation code like a mad man
 
-			MOVE.W #$0A01,POSITION		*** TEST - RESET POSITION ***
+			MOVE.W #$0A01,POSITION	*** TEST - RESET POSITION ***
 			STOP #EXIT			* Halt Simulator
 
 
@@ -57,12 +57,12 @@ BITMASK3	EQU   $07
 
 INIT_OP		* Resets the list of bitmasks & english to the begining
 
+			MOVE.W A0,D2		* Moving the current 16-bits address into D2
+			BSR DISPLAY_HEX	
+
 			LEA BITMASK,A2		* Load the bitmask list into address register 2
 			LEA TASK_OP,A3		* Load the OP task list into address register 3
 
-			MOVE.L A0,D1		* Moving the current 16-bits address into data register 1
-			MOVE.B #3,D0		* Moving task 3 into Data Register 0 
-			TRAP #15			* Display signed number in D1.L in decimal in smallest field. 
 
 LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 
@@ -76,13 +76,16 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 			TRAP #15			* Position the cursor at [0Axx] x - any number
 
 			MOVEA.W (A3),A3		* Moves the task address into the same (An)
+
 			JSR (A3)			* Jumps to the current task subroutine from A3
+			; JMP (A3)			* Jumps to the current task subroutine from A3
 
-			MOVE.L #14,D0		* Moving task 14 into Data Register 0
+RETURN 		MOVE.W (A0),D2		* Reloads the orignal 16-bits as a temp again
+			BSR DISPLAY_INT		* Display the current 16-bits in Hexadecimal
+
+			LEA NEWLINE,A1		* Loading NEWLINE into (A1) for next instruction
+			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
-
-			MOVE.W (A0),D2		* Reloads the orignal 16-bits as a temp again
-			BSR DISPLAY_HEX		* Display the current 16-bits in Hexadecimal
 
 			BRA SHIFT			* Shifts to the next 16-bits of the source code
 
@@ -98,7 +101,7 @@ SHIFT		ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 
 			ADDQ.W #1,POSITION  *** VERY IMPORTANT: Shifts the position by 1 ***
 
-			TST.W (A0)			* Checks to see if you reached the end of the instructions
+			TST.W (A0)			* See if you reached the end of the instructions
 			BNE INIT_OP			* (!=) Resets the bitmask & OP task lists
 			RTS					* Returns from subroutine
 
@@ -108,8 +111,9 @@ SHIFT		ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 * Take that prof. Nash (mostly Kim), I didn't want to use task #15 anyway
 
 *** IMPORTANT *** Load the value that you wish to display in hexadecimal in D2
+	
 
-DISPLAY_HEX MOVE.B #11,D0		* Moving task 11 into Data Register 0
+DISPLAY_INT	MOVE.B #11,D0		* Moving task 11 into Data Register 0
 			ADDI #$2200,D1
 			TRAP #15			* Position the cursor at [2Cxx] x - any number
 
@@ -117,7 +121,7 @@ DISPLAY_HEX MOVE.B #11,D0		* Moving task 11 into Data Register 0
 			MOVE.B #14,D0
 			TRAP #15
 
-RESET_HEX	LEA HEX_BITMASK,A2
+DISPLAY_HEX LEA HEX_BITMASK,A2
 			LEA HEX_VALUE,A3
 
 			ROL #4,D2			* Shifts to read the next hexadecimal digit
@@ -129,10 +133,7 @@ RESET_HEX	LEA HEX_BITMASK,A2
 			BSR LOOP_HEX		* SO I'M GOING TO LEAVE THIS HERE, BECUASE I 
 			ROL #4,D2 			* REALLY DON"T CARE. TOO MUCH TIME WAS WASTED
 			BSR LOOP_HEX		* ANNND YES!! NO MORE BAD CODE (IT WORKS DEAL)
-			
-			LEA NEWLINE,A1		* Creates a newline for the next instruction. Loading NEWLINE into (A1)
-			MOVE.B #14,D0		* Moving task 14 into Data Register 0
-			TRAP #15			* Display the NULL terminated string at (A1) without CR, LF
+
 			RTS					* Returns from subroutine
 
 LOOP_HEX	MOVE.W D2,D3		* Move the current 16-bits into data register 3
@@ -216,139 +217,249 @@ HEX_VALUE	DC.W 'F','E','D','C','B','A','9','8','7','6','5','4','3','2','1','0'
 *-------------------------------------------------
 ROL_M		DC.B	'ROL',0		* Tested	0xE118
 ROL_T		LEA ROL_M,A1
+			MOVE.L #14,D0		* Moving task 14 into Data Register 0
+			TRAP #15			* Display the string at (A1) without CR, LF
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 LSL_M		DC.B	'LSL',0		* Tested	0xE108
 LSL_T		LEA LSL_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 ASL_M		DC.B	'ASL',0		* Tested	0xE100
 ASL_T		LEA ASL_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN			
 *-------------------------------------------------
 ROR_M		DC.B	'ROR',0		* Tested	0xE018
 ROR_T		LEA ROR_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 LSR_M		DC.B	'LSR',0		* Tested	0xE008
 LSR_T		LEA LSR_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 ASR_M		DC.B	'ASR',0		* Tested	0xE000
 ASR_T		LEA ASR_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 ANDA_M		DC.B	'ADDA',0	* Tested	0xD0C0
 ANDA_T		LEA ANDA_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 ADD_M		DC.B	'ADD',0		* Tested	0xD000
 ADD_T		LEA ADD_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
-MULS_M		DC.B	'MULS',0	* Issue		0xC1C0		Not sure if corrent bitmask
+MULS_M		DC.B	'MULS',0	* Issue		0xC1C0
 MULS_T		LEA MULS_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 CMP_M		DC.B	'CMP',0					0xB000
 CMP_T		LEA CMP_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 SUB_M		DC.B	'SUB',0					0x9000
 SUB_T		LEA SUB_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
-DIVS_M		DC.B	'DIVS',0	* Issue		0x81C0		Not sure if corrent bitmask
+DIVS_M		DC.B	'DIVS',0	* Issue		0x81C0
 DIVS_T		LEA DIVS_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 OR_M		DC.B	'OR',0					0x8000
 OR_T		LEA OR_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
-BLT_M		DC.B	'BLT',0					0x6D00		May need to make branching
+BLT_M		DC.B	'BLT',0					0x6D00
 BLT_T		LEA BLT_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
-BGE_M		DC.B	'BGE',0					0x6C00		its own subroutine loop
+BGE_M		DC.B	'BGE',0					0x6C00
 BGE_T		LEA BGE_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 BVC_M		DC.B	'BVC',0					0x6800
 BVC_T		LEA BVC_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 BCS_M		DC.B	'BCS',0					0x6500
 BCS_T		LEA BCS_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
-BRA_M		DC.B	'BRA',0					0x6000
+BRA_M		DC.B	'BRA ',0				0x6000
 BRA_T		LEA BRA_M,A1
+			MOVE.L #14,D0
+			TRAP #15
+
+			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
+			AND.W #BITMASK8,D2
+
+			ASL.W #8, D2
+			ASR.W #8, D2
+
+			; ADD.W A0,D2
+
+			BSR DISPLAY_HEX	
+			
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 SUBQ_M		DC.B	'SUBQ',0				0x5100
 SUBQ_T		LEA SUBQ_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 JSR_M		DC.B	'JSR',0		* Tested	0x4E80
 JSR_T		LEA JSR_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 RTS_M		DC.B	'RTS',0		* Tested	0x4E75
 RTS_T		LEA RTS_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 NOP_M		DC.B	'NOP',0		* Tested	0x4E71
 NOP_T		LEA NOP_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 MOVEM_M		DC.B	'MOVEM',0				0x4880
 MOVEM_T		LEA MOVEM_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 NEG_M		DC.B	'NEG',0		* Tested	0x4400
 NEG_T		LEA NEG_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 LEA_M		DC.B	'LEA',0					0x41C0
 LEA_T		LEA LEA_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 MOAW_M		DC.B	'MOVEA.W',0				0x3040
 MOAW_T		LEA MOAW_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 MOW_M		DC.B	'MOVE.W',0				0x3000
 MOW_T		LEA MOW_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 MOAL_M		DC.B	'MOVEA.L',0				0x2040
 MOAL_T		LEA MOAL_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 MOL_M		DC.B	'MOVE.L',0				0x2000
 MOL_T		LEA MOL_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 MOB_M		DC.B	'MOVE.B',0				0x1000
 MOB_T		LEA MOB_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 CMPI_M		DC.B	'CMPI',0				0x0C00
 CMPI_T		LEA CMPI_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 BCLR_M		DC.B	'BCLR',0				0x01C0
 BCLR_T		LEA BCLR_M,A1
+			MOVE.L #14,D0
+			TRAP #15
 			RTS
+			; BRA RETURN
 *-------------------------------------------------
 ORI_M		DC.B	'ORI',0					0x0000
 ORI_T		LEA ORI_M,A1
+			MOVE.L #14,D0
+			TRAP #15
             RTS
+			; BRA RETURN
 
 *-------------------------------- Data Section ---------------------------------
 
-HEADER		DC.B 'ADDRESS   OP-CODE					  INSTRUCTION', 0 
+HEADER		DC.B 'ADDRESS   OP-CODE	OPERAND	    	 INSTRUCTION', 0 
 INIT_HEX	DC.B '0x',0
 NEWLINE		DC.B  CR,LF,0
 POSITION 	DC.W  $0A01,0
@@ -375,12 +486,20 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 *--------------------------------- Source Code ---------------------------------
 SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$4E71,$4E75
 ;				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   NOP   RTS
-			DC.W  $AAAA,$EE45,$E6AA,$E439,$2646,$EF45,$E7AA,$E539,$303C
+ 			DC.W  $AAAA,$EE45,$E6AA,$E439,$2646,$EF45,$E7AA,$E539,$303C
 ;				   ERROR ASR   LSR   ROR   MOVEA ASL   LSL   ROL   MOVE.W
-			DC.W  $E539,$60AB,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$0001,0
+ 			DC.W  $E539,$6078,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$0001,0
 ;				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  TEST
 
+; SOURCE_C	DC.W 	$1401,$1401,$60FC,$1401,0
+
+
 	END		START				* last line of source
+
+
+
+
+
 
 
 
