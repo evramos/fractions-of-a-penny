@@ -167,6 +167,8 @@ HEX_VALUE	DC.W 'F','E','D','C','B','A','9','8','7','6','5','4','3','2','1','0'
 
 
 ************************ 8-Bit Displacement Subroutine *************************
+* SubRoutine that displays a branching displacement as a hexadecimal value
+*
 
 DISPLACEMENT:
 	* Prints the pre-loaded OP message *
