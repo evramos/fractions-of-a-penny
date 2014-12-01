@@ -37,19 +37,34 @@ BITMASK3	EQU   $0007
 * D6: 
 * D7: 
 
-*------------------- Main Program / Initial Starting Point ---------------------
+******************** Main Program / Initial Starting Point *********************
 
 			ORG    START		* Program begins here
+
+			LEA LINE,A1
+			MOVE.B #14,D0		* Move task 13 into Data Register 0
+			TRAP #15			* Display the string at (A1) without CR, LF.
+			TRAP #15			* Display the string at (A1) without CR, LF.
+			BSR	NEWLINE
 
 			LEA HEADER,A1		* Load Dissassembler header message into A1 
 			MOVE.B #13,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) with CR, LF.
 
+			LEA LINE,A1
+			MOVE.B #14,D0		* Move task 13 into Data Register 0
+			TRAP #15			* Display the string at (A1) without CR, LF.
+			TRAP #15			* Display the string at (A1) without CR, LF.
+			BSR	NEWLINE
+
+			ADDQ.W #3,POSITION  *** IMPORTANT: Shifts the row position by 3 ***
+
+
 			LEA SOURCE_C,A0		* Load the source code into address register 0
 
 			BSR INIT_OP			* Hunts down each Operation code like a mad man
 
-			MOVE.W #$0001,POSITION	*** TEST - RESET POSITION ***
+			CLR.W POSITION			*** TEST - RESET POSITION ***
 
 			STOP #EXIT			* Halt Simulator
 
@@ -59,10 +74,10 @@ BITMASK3	EQU   $0007
 INIT_OP		* Resets the list of bitmasks & english to the begining
 
 
-*--- Displaying the current address as a hexadecimal value ---*
-			MOVE.W A0,D2		* Moving the current 16-bits address into D2
-			BSR DISPLAY_HEX	
+*----------- Displaying the current address as a hexadecimal value -------------
 
+			MOVE.W A0,D2		* Moving the current 16-bits address into D2
+			BSR DISPLAY_HEX
 
 			LEA BITMASK,A2		* Load the bitmask list into address register 2
 			LEA TASK_OP,A3		* Load the OP task list into address register 3
@@ -74,7 +89,8 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 			BNE NEXT_MASK		* No Match found branch to the NEXT_MASK
 			
 
-*--- Moving the cursor to the desired location ---*
+*----------------- Moving the cursor to the desired location -------------------
+
 			MOVE.B #11,D0 		* Moving task 11 into Data Register 0
 			MOVE.W POSITION,D1  * Setting up the desired row position
 			ADDI.W #$0A00,D1	* Setting up the desired column position
@@ -82,37 +98,14 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 
 	 		MOVE.L A0,SAVE_STATE	******  TESTING BETA  ******
 
-*--- Retrieve matched task then execute by jumping to subroutine  ---*
+*-------- Retrieve matched then execute task by jumping to subroutine ----------
+
 			MOVEA.W (A3),A3		* Moves the task address into the same (An)
 			JSR (A3)			* Jumps to the current task subroutine from A3
 
+			BSR DISPLAY_INTRUCTION	******  TESTING BETA  ******
 
-*--- Displaying the current instruction as a hexadecimal value ---*
-
-	 		MOVEA.L SAVE_STATE,A4	******  TESTING BETA  ******
-
-			MOVE.W (A4)+,D2		* Reloads the orignal 16-bits as a temp again
-			BSR DISPLAY_INT		* Display the current 16-bits in Hexadecimal
-	
-
-CHECK_VALUE	CMP.W (A0),D2			******  TESTING BETA  ******
-			BEQ NW_A				******  TESTING BETA  ******
-
-			MOVE.B #11,D0		* Moving task 11 into Data Register 0
-			ADDI #$0500,D1			******  TESTING BETA  ******
-			TRAP #15			* Position the cursor at [2Cxx] x - any number
-
-			MOVE.W (A4)+,D2			******  TESTING BETA  ******
-			BSR DISPLAY_HEX			******  TESTING BETA  ******
-			BRA CHECK_VALUE			******  TESTING BETA  ******
-
-
-NW_A		LEA NEWLINE,A1		* Loading NEWLINE into (A1) for next instruction
-			MOVE.B #14,D0		* Moving task 14 into Data Register 0
-			TRAP #15			* Display the string at (A1) without CR, LF
-
-			BRA SHIFT_OP			* Shifts to the next 16-bits of the source code
-
+			BRA SHIFT_OP		* Shifts to the next 16-bits of the source code
 
 *---------------------- Advancing Bitmask & OP Task list -----------------------
 
@@ -131,17 +124,48 @@ SHIFT_OP	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 			RTS					* Returns from subroutine
 
 
+************************ Display Instruction Subroutine ************************
+
+DISPLAY_INTRUCTION:
+
+*--------- Displaying the current instruction as a hexadecimal value -----------
+
+	 		MOVEA.L SAVE_STATE,A4	******  TESTING BETA  ******
+
+			MOVE.W (A4)+,D2		* Reloads the orignal 16-bits as a temp again
+			BSR DISPLAY_0x0		* Display the current 16-bits in Hexadecimal
+	
+
+CHECK_VALUE	CMP.W (A0),D2			******  TESTING BETA  ******
+			BEQ NEWLINE				******  TESTING BETA  ******
+
+			MOVE.B #11,D0		* Moving task 11 into Data Register 0
+			ADDI #$0500,D1			******  TESTING BETA  ******
+			TRAP #15			* Position the cursor at [2Cxx] x - any number
+
+			MOVE.W (A4)+,D2			******  TESTING BETA  ******
+			BSR DISPLAY_HEX			******  TESTING BETA  ******
+			BRA CHECK_VALUE			******  TESTING BETA  ******
+
+NEWLINE		LEA NEWLINE_M,A1	* Loading NEWLINE into (A1) for next instruction
+			MOVE.B #14,D0		* Moving task 14 into Data Register 0
+			TRAP #15			* Display the string at (A1) without CR, LF
+			RTS					* Returns from subroutine
+
+
 ************************ Display Hexadecimal Subroutine ************************
 * Displays an output of a single 16-bit instruction as a hexadecimal value
 * Take that prof. Nash (mostly Kim), I didn't want to use task #15 anyway
 
 *** IMPORTANT *** Load the value that you wish to display in hexadecimal in D2
 	
-DISPLAY_INT:
-*--- Moving the cursor to the desired location ---*
+DISPLAY_0x0:
+
+*----------------- Moving the cursor to the desired location -------------------
+
 			MOVE.B #11,D0		* Moving task 11 into Data Register 0
 			MOVE.W POSITION,D1  * Setting up the desired row position
-			ADDI #$2C00,D1		* Setting up the desired column position
+			ADDI #$3500,D1		* Setting up the desired column position
 			TRAP #15			* Position the cursor at [2Cxx] x - any number
 
 			ADDI #$0200,D1			******  TESTING BETA  ******
@@ -192,7 +216,7 @@ HEX_VALUE	DC.W 'F','E','D','C','B','A','9','8','7','6','5','4','3','2','1','0'
 
 DISPLACEMENT:
 
-*--- ERROR FILTER: Checks before printing a non existing branch ---*
+*--------- ERROR FILTER: Checks before printing a non existing branch ----------
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			ANDI.W #$FF00,D2
 			CMP.W (A2),D2
@@ -585,13 +609,14 @@ ORI_T		LEA ORI_M,A1
 
 *-------------------------------- Data Section ---------------------------------
 
-HEADER		DC.B	'ADDRESS   OP-CODE	 OPERAND    		INSTRUCTION', 0 
+HEADER		DC.B	'Address   OP-Code	  Operand      			 Instruction', 0
+LINE 		DC.B 	'----------------------------------------',0
 INIT_HEX	DC.B	'0x',0
 INIT_MEM	DC.B	'$',0
 DATA_M		DC.B	'DATA ',0
-NEWLINE		DC.B  CR,LF,0
+NEWLINE_M	DC.B  CR,LF,0
 
-POSITION 	DC.W  $0001
+POSITION 	DC.W  $0000
 SAVE_STATE	DS.L  1    
 
 ; Byte_M		DC.B  '.B ',0
@@ -614,19 +639,19 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 			DC.W $0C00,$01C0,$0000,0
 
 *--------------------------------- Source Code ---------------------------------
-; SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$4E71,$4E75
-; 				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   NOP   RTS
- 			; DC.W  $66FC,$EE45,$E6AA,$E439,$2646,$EF45,$62FC,$E539,$303C
-; 				   DATA  ASR   LSR   ROR   MOVEA ASL   DATA  ROL   MOVE.W
- 			; DC.W  $E539,$6078,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$0001,0
-; 				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  TEST
+SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$303C,$4E75
+; 				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   MOVE.W RTS
+ 			DC.W  $66FC,$EE45,$6CFF,$0002,$6A12,$E6AA,$E439,$2646,$EF45,$62FC
+; 				   DATA  ASR   BGE   DATA  DATA  LSR   ROR   MOVEA ASL   DATA  
+ 			DC.W  $E539,$6078,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$AAAA,0
+; 				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  ERROR
 
 **** Displacement TESTING - REMOVE WHEN DONE ****
 ; SOURCE_C	DC.W 	$4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA,0
 ; SOURCE_C	DC.W 	$2803,$6FFC,$6EFC,$6DFC,$6CFC,$6BFC,$6AFC,$69FC,$68FC,$67FC
 ; 			DC.W 	$66FC,$65FC,$64FC,$63FC,$62FC,$60FC,0
-SOURCE_C	DC.W 	$3202,$6D00,$000C,$3C0B,$6000,$0004,$3201,$4E71,$5241
-			DC.W 	$6CFF,$0002,$6A12,$66FC,$65FC,$64FC,$63FC,$62FC,$60FC,0
+; SOURCE_C	DC.W 	$3202,$6D00,$000C,$3C0B,$6000,$0004,$3201,$4E71,$5241
+; 			DC.W 	$6CFF,$0002,$6A12,$66FC,$65FC,$64FC,$63FC,$62FC,$60FC,0
 
 
 	END		START				* last line of source
