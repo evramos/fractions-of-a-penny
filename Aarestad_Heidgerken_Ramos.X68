@@ -80,8 +80,7 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 			ADDI.W #$0A00,D1	* Setting up the desired column position
 			TRAP #15			* Position the cursor at [0Axx] x - any number
 
-	 		; MOVE.W (A0),D7 		******  TESTING 1  ******
-	 		MOVEA.W A0,A4			******  TESTING 2  ******
+	 		MOVE.L A0,SAVE_STATE	******  TESTING BETA  ******
 
 *--- Retrieve matched task then execute by jumping to subroutine  ---*
 			MOVEA.W (A3),A3		* Moves the task address into the same (An)
@@ -89,14 +88,24 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 
 
 *--- Displaying the current instruction as a hexadecimal value ---*
-	 		; MOVE.W (A0),D2		* Reloads the orignal 16-bits as a temp again
-	 		; MOVE.W D7,D2		* Reloads the orignal 16-bits as a temp again
+
+	 		MOVEA.L SAVE_STATE,A4	******  TESTING BETA  ******
 
 			MOVE.W (A4)+,D2		* Reloads the orignal 16-bits as a temp again
 			BSR DISPLAY_INT		* Display the current 16-bits in Hexadecimal
 	
-			CMP.W (A0),D2			******  TESTING 2  ******
-			BNE HELP_HEX
+
+CHECK_VALUE	CMP.W (A0),D2			******  TESTING BETA  ******
+			BEQ NW_A				******  TESTING BETA  ******
+
+			MOVE.B #11,D0		* Moving task 11 into Data Register 0
+			ADDI #$0500,D1			******  TESTING BETA  ******
+			TRAP #15			* Position the cursor at [2Cxx] x - any number
+
+			MOVE.W (A4)+,D2			******  TESTING BETA  ******
+			BSR DISPLAY_HEX			******  TESTING BETA  ******
+			BRA CHECK_VALUE			******  TESTING BETA  ******
+
 
 NW_A		LEA NEWLINE,A1		* Loading NEWLINE into (A1) for next instruction
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
@@ -104,15 +113,6 @@ NW_A		LEA NEWLINE,A1		* Loading NEWLINE into (A1) for next instruction
 
 			BRA SHIFT_OP			* Shifts to the next 16-bits of the source code
 
-
-HELP_HEX	MOVE.B #11,D0		* Moving task 11 into Data Register 0
-			MOVE.W POSITION,D1  * Setting up the desired row position
-			ADDI #$3300,D1		* Setting up the desired column position
-			TRAP #15			* Position the cursor at [2Cxx] x - any number
-			MOVE.W (A4)+,D2
-			BSR DISPLAY_HEX
-
-			BRA NW_A
 
 *---------------------- Advancing Bitmask & OP Task list -----------------------
 
@@ -144,6 +144,7 @@ DISPLAY_INT:
 			ADDI #$2C00,D1		* Setting up the desired column position
 			TRAP #15			* Position the cursor at [2Cxx] x - any number
 
+			ADDI #$0200,D1			******  TESTING BETA  ******
 
 			LEA INIT_HEX,A1
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
@@ -206,7 +207,24 @@ DISPLACEMENT:
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			TST.B D2
 			BEQ D_16_BIT
+
+			CMPI.B #$FF,D2			******  TESTING BETA  ******
+			BEQ D_32_BIT			******  TESTING BETA  ******
+
 			BRA D_8_BIT
+
+D_32_BIT:							******  TESTING BETA  ******
+			ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction	
+			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
+			SWAP D2
+			ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
+			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
+
+			ADD.W A0,D2
+			SWAP D2
+			BSR DISPLAY_HEX
+			SWAP D2
+			BRA D_DONE			
 
 
 D_16_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
@@ -567,13 +585,14 @@ ORI_T		LEA ORI_M,A1
 
 *-------------------------------- Data Section ---------------------------------
 
-HEADER		DC.B	'ADDRESS   OP-CODE	OPERAND	    	 INSTRUCTION', 0 
+HEADER		DC.B	'ADDRESS   OP-CODE	 OPERAND    		INSTRUCTION', 0 
 INIT_HEX	DC.B	'0x',0
 INIT_MEM	DC.B	'$',0
 DATA_M		DC.B	'DATA ',0
 NEWLINE		DC.B  CR,LF,0
 
 POSITION 	DC.W  $0001
+SAVE_STATE	DS.L  1    
 
 ; Byte_M		DC.B  '.B ',0
 ; Word_M		DC.B  '.W ',0
@@ -606,7 +625,8 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 ; SOURCE_C	DC.W 	$4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA,0
 ; SOURCE_C	DC.W 	$2803,$6FFC,$6EFC,$6DFC,$6CFC,$6BFC,$6AFC,$69FC,$68FC,$67FC
 ; 			DC.W 	$66FC,$65FC,$64FC,$63FC,$62FC,$60FC,0
-SOURCE_C	DC.W 	$3202,$6D00,$000C,$3C0B,$6000,$0004,$3201,$4E71,$5241,0
+SOURCE_C	DC.W 	$3202,$6D00,$000C,$3C0B,$6000,$0004,$3201,$4E71,$5241
+			DC.W 	$6CFF,$0002,$6A12,$66FC,$65FC,$64FC,$63FC,$62FC,$60FC,0
 
 
 	END		START				* last line of source
