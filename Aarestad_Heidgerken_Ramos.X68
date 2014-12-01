@@ -64,6 +64,11 @@ BITMASK3	EQU   $0007
 
 			BSR INIT_OP			* Hunts down each Operation code like a mad man
 
+			LEA LINE,A1
+			MOVE.B #14,D0		* Move task 13 into Data Register 0
+			TRAP #15			* Display the string at (A1) without CR, LF.
+			TRAP #15			* Display the string at (A1) without CR, LF.
+
 			CLR.W POSITION			*** TEST - RESET POSITION ***
 
 			STOP #EXIT			* Halt Simulator
@@ -88,7 +93,6 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 			CMP.W (A2),D3		* Compares the current bitmask in (A2) with D3
 			BNE NEXT_MASK		* No Match found branch to the NEXT_MASK
 			
-
 *----------------- Moving the cursor to the desired location -------------------
 
 			MOVE.B #11,D0 		* Moving task 11 into Data Register 0
@@ -117,9 +121,13 @@ NEXT_MASK	ADDA.W #WORD,A2		* Shifts to the next bitmask
 
 SHIFT_OP	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 
+			MOVE.W POSITION,D0		******  TESTING BETA  ******
+			CMPI.B #$1F,D0			******  TESTING BETA  ******
+			BEQ PASS_CHECK			******  TESTING BETA  ******
+
 			ADDQ.W #1,POSITION  *** IMPORTANT: Shifts the row position by 1 ***
 
-			TST.W (A0)			* See if you reached the end of the instructions
+PASS_CHECK	TST.W (A0)			* See if you reached the end of the instructions
 			BNE INIT_OP			* (!=) Resets the bitmask & OP task lists
 			RTS					* Returns from subroutine
 
@@ -211,7 +219,7 @@ HEX_VALUE	DC.W 'F','E','D','C','B','A','9','8','7','6','5','4','3','2','1','0'
 
 
 ************************ 8-Bit Displacement Subroutine *************************
-* SubRoutine that displays a branching displacement as a hexadecimal value
+* Subroutine that displays a branching displacement as a hexadecimal value
 *
 
 DISPLACEMENT:
@@ -222,7 +230,7 @@ DISPLACEMENT:
 			CMP.W (A2),D2
 			BNE  DISPLAY_DATA
 
-*--- PRINT OP: Prints the pre-loaded OP message to the output ---*
+*---------- PRINT OP: Prints the pre-loaded OP message to the output -----------
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
 
@@ -237,8 +245,7 @@ DISPLACEMENT:
 
 			BRA D_8_BIT
 
-D_32_BIT:							******  TESTING BETA  ******
-			ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction	
+D_32_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction	
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			SWAP D2
 			ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
@@ -395,7 +402,7 @@ EA_TYPE5	MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3
 * Subroutine for Shift and rotate funcitons
 * D3 - stores Data
 * D4 -stores Size
-* D5 stores i(imediate or Register)
+* D5 stores i(immediate or Register)
 * D6 stores register
 *-------------------------------------------------------------------------------
 EA_TYPE6 	MOVE.B 	#%00001110, D3	;move data maskinto D3
@@ -413,201 +420,234 @@ EA_TYPE6 	MOVE.B 	#%00001110, D3	;move data maskinto D3
 
 ******************** OP-CODE: Individual Task Subroutine Set *******************
 
-*- 000 -------------------------------------------
-ROL_M		DC.B	'ROL',0		* Tested	0xE118
+*- 000 ROL ------------------------------------------------------ Rotate Left --
+
 ROL_T		LEA ROL_M,A1
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
 			RTS
-*- 001 -------------------------------------------
-LSL_M		DC.B	'LSL',0		* Tested	0xE108
+
+*- 001 LSL ------------------- Logical Shift Left ------------------------------
+
 LSL_T		LEA LSL_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 002 -------------------------------------------
-ASL_M		DC.B	'ASL',0		* Tested	0xE100
+
+*- 002 ASL ----------------- Arithmetic Shift Left -----------------------------
+
 ASL_T		LEA ASL_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 003 -------------------------------------------
-ROR_M		DC.B	'ROR',0		* Tested	0xE018
+
+*- 003 ROR ---------------------- Rotate Right ---------------------------------
+
 ROR_T		LEA ROR_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 004 -------------------------------------------
-LSR_M		DC.B	'LSR',0		* Tested	0xE008
+
+*- 004 LSL ------------------ Logical Shift Right ------------------------------
+
 LSR_T		LEA LSR_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 005 -------------------------------------------
-ASR_M		DC.B	'ASR',0		* Tested	0xE000
+
+*- 005 ASR ----------------- Arithmetic Shift Right ----------------------------
+
 ASR_T		LEA ASR_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 006 -------------------------------------------
-ANDA_M		DC.B	'ADDA',0	* Tested	0xD0C0
-ANDA_T		LEA ANDA_M,A1
+
+*- 006 ADDA --------------------- Add Address ----------------------------------
+
+ADDA_T		LEA ADDA_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 007 -------------------------------------------
-ADD_M		DC.B	'ADD',0		* Tested	0xD000
+
+*- 007 ADD -------------------------- Add --------------------------------------
+
 ADD_T		LEA ADD_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 008 -------------------------------------------
-MULS_M		DC.B	'MULS',0	* Issue		0xC1C0
+
+*- 008 MULS ------------------- Signed Multiply --------------------------------
+
 MULS_T		LEA MULS_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 009 -------------------------------------------
-CMP_M		DC.B	'CMP',0					0xB000
+
+*- 009 CMP ------------------------ Compare ------------------------------------
+
 CMP_T		LEA CMP_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 010 -------------------------------------------
-SUB_M		DC.B	'SUB',0					0x9000
+
+*- 010 SUB ------------------------ Subtract -----------------------------------
+
 SUB_T		LEA SUB_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 011 -------------------------------------------
-DIVS_M		DC.B	'DIVS',0	* Issue		0x81C0
+
+*- 011 DIVS -------------------- Signed Divide ---------------------------------
+
 DIVS_T		LEA DIVS_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 012 -------------------------------------------
-OR_M		DC.B	'OR',0					0x8000
+
+*- 012 OR ------------------- Inclusive OR Logical -----------------------------
+
 OR_T		LEA OR_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 013 -------------------------------------------
-BLT_M		DC.B	'BLT ',0				0x6D00
-BLT_T		LEA BLT_M,A1
-			BSR DISPLACEMENT
-			RTS
-*- 014 -------------------------------------------
-BGE_M		DC.B	'BGE ',0				0x6C00
-BGE_T		LEA BGE_M,A1
-			BSR DISPLACEMENT
-			RTS
-*- 015 -------------------------------------------
-BVC_M		DC.B	'BVC ',0				0x6800
-BVC_T		LEA BVC_M,A1
-			BSR DISPLACEMENT
-			RTS
-*- 016 -------------------------------------------
-BCS_M		DC.B	'BCS ',0				0x6500
-BCS_T		LEA BCS_M,A1
-			BSR DISPLACEMENT
-			RTS
-*- 017 -------------------------------------------
-BRA_M		DC.B	'BRA ',0				0x6000
-BRA_T		LEA BRA_M,A1
-			BSR DISPLACEMENT
-			RTS
-*- 018 -------------------------------------------
-SUBQ_M		DC.B	'SUBQ',0				0x5100
+
+*- 013 BLT -------------------- Branch Less Than -------------------------------
+
+BLT_T		LEA BLT_M,A1 		* Loading the OP name into address register 1
+			BSR DISPLACEMENT 	* Branches to the displacement subroutine
+			RTS					* Returns from subroutine
+
+*- 014 BGE ---------------- Branch Greater OR Equal ----------------------------
+
+BGE_T		LEA BGE_M,A1 		* Loading the OP name into address register 1
+			BSR DISPLACEMENT 	* Branches to the displacement subroutine
+			RTS					* Returns from subroutine
+
+*- 015 BVC ----------------- Branch Overflow Clear -----------------------------
+
+BVC_T		LEA BVC_M,A1 		* Loading the OP name into address register 1
+			BSR DISPLACEMENT 	* Branches to the displacement subroutine
+			RTS					* Returns from subroutine
+
+*- 015 BVS -------------------- Branch Carry Set -------------------------------
+
+BCS_T		LEA BCS_M,A1 		* Loading the OP name into address register 1
+			BSR DISPLACEMENT 	* Branches to the displacement subroutine
+			RTS					* Returns from subroutine
+
+*- 017 BRA --------------------- Branch Always ---------------------------------
+
+BRA_T		LEA BRA_M,A1 		* Loading the OP name into address register 1
+			BSR DISPLACEMENT 	* Branches to the displacement subroutine
+			RTS					* Returns from subroutine
+
+*- 018 SUBQ -------------------- Subtract Quick --------------------------------
+
 SUBQ_T		LEA SUBQ_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 019 -------------------------------------------
-JSR_M		DC.B	'JSR',0		* Tested	0x4E80
+
+*- 019 JSR ------------------- Jump to Subroutine ------------------------------
+
 JSR_T		LEA JSR_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 020 -------------------------------------------
-RTS_M		DC.B	'RTS',0		* Tested	0x4E75
+
+*- 020 RTS ------------------ Return to Subroutine -----------------------------
+
 RTS_T		LEA RTS_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 021 -------------------------------------------
-NOP_M		DC.B	'NOP',0		* Tested	0x4E71
+
+*- 021 NOP ---------------------- No Operation ---------------------------------
+
 NOP_T		LEA NOP_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 022 -------------------------------------------
-MOVEM_M		DC.B	'MOVEM',0				0x4880
+
+*- 022 MOVEM -------------- Move Multiple Registers ----------------------------
+
 MOVEM_T		LEA MOVEM_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 023 -------------------------------------------
-NEG_M		DC.B	'NEG',0		* Tested	0x4400
+
+*- 023 NEG ------------------------- Negate ------------------------------------
+
 NEG_T		LEA NEG_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 024 -------------------------------------------
-LEA_M		DC.B	'LEA',0					0x41C0
+
+*- 024 LEA ----------------- Load Effective Address ----------------------------
+
 LEA_T		LEA LEA_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 025 -------------------------------------------
-MOAW_M		DC.B	'MOVEA.W',0				0x3040
+
+*- 025 MOVEA.W -------------- Move Address (WORD) ------------------------------
+
 MOAW_T		LEA MOAW_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 026 -------------------------------------------
-MOW_M		DC.B	'MOVE.W',0				0x3000
+
+*- 026 MOVE.W --- Move Data from Source to Destination (WORD) ------------------
+
 MOW_T		LEA MOW_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 027 -------------------------------------------
-MOAL_M		DC.B	'MOVEA.L',0				0x2040
+
+*- 027 MOVEA.L -------------- Move Address (LONG) ------------------------------
+
 MOAL_T		LEA MOAL_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 028 -------------------------------------------
-MOL_M		DC.B	'MOVE.L',0				0x2000
+
+*- 028 MOVE.L --- Move Data from Source to Destination (LONG) ------------------
+
 MOL_T		LEA MOL_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 029 -------------------------------------------
-MOB_M		DC.B	'MOVE.B',0				0x1000
+
+*- 029 MOVE.B --- Move Data from Source to Destination (BYTE) ------------------
+
 MOB_T		LEA MOB_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 030 -------------------------------------------
-CMPI_M		DC.B	'CMPI',0				0x0C00
+
+*- 030 CMPI ------------------ Compare Immediate -------------------------------
+
 CMPI_T		LEA CMPI_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 031 -------------------------------------------
-BCLR_M		DC.B	'BCLR',0				0x01C0
+
+*- 031 BCLR ----------------- Test a Bit and Clear -----------------------------
+
 BCLR_T		LEA BCLR_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*- 032 -------------------------------------------
-ORI_M		DC.B	'ORI',0					0x0000
+
+*- 032 ORI ----------------- Inclusive OR Immediate ----------------------------
+
 ORI_T		LEA ORI_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
 
-*-------------------------------- Data Section ---------------------------------
+
+********************************* Data Section *********************************
 
 HEADER		DC.B	'Address   OP-Code	  Operand      			 Instruction', 0
 LINE 		DC.B 	'----------------------------------------',0
@@ -623,11 +663,45 @@ SAVE_STATE	DS.L  1
 ; Word_M		DC.B  '.W ',0
 ; Long_M		DC.B  '.L ',0
 
+ROL_M		DC.B	'ROL',0		* Tested	0xE118
+LSL_M		DC.B	'LSL',0		* Tested	0xE108
+ASL_M		DC.B	'ASL',0		* Tested	0xE100
+ROR_M		DC.B	'ROR',0		* Tested	0xE018
+LSR_M		DC.B	'LSR',0		* Tested	0xE008
+ASR_M		DC.B	'ASR',0		* Tested	0xE000
+ADDA_M		DC.B	'ADDA',0	* Tested	0xD0C0
+ADD_M		DC.B	'ADD',0		* Tested	0xD000
+MULS_M		DC.B	'MULS',0	* Issue		0xC1C0
+CMP_M		DC.B	'CMP',0					0xB000
+SUB_M		DC.B	'SUB',0					0x9000
+DIVS_M		DC.B	'DIVS',0	* Issue		0x81C0
+OR_M		DC.B	'OR',0					0x8000
+BLT_M		DC.B	'BLT ',0				0x6D00
+BGE_M		DC.B	'BGE ',0				0x6C00
+BVC_M		DC.B	'BVC ',0				0x6800
+BCS_M		DC.B	'BCS ',0				0x6500
+BRA_M		DC.B	'BRA ',0				0x6000
+SUBQ_M		DC.B	'SUBQ',0				0x5100
+JSR_M		DC.B	'JSR',0		* Tested	0x4E80
+RTS_M		DC.B	'RTS',0		* Tested	0x4E75
+NOP_M		DC.B	'NOP',0		* Tested	0x4E71
+MOVEM_M		DC.B	'MOVEM',0				0x4880
+NEG_M		DC.B	'NEG',0		* Tested	0x4400
+LEA_M		DC.B	'LEA',0					0x41C0
+MOAW_M		DC.B	'MOVEA.W',0				0x3040
+MOW_M		DC.B	'MOVE.W',0				0x3000
+MOAL_M		DC.B	'MOVEA.L',0				0x2040
+MOL_M		DC.B	'MOVE.L',0				0x2000
+MOB_M		DC.B	'MOVE.B',0				0x1000
+CMPI_M		DC.B	'CMPI',0				0x0C00
+BCLR_M		DC.B	'BCLR',0				0x01C0
+ORI_M		DC.B	'ORI',0					0x0000
+
 *---------------------------- Task Operation List ------------------------------
 * The values for this constant are set to move in parallel with those of
 * the constant BITMASK via steps at label NEXT_MASK.
 
-TASK_OP		DC.W ROL_T,LSL_T,ASL_T,ROR_T,LSR_T,ASR_T,ANDA_T,ADD_T,MULS_T,CMP_T
+TASK_OP		DC.W ROL_T,LSL_T,ASL_T,ROR_T,LSR_T,ASR_T,ADDA_T,ADD_T,MULS_T,CMP_T
 			DC.W SUB_T,DIVS_T,OR_T,BLT_T,BGE_T,BVC_T,BCS_T,BRA_T,SUBQ_T,JSR_T
 			DC.W RTS_T,NOP_T,MOVEM_T,NEG_T,LEA_T,MOAW_T,MOW_T,MOAL_T,MOL_T,MOB_T
 			DC.W CMPI_T,BCLR_T,ORI_T,0
@@ -636,25 +710,30 @@ TASK_OP		DC.W ROL_T,LSL_T,ASL_T,ROR_T,LSR_T,ASR_T,ANDA_T,ADD_T,MULS_T,CMP_T
 BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 			DC.W $9000,$81C0,$8000,$6D00,$6C00,$6800,$6500,$6000,$5100,$4E80
 			DC.W $4E75,$4E71,$4880,$4400,$41C0,$3040,$3000,$2040,$2000,$1000
-			DC.W $0C00,$01C0,$0000,0
+			DC.W $0C00,$01C0,$0000
 
 *--------------------------------- Source Code ---------------------------------
 SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$303C,$4E75
 ; 				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   MOVE.W RTS
  			DC.W  $66FC,$EE45,$6CFF,$0002,$6A12,$E6AA,$E439,$2646,$EF45,$62FC
 ; 				   DATA  ASR   BGE   DATA  DATA  LSR   ROR   MOVEA ASL   DATA  
- 			DC.W  $E539,$6078,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$AAAA,0
+ 			DC.W  $E539,$6078,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$AAAA
 ; 				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  ERROR
 
 **** Displacement TESTING - REMOVE WHEN DONE ****
-; SOURCE_C	DC.W 	$4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA,0
-; SOURCE_C	DC.W 	$2803,$6FFC,$6EFC,$6DFC,$6CFC,$6BFC,$6AFC,$69FC,$68FC,$67FC
-; 			DC.W 	$66FC,$65FC,$64FC,$63FC,$62FC,$60FC,0
-; SOURCE_C	DC.W 	$3202,$6D00,$000C,$3C0B,$6000,$0004,$3201,$4E71,$5241
-; 			DC.W 	$6CFF,$0002,$6A12,$66FC,$65FC,$64FC,$63FC,$62FC,$60FC,0
+			DC.W  $4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA
+
+			DC.W  $6FFC,$6EFC,$6DFC,$6C00,$6BFC,$6AFC,$69FC,$68FF,$2803,$67FC
+
+			DC.W  $66FC,$65FC,$64FC,$63FC,$62FC,$60FC,$3202,$6D00,$000C,$3C0B
+
+			DC.W  $6000,$0004,$3201,$4E71,$5241,$6CFF,$0002,$6A12,$66FC,$65FC
+			
+			DC.W  $64FC,$63FC,$62FC,$60FC,0
 
 
 	END		START				* last line of source
+
 
 
 
