@@ -194,21 +194,14 @@ DISPLACEMENT:
 			ADD.L A0,D2
 
 
-
-*--- Moving the cursor to the desired location ---*
-			MOVE.B #11,D0		* Moving task 11 into Data Register 0
-			MOVE.W POSITION,D1  * Setting up the desired row position
-			ADDI #$1600,D1		* Setting up the desired column position
-			TRAP #15			* Position the cursor at [16xx] x - any number
-
 			BSR DISPLAY_HEX	
 
 			RTS
 
+
 *******************************  DATA Subroutine *******************************
 
 *1000    DATA    $WXYZ
-DATA_M		DC.B	'DATA ',0
 DISPLAY_DATA:
 			
 			LEA DATA_M,A1
@@ -222,7 +215,6 @@ DISPLAY_DATA:
 			MOVE.W (A0),D2
 			BSR DISPLAY_HEX	
 			RTS
-
 
 
 ************************* Effective Address Algorithm **************************
@@ -353,194 +345,194 @@ EA_TYPE6 	MOVE.B 	#%00001110, D3	;move data maskinto D3
 
 ******************** OP-CODE: Individual Task Subroutine Set *******************
 
-*-------------------------------------------------
+*- 000 -------------------------------------------
 ROL_M		DC.B	'ROL',0		* Tested	0xE118
 ROL_T		LEA ROL_M,A1
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
 			RTS
-*-------------------------------------------------
+*- 001 -------------------------------------------
 LSL_M		DC.B	'LSL',0		* Tested	0xE108
 LSL_T		LEA LSL_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 002 -------------------------------------------
 ASL_M		DC.B	'ASL',0		* Tested	0xE100
 ASL_T		LEA ASL_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 003 -------------------------------------------
 ROR_M		DC.B	'ROR',0		* Tested	0xE018
 ROR_T		LEA ROR_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 004 -------------------------------------------
 LSR_M		DC.B	'LSR',0		* Tested	0xE008
 LSR_T		LEA LSR_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 005 -------------------------------------------
 ASR_M		DC.B	'ASR',0		* Tested	0xE000
 ASR_T		LEA ASR_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 006 -------------------------------------------
 ANDA_M		DC.B	'ADDA',0	* Tested	0xD0C0
 ANDA_T		LEA ANDA_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 007 -------------------------------------------
 ADD_M		DC.B	'ADD',0		* Tested	0xD000
 ADD_T		LEA ADD_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 008 -------------------------------------------
 MULS_M		DC.B	'MULS',0	* Issue		0xC1C0
 MULS_T		LEA MULS_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 009 -------------------------------------------
 CMP_M		DC.B	'CMP',0					0xB000
 CMP_T		LEA CMP_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 010 -------------------------------------------
 SUB_M		DC.B	'SUB',0					0x9000
 SUB_T		LEA SUB_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 011 -------------------------------------------
 DIVS_M		DC.B	'DIVS',0	* Issue		0x81C0
 DIVS_T		LEA DIVS_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 012 -------------------------------------------
 OR_M		DC.B	'OR',0					0x8000
 OR_T		LEA OR_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
-BLT_M		DC.B	'BLT',0					0x6D00
+*- 013 -------------------------------------------
+BLT_M		DC.B	'BLT ',0				0x6D00
 BLT_T		LEA BLT_M,A1
 			BSR DISPLACEMENT
 			RTS
-*-------------------------------------------------
-BGE_M		DC.B	'BGE',0					0x6C00
+*- 014 -------------------------------------------
+BGE_M		DC.B	'BGE ',0				0x6C00
 BGE_T		LEA BGE_M,A1
 			BSR DISPLACEMENT
 			RTS
-*-------------------------------------------------
-BVC_M		DC.B	'BVC',0					0x6800
+*- 015 -------------------------------------------
+BVC_M		DC.B	'BVC ',0				0x6800
 BVC_T		LEA BVC_M,A1
 			BSR DISPLACEMENT
 			RTS
-*-------------------------------------------------
-BCS_M		DC.B	'BCS',0					0x6500
+*- 016 -------------------------------------------
+BCS_M		DC.B	'BCS ',0				0x6500
 BCS_T		LEA BCS_M,A1
 			BSR DISPLACEMENT
 			RTS
-*-------------------------------------------------
-BRA_M		DC.B	'BRA',0					0x6000
+*- 017 -------------------------------------------
+BRA_M		DC.B	'BRA ',0				0x6000
 BRA_T		LEA BRA_M,A1
 			BSR DISPLACEMENT
 			RTS
-*-------------------------------------------------
+*- 018 -------------------------------------------
 SUBQ_M		DC.B	'SUBQ',0				0x5100
 SUBQ_T		LEA SUBQ_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 019 -------------------------------------------
 JSR_M		DC.B	'JSR',0		* Tested	0x4E80
 JSR_T		LEA JSR_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 020 -------------------------------------------
 RTS_M		DC.B	'RTS',0		* Tested	0x4E75
 RTS_T		LEA RTS_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 021 -------------------------------------------
 NOP_M		DC.B	'NOP',0		* Tested	0x4E71
 NOP_T		LEA NOP_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 022 -------------------------------------------
 MOVEM_M		DC.B	'MOVEM',0				0x4880
 MOVEM_T		LEA MOVEM_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 023 -------------------------------------------
 NEG_M		DC.B	'NEG',0		* Tested	0x4400
 NEG_T		LEA NEG_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 024 -------------------------------------------
 LEA_M		DC.B	'LEA',0					0x41C0
 LEA_T		LEA LEA_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 025 -------------------------------------------
 MOAW_M		DC.B	'MOVEA.W',0				0x3040
 MOAW_T		LEA MOAW_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 026 -------------------------------------------
 MOW_M		DC.B	'MOVE.W',0				0x3000
 MOW_T		LEA MOW_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 027 -------------------------------------------
 MOAL_M		DC.B	'MOVEA.L',0				0x2040
 MOAL_T		LEA MOAL_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 028 -------------------------------------------
 MOL_M		DC.B	'MOVE.L',0				0x2000
 MOL_T		LEA MOL_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 029 -------------------------------------------
 MOB_M		DC.B	'MOVE.B',0				0x1000
 MOB_T		LEA MOB_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 030 -------------------------------------------
 CMPI_M		DC.B	'CMPI',0				0x0C00
 CMPI_T		LEA CMPI_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 031 -------------------------------------------
 BCLR_M		DC.B	'BCLR',0				0x01C0
 BCLR_T		LEA BCLR_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-*-------------------------------------------------
+*- 032 -------------------------------------------
 ORI_M		DC.B	'ORI',0					0x0000
 ORI_T		LEA ORI_M,A1
 			MOVE.B #14,D0
@@ -549,10 +541,12 @@ ORI_T		LEA ORI_M,A1
 
 *-------------------------------- Data Section ---------------------------------
 
-HEADER		DC.B 'ADDRESS   OP-CODE	OPERAND	    	 INSTRUCTION', 0 
-INIT_HEX	DC.B '0x',0
-INIT_MEM	DC.B '$',0
+HEADER		DC.B	'ADDRESS   OP-CODE	OPERAND	    	 INSTRUCTION', 0 
+INIT_HEX	DC.B	'0x',0
+INIT_MEM	DC.B	'$',0
+DATA_M		DC.B	'DATA ',0
 NEWLINE		DC.B  CR,LF,0
+
 POSITION 	DC.W  $0001
 
 ; Byte_M		DC.B  '.B ',0
@@ -583,9 +577,9 @@ SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$4E71,$4E75
 ; 				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  TEST
 
 **** Displacement TESTING - REMOVE WHEN DONE ****
-; SOURCE_C	DC.W 	$4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$6500,0
+; SOURCE_C	DC.W 	$4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA,0
 ; SOURCE_C	DC.W 	$2803,$6FFC,$6EFC,$6DFC,$6CFC,$6BFC,$6AFC,$69FC,$68FC,$67FC
-			; DC.W 	$66FC,$65FC,$64FC,$63FC,$62FC,$60FC,0
+; 			DC.W 	$66FC,$65FC,$64FC,$63FC,$62FC,$60FC,0
 ; SOURCE_C	DC.W 	$3202,$6D00,$000C,$3C0B,$6000,$0004,$3201,$4E71,$5241,0
 
 
