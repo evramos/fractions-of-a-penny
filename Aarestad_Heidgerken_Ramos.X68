@@ -80,6 +80,8 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 			ADDI.W #$0A00,D1	* Setting up the desired column position
 			TRAP #15			* Position the cursor at [0Axx] x - any number
 
+	 		; MOVE.W (A0),D7 		******  TESTING 1  ******
+	 		MOVEA.W A0,A4			******  TESTING 2  ******
 
 *--- Retrieve matched task then execute by jumping to subroutine  ---*
 			MOVEA.W (A3),A3		* Moves the task address into the same (An)
@@ -87,15 +89,30 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 
 
 *--- Displaying the current instruction as a hexadecimal value ---*
-	 		MOVE.W (A0),D2		* Reloads the orignal 16-bits as a temp again
+	 		; MOVE.W (A0),D2		* Reloads the orignal 16-bits as a temp again
+	 		; MOVE.W D7,D2		* Reloads the orignal 16-bits as a temp again
+
+			MOVE.W (A4)+,D2		* Reloads the orignal 16-bits as a temp again
 			BSR DISPLAY_INT		* Display the current 16-bits in Hexadecimal
+	
+			CMP.W (A0),D2			******  TESTING 2  ******
+			BNE HELP_HEX
 
-
-			LEA NEWLINE,A1		* Loading NEWLINE into (A1) for next instruction
+NW_A		LEA NEWLINE,A1		* Loading NEWLINE into (A1) for next instruction
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
 
 			BRA SHIFT_OP			* Shifts to the next 16-bits of the source code
+
+
+HELP_HEX	MOVE.B #11,D0		* Moving task 11 into Data Register 0
+			MOVE.W POSITION,D1  * Setting up the desired row position
+			ADDI #$3300,D1		* Setting up the desired column position
+			TRAP #15			* Position the cursor at [2Cxx] x - any number
+			MOVE.W (A4)+,D2
+			BSR DISPLAY_HEX
+
+			BRA NW_A
 
 *---------------------- Advancing Bitmask & OP Task list -----------------------
 
@@ -174,34 +191,43 @@ HEX_VALUE	DC.W 'F','E','D','C','B','A','9','8','7','6','5','4','3','2','1','0'
 
 DISPLACEMENT:
 
-*--- ERROR FILTER: Checks before printing a non existing branch  ---*
+*--- ERROR FILTER: Checks before printing a non existing branch ---*
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			ANDI.W #$FF00,D2
 			CMP.W (A2),D2
 			BNE  DISPLAY_DATA
 
-*--- PRINT Prints the pre-loaded OP message ---*
+*--- PRINT OP: Prints the pre-loaded OP message to the output ---*
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
 
 
-
-
+*--- 8-bits 16-bits 32-bits ---*
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
+			TST.B D2
+			BEQ D_16_BIT
+			BRA D_8_BIT
+
+
+D_16_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
+			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
+			ADD.W A0,D2
+			BRA D_DONE			
+
+
+D_8_BIT		MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			AND.W #BITMASK8,D2
             ADDQ #2,D2
 			ORI.L #$FFFFFF00,D2
 			ADD.L A0,D2
 
-
-			BSR DISPLAY_HEX	
-
+D_DONE		BSR DISPLAY_HEX	
 			RTS
 
 
 *******************************  DATA Subroutine *******************************
-
 *1000    DATA    $WXYZ
+*
 DISPLAY_DATA:
 			
 			LEA DATA_M,A1
@@ -569,21 +595,22 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 			DC.W $0C00,$01C0,$0000,0
 
 *--------------------------------- Source Code ---------------------------------
-SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$4E71,$4E75
+; SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$4E71,$4E75
 ; 				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   NOP   RTS
- 			DC.W  $66FC,$EE45,$E6AA,$E439,$2646,$EF45,$62FC,$E539,$303C
+ 			; DC.W  $66FC,$EE45,$E6AA,$E439,$2646,$EF45,$62FC,$E539,$303C
 ; 				   DATA  ASR   LSR   ROR   MOVEA ASL   DATA  ROL   MOVE.W
- 			DC.W  $E539,$6078,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$0001,0
+ 			; DC.W  $E539,$6078,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$0001,0
 ; 				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  TEST
 
 **** Displacement TESTING - REMOVE WHEN DONE ****
 ; SOURCE_C	DC.W 	$4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA,0
 ; SOURCE_C	DC.W 	$2803,$6FFC,$6EFC,$6DFC,$6CFC,$6BFC,$6AFC,$69FC,$68FC,$67FC
 ; 			DC.W 	$66FC,$65FC,$64FC,$63FC,$62FC,$60FC,0
-; SOURCE_C	DC.W 	$3202,$6D00,$000C,$3C0B,$6000,$0004,$3201,$4E71,$5241,0
+SOURCE_C	DC.W 	$3202,$6D00,$000C,$3C0B,$6000,$0004,$3201,$4E71,$5241,0
 
 
 	END		START				* last line of source
+
 
 
 *~Font name~Courier New~
