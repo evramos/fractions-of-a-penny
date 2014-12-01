@@ -178,7 +178,7 @@ DISPLACEMENT:
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			ANDI.W #$FF00,D2
 			CMP.W (A2),D2
-			BNE  DATA_DISPLAY
+			BNE  DISPLAY_DATA
 
 *--- PRINT Prints the pre-loaded OP message ---*
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
@@ -209,7 +209,7 @@ DISPLACEMENT:
 
 *1000    DATA    $WXYZ
 DATA_M		DC.B	'DATA ',0
-DATA_DISPLAY:
+DISPLAY_DATA:
 			
 			LEA DATA_M,A1
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
@@ -218,8 +218,9 @@ DATA_DISPLAY:
 			LEA INIT_MEM,A1
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
+
 			MOVE.W (A0),D2
-			BRA DISPLAY_HEX
+			BSR DISPLAY_HEX	
 			RTS
 
 
@@ -431,27 +432,27 @@ OR_T		LEA OR_M,A1
 			TRAP #15
 			RTS
 *-------------------------------------------------
-BLT_M		DC.B	'BLT ',0				0x6D00
+BLT_M		DC.B	'BLT',0					0x6D00
 BLT_T		LEA BLT_M,A1
 			BSR DISPLACEMENT
 			RTS
 *-------------------------------------------------
-BGE_M		DC.B	'BGE ',0				0x6C00
+BGE_M		DC.B	'BGE',0					0x6C00
 BGE_T		LEA BGE_M,A1
 			BSR DISPLACEMENT
 			RTS
 *-------------------------------------------------
-BVC_M		DC.B	'BVC ',0				0x6800
+BVC_M		DC.B	'BVC',0					0x6800
 BVC_T		LEA BVC_M,A1
 			BSR DISPLACEMENT
 			RTS
 *-------------------------------------------------
-BCS_M		DC.B	'BCS ',0				0x6500
+BCS_M		DC.B	'BCS',0					0x6500
 BCS_T		LEA BCS_M,A1
 			BSR DISPLACEMENT
 			RTS
 *-------------------------------------------------
-BRA_M		DC.B	'BRA ',0				0x6000
+BRA_M		DC.B	'BRA',0					0x6000
 BRA_T		LEA BRA_M,A1
 			BSR DISPLACEMENT
 			RTS
@@ -589,13 +590,6 @@ SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$4E71,$4E75
 
 
 	END		START				* last line of source
-
-
-
-
-
-
-
 
 
 *~Font name~Courier New~
