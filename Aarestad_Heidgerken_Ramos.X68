@@ -100,7 +100,7 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 			ADDI.W #$0A00,D1	* Setting up the desired column position
 			TRAP #15			* Position the cursor at [0Axx] x - any number
 
-	 		MOVE.L A0,SAVE_STATE	******  TESTING BETA  ******
+			MOVE.L A0,SAVE_STATE	******  TESTING BETA  ******
 
 *-------- Retrieve matched then execute task by jumping to subroutine ----------
 
@@ -138,7 +138,7 @@ DISPLAY_INTRUCTION:
 
 *--------- Displaying the current instruction as a hexadecimal value -----------
 
-	 		MOVEA.L SAVE_STATE,A4	******  TESTING BETA  ******
+			MOVEA.L SAVE_STATE,A4	******  TESTING BETA  ******
 
 			MOVE.W (A4)+,D2		* Reloads the orignal 16-bits as a temp again
 			BSR DISPLAY_0x0		* Display the current 16-bits in Hexadecimal
@@ -266,7 +266,7 @@ D_16_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 
 D_8_BIT		MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			AND.W #BITMASK8,D2
-            ADDQ #2,D2
+			ADDQ #2,D2
 			ORI.L #$FFFFFF00,D2
 			ADD.L A0,D2
 
@@ -274,8 +274,8 @@ D_DONE		BSR DISPLAY_HEX
 			RTS
 
 
-*******************************  DATA Subroutine *******************************
-*1000    DATA    $WXYZ
+******************************* DATA Subroutine ********************************
+*1000	DATA	$WXYZ
 *
 DISPLAY_DATA:
 			
@@ -295,7 +295,7 @@ DISPLAY_DATA:
 ************************* Effective Address Algorithm **************************
 *-------------------------------------------------------------------------------
 * Type 1 mode xxxx xxxx ssoo oorrr
-* SubRoutine for handling One Operand addressing looking for a mode and register 
+* SubRoutine for handling One Operand addressing looking for a mode and register
 * value
 * Written by: David Heidgerken
 * Description.  16 bit Instruction will be passed to subroutine via D7
@@ -420,7 +420,7 @@ EA_TYPE6 	MOVE.B 	#%00001110, D3	;move data maskinto D3
 
 ******************** OP-CODE: Individual Task Subroutine Set *******************
 
-*- 000 ROL ------------------------------------------------------ Rotate Left --
+*- 000 ROL ---------------------- Rotate Left ----------------------------------
 
 ROL_T		LEA ROL_M,A1
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
@@ -714,22 +714,22 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 
 *--------------------------------- Source Code ---------------------------------
 SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$303C,$4E75
-; 				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   MOVE.W RTS
- 			DC.W  $66FC,$EE45,$6CFF,$0002,$6A12,$E6AA,$E439,$2646,$EF45,$62FC
-; 				   DATA  ASR   BGE   DATA  DATA  LSR   ROR   MOVEA ASL   DATA  
- 			DC.W  $E539,$6078,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$AAAA
-; 				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  ERROR
+;				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   MOVE.W RTS
+			DC.W  $66FC,$EE45,$6CFF,$0002,$6A12,$E6AA,$E439,$2646,$EF45,$62FC
+;				   DATA  ASR   BGE   DATA  DATA  LSR   ROR   MOVEA ASL   DATA
+			DC.W  $E539,$6078,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$AAAA,0
+;				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  ERROR
 
 **** Displacement TESTING - REMOVE WHEN DONE ****
-			DC.W  $4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA
+			; DC.W  $4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA
 
-			DC.W  $6FFC,$6EFC,$6DFC,$6C00,$6BFC,$6AFC,$69FC,$68FF,$2803,$67FC
+			; DC.W  $6FFC,$6EFC,$6DFC,$6C00,$6BFC,$6AFC,$69FC,$68FF,$2803,$67FC
 
-			DC.W  $66FC,$65FC,$64FC,$63FC,$62FC,$60FC,$3202,$6D00,$000C,$3C0B
+			; DC.W  $66FC,$65FC,$64FC,$63FC,$62FC,$60FC,$3202,$6D00,$000C,$3C0B
 
-			DC.W  $6000,$0004,$3201,$4E71,$5241,$6CFF,$0002,$6A12,$66FC,$65FC
+			; DC.W  $6000,$0004,$3201,$4E71,$5241,$6CFF,$0002,$6A12,$66FC,$65FC
 			
-			DC.W  $64FC,$63FC,$62FC,$60FC,0
+			; DC.W  $64FC,$63FC,$62FC,$60FC,0
 
 
 	END		START				* last line of source
