@@ -166,7 +166,7 @@ NEWLINE		LEA NEWLINE_M,A1	* Loading NEWLINE into (A1) for next instruction
 * Take that prof. Nash (mostly Kim), I didn't want to use task #15 anyway
 
 *** IMPORTANT *** Load the value that you wish to display in hexadecimal in D2
-	
+
 DISPLAY_0x0:
 
 *----------------- Moving the cursor to the desired location -------------------
@@ -205,7 +205,7 @@ LOOP_HEX	MOVE.W D2,D3		* Move the current 16-bits into data register 3
 			LEA (A3),A1
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
-			
+
 			LEA HEX_BITMASK,A2
 			LEA HEX_VALUE,A3
 			RTS					* Returns from subroutine
@@ -245,7 +245,7 @@ DISPLACEMENT:
 
 			BRA D_8_BIT
 
-D_32_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction	
+D_32_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			SWAP D2
 			ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
@@ -278,7 +278,7 @@ D_DONE		BSR DISPLAY_HEX
 *1000	DATA	$WXYZ
 *
 DISPLAY_DATA:
-			
+
 			LEA DATA_M,A1
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
@@ -310,7 +310,7 @@ EA_TYPE1	MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3
 			AND.W	D7,D6			;and D7 and D6 store in D6 Register
 			AND.W	D7,D5			;and D7 and D5 store in D5 Mode
 			AND.W	D7,D4			;and D7 and D4 store in D4 Size
-			
+
 			; BSR						;return to calling instruction
 
 *-------------------------------------------------------------------------------
@@ -334,24 +334,24 @@ EA_TYPE2	MOVE.B	#%11111111, D6	;move 8bitmask into D6
 * locations of the data.
 * source register stored in D3, source mode in D4 Dest mode in D5 dest register
 * in D6
-*-------------------------------------------------------------------------------			
+*-------------------------------------------------------------------------------
 EA_TYPE3	MOVE.B	#BITMASK3, D6	;move primative 3 bit mask into D6
 			MOVE.B	#BITMASK3, D5	;move primative 3 bitmask into D5
 			MOVE.B	#BITMASK3, D4	;move primative 3 bit mask into D4
 			MOVE.B	#BITMASK3, D3	;move primative 3 bit mask into D3
-			
+
 			LSL.W	#3,D5			;shift mask left 3 times
 			LSL.W	#6,D4			;shift mask left 6 times
 			LSL.W	#6,D3			;shift mask left 6 times
 			LSL.W	#6,D3			;shift mask left 3 times
-			
+
 			AND.L	D7,D6			;and D7 with D6 DestRegister
 			AND.L	D7,D5			;and D7 with D5	DestMode
 			AND.L	D7,D4			;and D7 with D4 SrcMode
 			AND.L	D7,D3			;and D7 with D3 SrcRegister
-			
+
 			; BSR
-			
+
 *-------------------------------------------------------------------------------
 * Type 4   - xxxx DDD1 ssoo orrr
 * Sub Routine to find Size and EA(mode and Register) and Data from instruction
@@ -359,14 +359,14 @@ EA_TYPE3	MOVE.B	#BITMASK3, D6	;move primative 3 bit mask into D6
 * D4 Stores Size
 * D5 stores Mode
 * D6 stores Register
-*-------------------------------------------------------------------------------			
+*-------------------------------------------------------------------------------
 EA_TYPE4	MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
 			MOVE.B	#%00000111, D5	;move primative 3 bitmask into D4
 			LSL.W	#3,D5			;shift mask in D5 left 3 times
 			MOVE.W  #%11000000, D4	;move size mask into D4
 			MOVE.W	#%00001110, D3	; move Datamask into D3
 			LSL.W	#8,D3			; shift datamask 8 places
-			
+
 			AND.W	D7,D6			;and D7 and D6 store in D6 Register
 			AND.W	D7,D5			;and D7 and D5 store in D5 Mode
 			AND.W	D7,D4			;and D7 and D4 store in D4 Size
@@ -410,7 +410,7 @@ EA_TYPE6 	MOVE.B 	#%00001110, D3	;move data maskinto D3
 			MOVE.B	#%11000000, D4	;move size masking into D4
 			MOVE.B	#%00100000,	D5	;move i masking into D5
 			MOVE.B	#%00000111,	D6	;move register mask into D6
-			
+
 			AND.W	D7,D3			;value of Data in D3
 			AND.W	D7,D4			;value of size in D4
 			AND.W	D7,D5			;value of i in D5
@@ -713,15 +713,15 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 			DC.W $0C00,$01C0,$0000
 
 *--------------------------------- Source Code ---------------------------------
-SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$303C,$4E75
+SOURCE_C    * DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$303C,$4E75
 ;				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   MOVE.W RTS
 			DC.W  $66FC,$EE45,$6CFF,$0002,$6A12,$E6AA,$E439,$2646,$EF45,$62FC
 ;				   DATA  ASR   BGE   DATA  DATA  LSR   ROR   MOVEA ASL   DATA
-			DC.W  $E539,$6078,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$AAAA,0
+			DC.W  $E539,$6000,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$AAAA
 ;				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  ERROR
 
 **** Displacement TESTING - REMOVE WHEN DONE ****
-			; DC.W  $4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA
+			DC.W  $4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA,0
 
 			; DC.W  $6FFC,$6EFC,$6DFC,$6C00,$6BFC,$6AFC,$69FC,$68FF,$2803,$67FC
 
