@@ -44,18 +44,18 @@ BITMASK3	EQU   $0007
 			LEA LINE,A1
 			MOVE.B #14,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
+			MOVE.B #13,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
-			BSR	NEWLINE
 
 			LEA HEADER,A1		* Load Dissassembler header message into A1 
-			MOVE.B #13,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) with CR, LF.
 
 			LEA LINE,A1
 			MOVE.B #14,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
+			MOVE.B #13,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
-			BSR	NEWLINE
+
 
 			ADDQ.W #3,POSITION  *** IMPORTANT: Shifts the row position by 3 ***
 
@@ -248,13 +248,15 @@ DISPLACEMENT:
 D_32_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			SWAP D2
+			
 			ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
-
-			ADD.W A0,D2
 			SWAP D2
+			; ADD.W A0,D2
+
 			BSR DISPLAY_HEX
 			SWAP D2
+
 			BRA D_DONE			
 
 
@@ -272,6 +274,10 @@ D_8_BIT		MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 
 D_DONE		BSR DISPLAY_HEX	
 			RTS
+
+
+*************************** ASd,LSd,Rod  Subroutine ****************************
+
 
 
 ******************************* DATA Subroutine ********************************
@@ -717,19 +723,24 @@ SOURCE_C    * DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$303C,$4E75
 ;				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   MOVE.W RTS
 			DC.W  $66FC,$EE45,$6CFF,$0002,$6A12,$E6AA,$E439,$2646,$EF45,$62FC
 ;				   DATA  ASR   BGE   DATA  DATA  LSR   ROR   MOVEA ASL   DATA
-			DC.W  $E539,$60AA,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$AAAA
+			DC.W  $E539,$60AA,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$AAAA,0
 ;				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  ERROR
 
 **** Displacement TESTING - REMOVE WHEN DONE ****
-			DC.W  $4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA,0
+			DC.W  $4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA
 
-			; DC.W  $6FFC,$6EFC,$6DFC,$6C00,$6BFC,$6AFC,$69FC,$68FF,$2803,$67FC
+			DC.W  $6FFC,$6EFC,$6DFC,$6C00,$6BFC,$6AFC,$69FC,$68FF,$2803,$67FC
 
-			; DC.W  $66FC,$65FC,$64FC,$63FC,$62FC,$60FC,$3202,$6D00,$000C,$3C0B
+			DC.W  $66FC,$65FC,$64FC,$63FC,$62FC,$60FC,$3202,$6D00,$000C,$3C0B
 
-			; DC.W  $6000,$0004,$3201,$4E71,$5241,$6CFF,$0002,$6A12,$66FC,$65FC
+			DC.W  $6000,$0004,$3201,$4E71,$5241,$6CFF,$0002,$6A12,$66FC,$65FC
 			
-			; DC.W  $64FC,$63FC,$62FC,$60FC,0
+			DC.W  $64FC,$63FC,$62FC,$60FC,0
+
+; SOURCE_C	DC.W $E539,0
+
+; SOURCE_C	DC.W $60FF,$0000,$000A
+; 			DC.W $60FF,$1234,$5678,0
 
 
 	END		START				* last line of source
