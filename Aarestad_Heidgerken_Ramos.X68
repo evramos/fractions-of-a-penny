@@ -273,11 +273,39 @@ D_8_BIT		MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			ADD.L A0,D2
 
 D_DONE		BSR DISPLAY_HEX	
+			RTS					* Returns from subroutine
+
+
+******************** Display the Size (.B .W .L) Subroutine ********************
+
+DISPLAY_SIZE:
+
+			MOVE.B #14,D0		* Moving task 14 into Data Register 0
+			TRAP #15			* Display the string at (A1) without CR, LF
+
+			MOVE.W (A0),D1
+			ANDI.B #$C0,D1		0000 0000 1100 0000
+
+			CMPI.B #$C0,D1
+			BNE CHECK_A
 			RTS
 
+CHECK_A 	CMPI.B #$80,D1
+			BNE CHECK_B
 
-*************************** ASd,LSd,Rod  Subroutine ****************************
+			LEA LONG_M,A1		* Loading message '.L' into address register 1
+			BRA CHECK_D
 
+CHECK_B		CMPI.B #$40,D1
+			BNE CHECK_C
+
+			LEA WORD_M,A1		* Loading message '.W' into address register 1
+			BRA CHECK_D
+
+CHECK_C		LEA BYTE_M,A1		* Loading message '.B' into address register 1
+
+CHECK_D		TRAP #15			* Display the string at (A1) without CR, LF
+			RTS					* Returns from subroutine
 
 
 ******************************* DATA Subroutine ********************************
@@ -429,43 +457,37 @@ EA_TYPE6 	MOVE.B 	#%00001110, D3	;move data maskinto D3
 *- 000 ROL ---------------------- Rotate Left ----------------------------------
 
 ROL_T		LEA ROL_M,A1
-			MOVE.B #14,D0		* Moving task 14 into Data Register 0
-			TRAP #15			* Display the string at (A1) without CR, LF
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 001 LSL ------------------- Logical Shift Left ------------------------------
 
 LSL_T		LEA LSL_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 002 ASL ----------------- Arithmetic Shift Left -----------------------------
 
 ASL_T		LEA ASL_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 003 ROR ---------------------- Rotate Right ---------------------------------
 
 ROR_T		LEA ROR_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 004 LSL ------------------ Logical Shift Right ------------------------------
 
 LSR_T		LEA LSR_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 005 ASR ----------------- Arithmetic Shift Right ----------------------------
 
 ASR_T		LEA ASR_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 006 ADDA --------------------- Add Address ----------------------------------
@@ -478,8 +500,7 @@ ADDA_T		LEA ADDA_M,A1
 *- 007 ADD -------------------------- Add --------------------------------------
 
 ADD_T		LEA ADD_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 008 MULS ------------------- Signed Multiply --------------------------------
@@ -492,15 +513,13 @@ MULS_T		LEA MULS_M,A1
 *- 009 CMP ------------------------ Compare ------------------------------------
 
 CMP_T		LEA CMP_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 010 SUB ------------------------ Subtract -----------------------------------
 
 SUB_T		LEA SUB_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 011 DIVS -------------------- Signed Divide ---------------------------------
@@ -513,8 +532,7 @@ DIVS_T		LEA DIVS_M,A1
 *- 012 OR ------------------- Inclusive OR Logical -----------------------------
 
 OR_T		LEA OR_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 013 BLT -------------------- Branch Less Than -------------------------------
@@ -550,8 +568,7 @@ BRA_T		LEA BRA_M,A1 		* Loading the OP name into address register 1
 *- 018 SUBQ -------------------- Subtract Quick --------------------------------
 
 SUBQ_T		LEA SUBQ_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 019 JSR ------------------- Jump to Subroutine ------------------------------
@@ -585,8 +602,7 @@ MOVEM_T		LEA MOVEM_M,A1
 *- 023 NEG ------------------------- Negate ------------------------------------
 
 NEG_T		LEA NEG_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 024 LEA ----------------- Load Effective Address ----------------------------
@@ -634,8 +650,7 @@ MOB_T		LEA MOB_M,A1
 *- 030 CMPI ------------------ Compare Immediate -------------------------------
 
 CMPI_T		LEA CMPI_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 031 BCLR ----------------- Test a Bit and Clear -----------------------------
@@ -648,8 +663,7 @@ BCLR_T		LEA BCLR_M,A1
 *- 032 ORI ----------------- Inclusive OR Immediate ----------------------------
 
 ORI_T		LEA ORI_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 
@@ -665,9 +679,9 @@ NEWLINE_M	DC.B  CR,LF,0
 POSITION 	DC.W  $0000
 SAVE_STATE	DS.L  1    
 
-; Byte_M		DC.B  '.B ',0
-; Word_M		DC.B  '.W ',0
-; Long_M		DC.B  '.L ',0
+BYTE_M		DC.B  '.B',0
+WORD_M		DC.B  '.W',0
+LONG_M		DC.B  '.L',0
 
 ROL_M		DC.B	'ROL',0		* Tested	0xE118
 LSL_M		DC.B	'LSL',0		* Tested	0xE108
@@ -719,31 +733,51 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 			DC.W $0C00,$01C0,$0000
 
 *--------------------------------- Source Code ---------------------------------
-SOURCE_C    * DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$303C,$4E75
-;				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   MOVE.W RTS
-			DC.W  $66FC,$EE45,$6CFF,$0002,$6A12,$E6AA,$E439,$2646,$EF45,$62FC
-;				   DATA  ASR   BGE   DATA  DATA  LSR   ROR   MOVEA ASL   DATA
-			DC.W  $E539,$60AA,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$AAAA,0
-;				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  ERROR
+; SOURCE_C     DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$303C,$4E75
+; ;				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   MOVE.W RTS
+; 			DC.W  $66FC,$EE45,$6CFF,$0002,$6A12,$E6AA,$E439,$2646,$EF45,$62FC
+; ;				   DATA  ASR   BGE   DATA  DATA  LSR   ROR   MOVEA ASL   DATA
+; 			DC.W  $E539,$60AA,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$AAAA,0
+; ;				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  ERROR
 
 **** Displacement TESTING - REMOVE WHEN DONE ****
-			DC.W  $4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA
+SOURCE_C	DC.W  $4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA
 
-			DC.W  $6FFC,$6EFC,$6DFC,$6C00,$6BFC,$6AFC,$69FC,$68FF,$2803,$67FC
+; 			DC.W  $6FFC,$6EFC,$6DFC,$6C00,$6BFC,$6AFC,$69FC,$68FF,$2803,$67FC
 
-			DC.W  $66FC,$65FC,$64FC,$63FC,$62FC,$60FC,$3202,$6D00,$000C,$3C0B
+			; DC.W  $66FC,$65FC,$64FC,$63FC,$62FC,$60FC,$3202,$6D00,$000C,$3C0B
 
 			DC.W  $6000,$0004,$3201,$4E71,$5241,$6CFF,$0002,$6A12,$66FC,$65FC
 			
-			DC.W  $64FC,$63FC,$62FC,$60FC,0
+; 			DC.W  $64FC,$63FC,$62FC,$60FC,0
 
 ; SOURCE_C	DC.W $E539,0
 
-; SOURCE_C	DC.W $60FF,$0000,$000A
-; 			DC.W $60FF,$1234,$5678,0
+; SOURCE_C	DC.W $60FF,$0000,$000A	BRA
+; 			DC.W $60FF,$1234,$5678	BRA
+
+; SOURCE_C	DC.W $E118	ROL.B
+; 			DC.W $E158	ROL.W
+; 			DC.W $E198	ROL.L
+; 			DC.W $E1D8	ROL
+
+; 			DC.W $E018	LOL.B
+; 			DC.W $E058	LOL.W
+; 			DC.W $E098	LOL.L
+; 			DC.W $E0D8	LOL	
+
+; 			DC.W $E110	LSL.B
+; 			DC.W $E150	LSL.W
+; 			DC.W $E190	LSL.L
+; 			DC.W $E1D0	LSL
+
+; 			DC.W 0
 
 
 	END		START				* last line of source
+
+
+
 
 
 
