@@ -41,6 +41,12 @@ BITMASK3	EQU   $0007
 
 			ORG    START		* Program begins here
 
+			LEA SOURCE_C,A2		* Loading the source into address register A2
+
+NEXT_SOURCE	MOVEA.L (A2)+,A0		*******  TESTING BETA  ******
+
+			MOVE.L A2,SOURCE_LIST
+
 			LEA LINE,A1
 			MOVE.B #14,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
@@ -59,18 +65,37 @@ BITMASK3	EQU   $0007
 
 			ADDQ.W #3,POSITION  *** IMPORTANT: Shifts the row position by 3 ***
 
-
-			LEA SOURCE_C,A0		* Load the source code into address register 0
-
 			BSR INIT_OP			* Hunts down each Operation code like a mad man
 
 			LEA LINE,A1
 			MOVE.B #14,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
+			MOVE.B #13,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
+
+			LEA PRESS_ANY,A1
+			MOVE.B #14,D0		* Move task 13 into Data Register 0
+			TRAP #15			* Display the string at (A1) without CR, LF.
+
+
+			MOVE.B #5,D0		*******  TESTING BETA  ******
+			TRAP #15			*******  TESTING BETA  ******
+
+			MOVE.L SOURCE_LIST,A2
+
+			TST.L (A2)			*******  TESTING BETA  ******
+			BEQ END_PROGRAM		*******  TESTING BETA  ******
+
+			MOVE.B #11,D0 		* Moving task 11 into Data Register 0
+			MOVE.W #$FF00,D1	* Clear Screen : Set D1.W to $FF00
+			TRAP #15
 
 			CLR.W POSITION			*** TEST - RESET POSITION ***
 
+			BRA NEXT_SOURCE
+
+END_PROGRAM
+			CLR.W POSITION			*** TEST - RESET POSITION ***
 			STOP #EXIT			* Halt Simulator
 
 
@@ -81,8 +106,14 @@ INIT_OP		* Resets the list of bitmasks & english to the begining
 
 *----------- Displaying the current address as a hexadecimal value -------------
 
-			MOVE.W A0,D2		* Moving the current 16-bits address into D2
+			MOVE.L A0,D2		* Moving the current 16-bits address into D2
+			
+			; SWAP D2
+			; BSR DISPLAY_HEX
+
+			; SWAP D2
 			BSR DISPLAY_HEX
+
 
 			LEA BITMASK,A2		* Load the bitmask list into address register 2
 			LEA TASK_OP,A3		* Load the OP task list into address register 3
@@ -101,6 +132,8 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 			TRAP #15			* Position the cursor at [0Axx] x - any number
 
 			MOVE.L A0,SAVE_STATE	******  TESTING BETA  ******
+
+			MOVE.B (A0),D7 		 ***** Saving current instruction in D7 *****
 
 *-------- Retrieve matched then execute task by jumping to subroutine ----------
 
@@ -251,8 +284,11 @@ D_32_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 			
 			ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
+
+			SUBQ.L #4,D2
+			ADD.L A0,D2
+
 			SWAP D2
-			; ADD.W A0,D2
 
 			BSR DISPLAY_HEX
 			SWAP D2
@@ -671,13 +707,15 @@ ORI_T		LEA ORI_M,A1
 
 HEADER		DC.B	'Address   OP-Code	  Operand      			 Instruction', 0
 LINE 		DC.B 	'----------------------------------------',0
+PRESS_ANY   DC.B 	'  press ANY key to continue...',0
 INIT_HEX	DC.B	'0x',0
 INIT_MEM	DC.B	'$',0
 DATA_M		DC.B	'DATA ',0
 NEWLINE_M	DC.B  CR,LF,0
 
 POSITION 	DC.W  $0000
-SAVE_STATE	DS.L  1    
+SAVE_STATE	DS.L  1
+SOURCE_LIST DS.L  1   
 
 BYTE_M		DC.B  '.B',0
 WORD_M		DC.B  '.W',0
@@ -733,52 +771,81 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 			DC.W $0C00,$01C0,$0000
 
 *--------------------------------- Source Code ---------------------------------
-; SOURCE_C     DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$303C,$4E75
-; ;				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   MOVE.W RTS
-; 			DC.W  $66FC,$EE45,$6CFF,$0002,$6A12,$E6AA,$E439,$2646,$EF45,$62FC
-; ;				   DATA  ASR   BGE   DATA  DATA  LSR   ROR   MOVEA ASL   DATA
-; 			DC.W  $E539,$60AA,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$AAAA,0
-; ;				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  ERROR
+
+SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,0
+
+
+SOURCE_1	DC.W $4E75				RTS
+			DC.W $D6C7				ADDA
+			DC.W $4EB8				JSR
+			DC.W $4487				NEG.L
+			DC.W $D5C2				ADDA
+			DC.W $4E71				NOP
+			DC.W $4EB9				JSR
+			DC.W $D280				ADD.L
+			DC.W $303C				MOVE.W
+			DC.W $4E75				RTS
+			DC.W 0
+
+SOURCE_2	DC.W $66FC				DATA
+			DC.W $EE45				ASR.W
+			DC.W $6CFF,$0002,$6A12	BGE
+			DC.W $E6AA				LSR.L
+			DC.W $E439				ROR.B
+			DC.W $2646				MOVEA.L
+			DC.W $EF45				ASL.W
+			DC.W $62FC				DATA
+			DC.W $E539				ROL.B
+			DC.W $60AA				BRA
+			DC.W $EF45				ASL.W
+			DC.W $68CD				BVC
+			DC.W $BBBB				ERROR (CMP.L)
+			DC.W $E6AA				LSR.L
+			DC.W $EE45				ASR.W
+			DC.W $85C3				DIVS
+			DC.W $AAAA				ERROR (OR.L)
+			DC.W 0
 
 **** Displacement TESTING - REMOVE WHEN DONE ****
-SOURCE_C	DC.W  $4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA
 
-; 			DC.W  $6FFC,$6EFC,$6DFC,$6C00,$6BFC,$6AFC,$69FC,$68FF,$2803,$67FC
-
-			; DC.W  $66FC,$65FC,$64FC,$63FC,$62FC,$60FC,$3202,$6D00,$000C,$3C0B
-
-			DC.W  $6000,$0004,$3201,$4E71,$5241,$6CFF,$0002,$6A12,$66FC,$65FC
+SOURCE_3	DC.W $6FFC				BLE	1111
+			DC.W $6EFC				BGT	1110
+			DC.W $6DFC				BLT	1101
+			DC.W $6C00,$0004		BGE	1100
+			DC.W $6BFC				BMI	1011
+			DC.W $6AFC				BPL	1010
+			DC.W $69FC				BVS	1001
+			DC.W $68FF,$2803,$3201	BVC	1000
+			DC.W $67FC				BEQ	0111
+			DC.W $66FC				BNE	0110
+			DC.W $65FC				BCS	0101
+			DC.W $64FC				BCC	0100
+			DC.W $63FC				BLS	0011
+			DC.W $62FC				BHI	0010
+			DC.W $60FC				BRA
+			DC.W $60FF,$0000,$000A	BRA
+			DC.W $60FF,$1234,$5678	BRA
+			DC.W 0
 			
-; 			DC.W  $64FC,$63FC,$62FC,$60FC,0
+**** Size BYTE,WORD,LONG TESTING - REMOVE WHEN DONE ****
 
-; SOURCE_C	DC.W $E539,0
+SOURCE_4	DC.W $E118				ROL.B
+			DC.W $E158				ROL.W
+			DC.W $E198				ROL.L
+			DC.W $E1D8				ROL
 
-; SOURCE_C	DC.W $60FF,$0000,$000A	BRA
-; 			DC.W $60FF,$1234,$5678	BRA
+			DC.W $E018				LOL.B
+			DC.W $E058				LOL.W
+			DC.W $E098				LOL.L
+			DC.W $E0D8				LOL	
 
-; SOURCE_C	DC.W $E118	ROL.B
-; 			DC.W $E158	ROL.W
-; 			DC.W $E198	ROL.L
-; 			DC.W $E1D8	ROL
-
-; 			DC.W $E018	LOL.B
-; 			DC.W $E058	LOL.W
-; 			DC.W $E098	LOL.L
-; 			DC.W $E0D8	LOL	
-
-; 			DC.W $E110	LSL.B
-; 			DC.W $E150	LSL.W
-; 			DC.W $E190	LSL.L
-; 			DC.W $E1D0	LSL
-
-; 			DC.W 0
-
+			DC.W $E110				LSL.B
+			DC.W $E150				LSL.W
+			DC.W $E190				LSL.L
+			DC.W $E1D0				LSL
+			DC.W 0
 
 	END		START				* last line of source
-
-
-
-
 
 
 
