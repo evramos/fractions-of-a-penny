@@ -156,11 +156,11 @@ SHIFT_OP	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 
 			MOVE.W POSITION,D0		******  TESTING BETA  ******
 			CMPI.B #$1F,D0			******  TESTING BETA  ******
-			BEQ PASS_CHECK			******  TESTING BETA  ******
+			BEQ POSI_CHECK		******  TESTING BETA  ******
 
 			ADDQ.W #1,POSITION  *** IMPORTANT: Shifts the row position by 1 ***
 
-PASS_CHECK	TST.W (A0)			* See if you reached the end of the instructions
+POSI_CHECK	TST.W (A0)			* See if you reached the end of the instructions
 			BNE INIT_OP			* (!=) Resets the bitmask & OP task lists
 			RTS					* Returns from subroutine
 
