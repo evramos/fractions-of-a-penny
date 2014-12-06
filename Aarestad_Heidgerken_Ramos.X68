@@ -88,7 +88,10 @@ NEXT_SOURCE	MOVEA.L (A2)+,A0		*******  TESTING BETA  ******
 
 *---------------------------- Displaying to output -----------------------------
 
+<<<<<<< HEAD
 >>>>>>> origin/Davids
+=======
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 			LEA LINE,A1
 			MOVE.B #14,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
@@ -120,9 +123,13 @@ NEXT_SOURCE	MOVEA.L (A2)+,A0		*******  TESTING BETA  ******
 			TRAP #15			* Display the string at (A1) without CR, LF.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 *------------------------ Press ANY key to continue to -------------------------
 >>>>>>> origin/Davids
+=======
+*------------------------ Press ANY key to continue to -------------------------
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 
 			MOVE.B #5,D0		*******  TESTING BETA  ******
 			TRAP #15			*******  TESTING BETA  ******
@@ -141,11 +148,15 @@ NEXT_SOURCE	MOVEA.L (A2)+,A0		*******  TESTING BETA  ******
 			BRA NEXT_SOURCE
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 END_PROGRAM
 			CLR.W POSITION			*** TEST - RESET POSITION ***
 =======
 END_PROGRAM	CLR.W POSITION			*** TEST - RESET POSITION ***
 >>>>>>> origin/Davids
+=======
+END_PROGRAM	CLR.W POSITION			*** TEST - RESET POSITION ***
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 			STOP #EXIT			* Halt Simulator
 
 
@@ -153,6 +164,7 @@ END_PROGRAM	CLR.W POSITION			*** TEST - RESET POSITION ***
 
 INIT_OP		* Resets the list of bitmasks & english to the begining
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 *----------- Displaying the current address as a hexadecimal value -------------
@@ -171,6 +183,12 @@ INIT_OP		* Resets the list of bitmasks & english to the begining
 			MOVE.L A0,D2		* Moving the current 16-bits address into D2
 			BSR DISPLAY_LONG_HEX
 >>>>>>> origin/Davids
+=======
+*----------- Displaying the current address as a hexadecimal value -------------
+
+			MOVE.L A0,D2		* Moving the current 16-bits address into D2
+			BSR DISPLAY_LONG_HEX
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 
 			LEA BITMASK,A2		* Load the bitmask list into address register 2
 			LEA TASK_OP,A3		* Load the OP task list into address register 3
@@ -191,10 +209,14 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 			MOVE.L A0,SAVE_STATE	******  TESTING BETA  ******
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 			MOVE.B (A0),D7 		 ***** Saving current instruction in D7 *****
 =======
 			MOVE.W (A0),D7 		 ***** Saving current instruction in D7 *****
 >>>>>>> origin/Davids
+=======
+			MOVE.W (A0),D7 		 ***** Saving current instruction in D7 *****
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 
 *-------- Retrieve matched then execute task by jumping to subroutine ----------
 
@@ -218,6 +240,7 @@ SHIFT_OP	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 			MOVE.W POSITION,D0		******  TESTING BETA  ******
 			CMPI.B #$1F,D0			******  TESTING BETA  ******
 <<<<<<< HEAD
+<<<<<<< HEAD
 			BEQ PASS_CHECK			******  TESTING BETA  ******
 
 			ADDQ.W #1,POSITION  *** IMPORTANT: Shifts the row position by 1 ***
@@ -230,6 +253,13 @@ PASS_CHECK	TST.W (A0)			* See if you reached the end of the instructions
 
 POSI_CHECK	TST.W (A0)			* See if you reached the end of the instructions
 >>>>>>> origin/Davids
+=======
+			BEQ POSI_CHECK			******  TESTING BETA  ******
+
+			ADDQ.W #1,POSITION  *** IMPORTANT: Shifts the row position by 1 ***
+
+POSI_CHECK	TST.W (A0)			* See if you reached the end of the instructions
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 			BNE INIT_OP			* (!=) Resets the bitmask & OP task lists
 			RTS					* Returns from subroutine
 
@@ -244,9 +274,12 @@ DISPLAY_INTRUCTION:
 
 			MOVE.W (A4)+,D2		* Reloads the orignal 16-bits as a temp again
 <<<<<<< HEAD
+<<<<<<< HEAD
 			BSR DISPLAY_0x0		* Display the current 16-bits in Hexadecimal
 	
 =======
+=======
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 
 
 
@@ -264,7 +297,10 @@ DISPLAY_INTRUCTION:
 			TRAP #15			* Display the string at (A1) without CR, LF
 
 			BSR DISPLAY_WORD_HEX
+<<<<<<< HEAD
 >>>>>>> origin/Davids
+=======
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 
 CHECK_VALUE	CMP.W (A0),D2			******  TESTING BETA  ******
 			BEQ NEWLINE				******  TESTING BETA  ******
@@ -275,10 +311,14 @@ CHECK_VALUE	CMP.W (A0),D2			******  TESTING BETA  ******
 
 			MOVE.W (A4)+,D2			******  TESTING BETA  ******
 <<<<<<< HEAD
+<<<<<<< HEAD
 			BSR DISPLAY_HEX			******  TESTING BETA  ******
 =======
 			BSR DISPLAY_WORD_HEX	******  TESTING BETA  ******
 >>>>>>> origin/Davids
+=======
+			BSR DISPLAY_WORD_HEX	******  TESTING BETA  ******
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 			BRA CHECK_VALUE			******  TESTING BETA  ******
 
 NEWLINE		LEA NEWLINE_M,A1	* Loading NEWLINE into (A1) for next instruction
@@ -294,6 +334,7 @@ NEWLINE		LEA NEWLINE_M,A1	* Loading NEWLINE into (A1) for next instruction
 *** IMPORTANT *** Load the value that you wish to display in hexadecimal in D2
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 DISPLAY_0x0:
 
 *----------------- Moving the cursor to the desired location -------------------
@@ -302,39 +343,62 @@ DISPLAY_0x0:
 			MOVE.W POSITION,D1  * Setting up the desired row position
 			ADDI #$3500,D1		* Setting up the desired column position
 			TRAP #15			* Position the cursor at [2Cxx] x - any number
+=======
+DISPLAY_LONG_HEX:
 
-			ADDI #$0200,D1			******  TESTING BETA  ******
+			ROL.L #4,D2
+			BSR INTI_LOOP
+			ROL.L #4,D2	
+			BSR INTI_LOOP
+			ROL.L #4,D2	
+			BSR INTI_LOOP
+			ROL.L #4,D2	
+			BSR INTI_LOOP
+			ROL.L #4,D2	
+			BSR INTI_LOOP
+			ROL.L #4,D2
+			BSR INTI_LOOP
+			ROL.L #4,D2
+			BSR INTI_LOOP
+			ROL.L #4,D2
+			BSR INTI_LOOP
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 
-			LEA INIT_HEX,A1
-			MOVE.B #14,D0		* Moving task 14 into Data Register 0
-			TRAP #15			* Display the string at (A1) without CR, LF
+			RTS
 
-DISPLAY_HEX LEA HEX_BITMASK,A2
-			LEA HEX_VALUE,A3
+DISPLAY_WORD_HEX:
+			
+			MOVE.W D1,D3 		* Saves the current position into D3 for later
 
 			ROL #4,D2			* Shifts to read the next hexadecimal digit
-			BSR LOOP_HEX		* Branch towards the loop of hex thingy
+			BSR INTI_LOOP		* Branch towards the loop of hex thingy
 
 			ROL #4,D2 			* I HATE THIS, SO MUCH REPEATING CODE
-			BSR LOOP_HEX		* I TRIED EVERYTHING WITHOUT USING ANOTHER
+			BSR INTI_LOOP		* I TRIED EVERYTHING WITHOUT USING ANOTHER
 			ROL #4,D2 			* DATA REGISTER. THAT IS SUCH A WASTE... GOSH
-			BSR LOOP_HEX		* SO I'M GOING TO LEAVE THIS HERE, BECUASE I 
+			BSR INTI_LOOP		* SO I'M GOING TO LEAVE THIS HERE, BECUASE I 
 			ROL #4,D2 			* REALLY DON"T CARE. TOO MUCH TIME WAS WASTED
-			BSR LOOP_HEX		* ANNND YES!! NO MORE BAD CODE (IT WORKS DEAL)
+			BSR INTI_LOOP		* ANNND YES!! NO MORE BAD CODE (IT WORKS DEAL)
 
+			MOVE.W D3,D1 		* Move the saved position from D1 before display
 			RTS					* Returns from subroutine
 
-LOOP_HEX	MOVE.W D2,D3		* Move the current 16-bits into data register 3
-			AND.W (A2),D3		* AND the current bitmask with temp instruction
-			CMP.W (A2),D3		* Compares the current bitmask in (A2) with D3
-			BNE NEXT_HEX
+*----------------- Heart of the hexadecimal display Algorithm ------------------
 
-			LEA (A3),A1
-			MOVE.B #14,D0		* Moving task 14 into Data Register 0
-			TRAP #15			* Display the string at (A1) without CR, LF
+INTI_LOOP	MOVE.W D2,D1		* Move the current 16-bits into data register 3
 
-			LEA HEX_BITMASK,A2
+			ANDI.W #$000F,D1
+			CMPI.B #9,D1
+			BGT	PRINT_HEX
+			
+			MOVE.B #3,D0		* Display signed number in D1.L in decimal
+			TRAP #15
+
+			RTS
+
+PRINT_HEX	LEA HEX_BITMASK,A2
 			LEA HEX_VALUE,A3
+<<<<<<< HEAD
 =======
 DISPLAY_LONG_HEX:
 
@@ -389,6 +453,8 @@ INTI_LOOP	MOVE.W D2,D1		* Move the current 16-bits into data register 3
 
 PRINT_HEX	LEA HEX_BITMASK,A2
 			LEA HEX_VALUE,A3
+=======
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 
 LOOP_HEX	MOVE.B D1,D0
 			AND.W (A2),D0		* AND the current bitmask with temp instruction
@@ -398,7 +464,10 @@ LOOP_HEX	MOVE.B D1,D0
 			LEA (A3),A1 		* Loads the correct hex value to be printed
 			MOVE.W #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
+<<<<<<< HEAD
 >>>>>>> origin/Davids
+=======
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 			RTS					* Returns from subroutine
 
 NEXT_HEX	ADDA.W #WORD,A2		* Shifts to the next binary
@@ -406,12 +475,17 @@ NEXT_HEX	ADDA.W #WORD,A2		* Shifts to the next binary
 			BRA LOOP_HEX		* Go back to LOOP and test the new bitmask
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 HEX_BITMASK	DC.W $F,$E,$D,$C,$B,$A,$9,$8,$7,$6,$5,$4,$3,$2,$1,$0
 HEX_VALUE	DC.W 'F','E','D','C','B','A','9','8','7','6','5','4','3','2','1','0'
 =======
 HEX_BITMASK	DC.W $F,$E,$D,$C,$B,$A
 HEX_VALUE   DC.W 'F','E','D','C','B','A'
 >>>>>>> origin/Davids
+=======
+HEX_BITMASK	DC.W $F,$E,$D,$C,$B,$A
+HEX_VALUE   DC.W 'F','E','D','C','B','A'
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 
 
 ************************ 8-Bit Displacement Subroutine *************************
@@ -425,10 +499,14 @@ DISPLACEMENT:
 			ANDI.W #$FF00,D2
 			CMP.W (A2),D2
 <<<<<<< HEAD
+<<<<<<< HEAD
 			BNE  DISPLAY_DATA
 =======
 			BNE  DISPLAY_ERROR
 >>>>>>> origin/Davids
+=======
+			BNE  DISPLAY_ERROR
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 
 *---------- PRINT OP: Prints the pre-loaded OP message to the output -----------
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
@@ -436,11 +514,16 @@ DISPLACEMENT:
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 *--- 8-bits 16-bits 32-bits ---*
 =======
 *----------------------- Display 8-bits 16-bits 32-bits ------------------------
 
 >>>>>>> origin/Davids
+=======
+*----------------------- Display 8-bits 16-bits 32-bits ------------------------
+
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			TST.B D2
 			BEQ D_16_BIT
@@ -461,6 +544,7 @@ D_32_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 			ADD.L A0,D2
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 			SWAP D2
 
 			BSR DISPLAY_HEX
@@ -472,10 +556,15 @@ D_32_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 			BSR DISPLAY_LONG_HEX
 			RTS
 >>>>>>> origin/Davids
+=======
+			BSR DISPLAY_LONG_HEX
+			RTS
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 
 D_16_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			ADD.W A0,D2
+<<<<<<< HEAD
 <<<<<<< HEAD
 			BRA D_DONE			
 
@@ -483,6 +572,10 @@ D_16_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 			BSR DISPLAY_WORD_HEX
 			RTS	
 >>>>>>> origin/Davids
+=======
+			BSR DISPLAY_WORD_HEX
+			RTS	
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 
 D_8_BIT		MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			AND.W #BITMASK8,D2
@@ -490,11 +583,15 @@ D_8_BIT		MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			ORI.L #$FFFFFF00,D2
 			ADD.L A0,D2
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 D_DONE		BSR DISPLAY_HEX	
 =======
 			BSR DISPLAY_WORD_HEX	
 >>>>>>> origin/Davids
+=======
+			BSR DISPLAY_WORD_HEX	
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 			RTS					* Returns from subroutine
 
 
@@ -535,6 +632,7 @@ CHECK_D		TRAP #15			* Display the string at (A1) without CR, LF
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 ******************************* DATA Subroutine ********************************
 *1000	DATA	$WXYZ
 *
@@ -546,6 +644,12 @@ DISPLAY_DATA:
 *
 DISPLAY_ERROR:
 >>>>>>> origin/Davids
+=======
+************************ DISPLAY ERROR DATA Subroutine *************************
+*1000	DATA	$WXYZ
+*
+DISPLAY_ERROR:
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 			LEA DATA_M,A1
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
@@ -556,10 +660,14 @@ DISPLAY_ERROR:
 
 			MOVE.W (A0),D2
 <<<<<<< HEAD
+<<<<<<< HEAD
 			BSR DISPLAY_HEX	
 =======
 			BSR DISPLAY_WORD_HEX	
 >>>>>>> origin/Davids
+=======
+			BSR DISPLAY_WORD_HEX	
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 			RTS
 
 
@@ -567,10 +675,14 @@ DISPLAY_ERROR:
 *-------------------------------------------------------------------------------
 * Type 1 mode xxxx xxxx ssoo oorrr
 <<<<<<< HEAD
+<<<<<<< HEAD
 * SubRoutine for handling One Operand addressing looking for a mode and register
 =======
 * SubRoutine for handling One Operand addressing looking for a mode and register 
 >>>>>>> origin/Davids
+=======
+* Subroutine for handling One Operand addressing looking for a mode and register
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 * value
 * Written by: David Heidgerken
 * Description.  16 bit Instruction will be passed to subroutine via D7
@@ -578,15 +690,98 @@ DISPLAY_ERROR:
 * D6 used for Register value, D5 is mode D4 is the Size
 <<<<<<< HEAD
 *-------------------------------------------------------------------------------
-EA_TYPE1	MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
+EA_TYPE1:
+			MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
 			MOVE.B	#%00000111, D5	;move primative 3 bitmask into D4
 			LSL.W	#3,D5			;shift mask in D5 left 3 times
 			MOVE.W  #%11000000, D4	;move size mask into D4
 
+			
 			AND.W	D7,D6			;and D7 and D6 store in D6 Register
 			AND.W	D7,D5			;and D7 and D5 store in D5 Mode
 			AND.W	D7,D4			;and D7 and D4 store in D4 Size
+			
+			MOVE.L	D4,D1			;load sizeinto D1
+			
+			CMP.B	#3,D1			;siz of %11(3) is invalid
+			BEQ		INV_SIZE		;branch to invalid size block
+			
+			BSR		DISPLAY_SIZE	;send to display size subr
+			
+			CMP.B 	#0, D5			;compare mode with 0
+			BEQ		D_MODE			;branch to Data reg mode
+			
+			CMP.B	#1, D5			;compare mode with 1
+			BEQ		A_MODE			;branch to Address reg mode
+			
+			CMP.B	#2, D5			;compare mode with #2
+			BEQ		IND_MODE		;branch to indirect Mode (Ax)
 
+			CMP.B	#3, D5			;compare mode with 3
+			BEQ		PI_MODE			; branch tp post incrementmodebr
+			
+			CMP.B	#4, D5			;compare mode with 4
+			BEQ		PD_MODE			;branchto Post decrement mode
+			
+			CMP.B	#5, D5			; compare mode with 5 (not implemented)
+			BEQ		INV_MODE		;brancht invalid mode
+			
+			CMP.B	#6, D5			; compare mode to 6 (not implemented)
+			BEQ		INV_MODE		;brancht invalid mode
+
+			CMP.B	#7, D5			; compare mode with 7
+			BEQ		DATA_MODE		; branc to data modes
+			
+INV_SIZE	BSR		DISPLAY_ERROR	;display error	
+			BRA		break			;break from type subroutine
+			
+INV_MODE	BSR		DISPLAY_ERROR	;display error
+			BRA		break			;break from type subroutine
+			
+D_MODE		MOVE.B	D6,D1			;move reg value to D1
+			BSR		DISPLAY_DATAREG	;send to data register display subr  ********
+			BRA		break			;break
+
+A_MODE		BRA		INV_MODE		;invalid mode for this type
+
+IND_MODE	MOVE.B	D6,D1			;move reg value to D1
+			BSR		DISPLAY_INDIR	;send to data register indirect subr  ********
+			BRA		break			;break
+			
+PI_MODE		MOVE.B	D6,D1			;move reg value to D1
+			BSR		DISPLAY_POSTINC	;send to POSTINCR display sub  ********
+			BRA		break			;break
+			
+PD_MODE		MOVE.B	D6,D1			;move reg value to D1
+			BSR		DISPLAY_PREDEC	;send to data PREDEC display sub  ********
+			BRA		break			;break
+			
+DATA_MODE	CMP.B	#0,D6			; compare register to 000
+			BEQ		worddata		;branch to word data
+			
+			CMP.B	#1, D6			;compare register to 1
+			BEQ		longdata		;branch to long data
+			BGT		INV_MODE		;branch to invalid mode if reg greater than1
+						
+worddata	*BSR		DISPLAY_WORD	;display the .W
+			MOVE.W	(A6), D2		;pull word from datastream
+			ADDA	#WORD, A6		;increment data pointer
+			
+*			BSR		DISPLAY_0x0		; display word in hex
+			BRA		break			; break from sub
+
+longdata	*BSR		DISPLAY_LONG	;display the .L
+			MOVE.L	(A6), D2		;pull long from datastream into D2
+			ADDA	#WORD, A6		;increment data pointer
+			ADDA	#WORD, A6
+			
+*			BSR		DISPLAY_0x0		; display long in hex
+			BRA		break			; break from sub
+
+		
+break			RTS					;return to calling instruction
+
+<<<<<<< HEAD
 			; BSR						;return to calling instruction
 =======
 *-----------------------------------------------------------------------------
@@ -679,6 +874,8 @@ EA_TYPE1:
 .break			RTS					;return to calling instruction
 
 >>>>>>> origin/Davids
+=======
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 
 *-------------------------------------------------------------------------------
 * Type 2 xxxx xxxx dddd dddd
@@ -936,8 +1133,11 @@ MOVEM_T		LEA MOVEM_M,A1
 
 NEG_T		LEA NEG_M,A1
 <<<<<<< HEAD
+<<<<<<< HEAD
 			BSR DISPLAY_SIZE
 =======
+=======
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 
 
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
@@ -948,7 +1148,10 @@ NEG_T		LEA NEG_M,A1
 			BSR DISPLAY_SIZE
 
 			; BSR EA_TYPE1
+<<<<<<< HEAD
 >>>>>>> origin/Davids
+=======
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 			RTS
 
 *- 024 LEA ----------------- Load Effective Address ----------------------------
@@ -1022,7 +1225,10 @@ INIT_HEX	DC.B	'0x',0
 INIT_MEM	DC.B	'$',0
 DATA_M		DC.B	'DATA ',0
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 BYTE_M		DC.B  	'.B',0
 WORD_M		DC.B  	'.W',0
 LONG_M		DC.B  	'.L',0
@@ -1037,7 +1243,10 @@ DISPLAY_PREDEC  DC.B '-(Ax)',0
 ; DISPLAY_LONG - displays 32 bits of data, maybe just a wrapper for DISPLAY_0x0?
 ; DISPLAY_REGS - for use in MOVEM where we need to display a / delimited list of Registers and ranges of registers.
 
+<<<<<<< HEAD
 >>>>>>> origin/Davids
+=======
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 NEWLINE_M	DC.B  CR,LF,0
 
 POSITION 	DC.W  $0000
@@ -1045,12 +1254,15 @@ SAVE_STATE	DS.L  1
 SOURCE_LIST DS.L  1   
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 BYTE_M		DC.B  '.B',0
 WORD_M		DC.B  '.W',0
 LONG_M		DC.B  '.L',0
 
 =======
 >>>>>>> origin/Davids
+=======
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 ROL_M		DC.B	'ROL',0		* Tested	0xE118
 LSL_M		DC.B	'LSL',0		* Tested	0xE108
 ASL_M		DC.B	'ASL',0		* Tested	0xE100
@@ -1103,8 +1315,11 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 *--------------------------------- Source Code ---------------------------------
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,0
 =======
+=======
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 ; SOURCE_C	DC.L  TEST_1,0
 
 ; TEST_1		DC.W $4400
@@ -1114,7 +1329,10 @@ SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,0
 
 
 SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
+<<<<<<< HEAD
 >>>>>>> origin/Davids
+=======
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 
 
 SOURCE_1	DC.W $4E75				RTS
@@ -1188,7 +1406,10 @@ SOURCE_4	DC.W $E118				ROL.B
 			DC.W 0
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 SOURCE_5	DC.W $4E71
 			DC.W $6DFC
 			DC.W $6CFC
@@ -1197,7 +1418,10 @@ SOURCE_5	DC.W $4E71
 			DC.W $60FC
 			DC.W 0
 
+<<<<<<< HEAD
 >>>>>>> origin/Davids
+=======
+>>>>>>> 1365dcd85c6c0b045d7396a521bc57c06a26300d
 	END		START				* last line of source
 
 
