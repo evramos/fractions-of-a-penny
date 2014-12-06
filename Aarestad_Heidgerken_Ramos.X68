@@ -371,9 +371,10 @@ DISPLAY_ERROR:
 * and will parse it to find which address mode and location is being used.
 * D6 used for Register value, D5 is mode D4 is the Size
 *-------------------------------------------------------------------------------
-EA_TYPE1	MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
+EA_TYPE1:
+			MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
 			MOVE.B	#%00000111, D5	;move primative 3 bitmask into D4
-			LSL.W	#3,D5			;shift mask in D5 left 3 times
+			LSL.W	3,D5			;shift mask in D5 left 3 times
 			MOVE.W  #%11000000, D4	;move size mask into D4
 
 			
@@ -384,82 +385,82 @@ EA_TYPE1	MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3
 			MOVE.L	D4,D1			;load sizeinto D1
 			
 			CMP.B	#3,D1			;siz of %11(3) is invalid
-			BEQ		1INV_SIZE		;branch to invalid size block
+			BEQ		INV_SIZE		;branch to invalid size block
 			
 			BSR		DISPLAY_SIZE	;send to display size subr
 			
 			CMP.B 	#0, D5			;compare mode with 0
-			BEQ		1D_MODE			;branch to Data reg mode
+			BEQ		D_MODE			;branch to Data reg mode
 			
 			CMP.B	#1, D5			;compare mode with 1
-			BEQ		1A_MODE			;branch to Address reg mode
+			BEQ		A_MODE			;branch to Address reg mode
 			
 			CMP.B	#2, D5			;compare mode with #2
-			BEQ		1IND_MODE		;branch to indirect Mode (Ax)
+			BEQ		IND_MODE		;branch to indirect Mode (Ax)
 
 			CMP.B	#3, D5			;compare mode with 3
-			BEQ		1PI_MODE			; branch tp post incrementmodebr
+			BEQ		PI_MODE			; branch tp post incrementmodebr
 			
 			CMP.B	#4, D5			;compare mode with 4
-			BEQ		1PD_MODE			;branchto Post decrement mode
+			BEQ		PD_MODE			;branchto Post decrement mode
 			
 			CMP.B	#5, D5			; compare mode with 5 (not implemented)
-			BEQ		1INV_MODE		;brancht invalid mode
+			BEQ		INV_MODE		;brancht invalid mode
 			
 			CMP.B	#6, D5			; compare mode to 6 (not implemented)
-			BEQ		1INV_MODE		;brancht invalid mode
+			BEQ		INV_MODE		;brancht invalid mode
 
 			CMP.B	#7, D5			; compare mode with 7
-			BEQ		1DATA_MODE		; branc to data modes
+			BEQ		DATA_MODE		; branc to data modes
 			
-1INV_SIZE	BSR		DISPLAY_ERROR	;display error	
-			BRA		1break			;break from type subroutine
+INV_SIZE	BSR		DISPLAY_ERROR	;display error	
+			BRA		break			;break from type subroutine
 			
-1INV_MODE 	BSR		DISPLAY_ERROR	;display error
-			BRA		1break			;break from type subroutine
+INV_MODE 	BSR		DISPLAY_ERROR	;display error
+			BRA		break			;break from type subroutine
 			
-1D_MODE		MOVE.B	D6,D1			;move reg value to D1
+D_MODE		MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_DATAREG	;send to data register display subr  ********
-			BRA		1break			;break
+			BRA		break			;break
 
-1A_MODE		BRA		INV_MODE		;invalid mode for this type
+A_MODE		BRA		INV_MODE		;invalid mode for this type
 
-1IND_MODE	MOVE.B	D6,D1			;move reg value to D1
+IND_MODE	MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_INDIR	;send to data register indirect subr  ********
-			BRA		1break			;break
+			BRA		break			;break
 			
-1PI_MODE		MOVE.B	D6,D1			;move reg value to D1
+PI_MODE		MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_POSTINC	;send to POSTINCR display sub  ********
-			BRA		1break			;break
+			BRA		break			;break
 			
-1PD_MODE		MOVE.B	D6,D1			;move reg value to D1
+PD_MODE		MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_PREDEC	;send to data PREDEC display sub  ********
-			BRA		1break			;break
+			BRA		break			;break
 			
-1DATA_MODE	CMP.B	#0,D6			; compare register to 000
-			BEQ		1worddata		;branch to word data
+DATA_MODE	CMP.B	#0,D6			; compare register to 000
+			BEQ		worddata		;branch to word data
 			
 			CMP.B	#1, D6			;compare register to 1
-			BEQ		1longdata		;branch to long data
-			BGT		1INV_MODE		;branch to invalid mode if reg greater than1
+			BEQ		longdata		;branch to long data
+			BGT		INV_MODE		;branch to invalid mode if reg greater than1
 						
-1worddata	BSR		DISPLAY_WORD	;display the .W
+worddata	BSR		DISPLAY_WORD	;display the .W
 			MOVE.W	(A6), D2		;pull word from datastream
 			ADDA	#WORD, A6		;increment data pointer
 			
 			BSR		DISPLAY_0x0		; display word in hex
-			BRA		1break			; break from sub
+			BRA		break			; break from sub
 
-1longdata	BSR		DISPLAY_LONG	;display the .L
+longdata	BSR		DISPLAY_LONG	;display the .L
 			MOVE.L 	(A6), D2		;pull long from datastream into D2
 			ADDA	#WORD, A6		;increment data pointer
 			ADDA	#WORD, A6
 			
 			BSR		DISPLAY_0x0		; display long in hex
-			BRA		1break			; break from sub
+			BRA		break			; break from sub
 
 		
-1break			RTS					;return to calling instruction
+break			RTS					;return to calling instruction
 
 
 *-------------------------------------------------------------------------------
