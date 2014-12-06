@@ -391,17 +391,17 @@ DISPLAY_ERROR:
 ************************* Effective Address Algorithm **************************
 *-------------------------------------------------------------------------------
 * Type 1 mode xxxx xxxx ssoo oorrr
-* SubRoutine for handling One Operand addressing looking for a mode and register 
+* Subroutine for handling One Operand addressing looking for a mode and register 
 * value
 * Written by: David Heidgerken
 * Description.  16 bit Instruction will be passed to subroutine via D7
 * and will parse it to find which address mode and location is being used.
 * D6 used for Register value, D5 is mode D4 is the Size
-*-----------------------------------------------------------------------------
+*-------------------------------------------------------------------------------
 EA_TYPE1:
 			MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
 			MOVE.B	#%00000111, D5	;move primative 3 bitmask into D4
-			LSL.W	3,D5			;shift mask in D5 left 3 times
+			LSL.W	#3,D5			;shift mask in D5 left 3 times
 			MOVE.W  #%11000000, D4	;move size mask into D4
 
 			
