@@ -47,6 +47,8 @@ NEXT_SOURCE	MOVEA.L (A2)+,A0		*******  TESTING BETA  ******
 
 			MOVE.L A2,SOURCE_LIST
 
+*---------------------------- Displaying to output -----------------------------
+
 			LEA LINE,A1
 			MOVE.B #14,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
@@ -77,6 +79,7 @@ NEXT_SOURCE	MOVEA.L (A2)+,A0		*******  TESTING BETA  ******
 			MOVE.B #14,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
 
+*------------------------ Press ANY key to continue to -------------------------
 
 			MOVE.B #5,D0		*******  TESTING BETA  ******
 			TRAP #15			*******  TESTING BETA  ******
@@ -94,8 +97,7 @@ NEXT_SOURCE	MOVEA.L (A2)+,A0		*******  TESTING BETA  ******
 
 			BRA NEXT_SOURCE
 
-END_PROGRAM
-			CLR.W POSITION			*** TEST - RESET POSITION ***
+END_PROGRAM	CLR.W POSITION			*** TEST - RESET POSITION ***
 			STOP #EXIT			* Halt Simulator
 
 
@@ -103,17 +105,10 @@ END_PROGRAM
 
 INIT_OP		* Resets the list of bitmasks & english to the begining
 
-
 *----------- Displaying the current address as a hexadecimal value -------------
 
 			MOVE.L A0,D2		* Moving the current 16-bits address into D2
-			
-			; SWAP D2
-			; BSR DISPLAY_HEX
-
-			; SWAP D2
-			BSR DISPLAY_HEX
-
+			BSR DISPLAY_LONG_HEX
 
 			LEA BITMASK,A2		* Load the bitmask list into address register 2
 			LEA TASK_OP,A3		* Load the OP task list into address register 3
@@ -133,7 +128,7 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 
 			MOVE.L A0,SAVE_STATE	******  TESTING BETA  ******
 
-			MOVE.B (A0),D7 		 ***** Saving current instruction in D7 *****
+			MOVE.W (A0),D7 		 ***** Saving current instruction in D7 *****
 
 *-------- Retrieve matched then execute task by jumping to subroutine ----------
 
@@ -156,7 +151,7 @@ SHIFT_OP	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 
 			MOVE.W POSITION,D0		******  TESTING BETA  ******
 			CMPI.B #$1F,D0			******  TESTING BETA  ******
-			BEQ POSI_CHECK		******  TESTING BETA  ******
+			BEQ POSI_CHECK			******  TESTING BETA  ******
 
 			ADDQ.W #1,POSITION  *** IMPORTANT: Shifts the row position by 1 ***
 
@@ -174,33 +169,8 @@ DISPLAY_INTRUCTION:
 			MOVEA.L SAVE_STATE,A4	******  TESTING BETA  ******
 
 			MOVE.W (A4)+,D2		* Reloads the orignal 16-bits as a temp again
-			BSR DISPLAY_0x0		* Display the current 16-bits in Hexadecimal
-	
-
-CHECK_VALUE	CMP.W (A0),D2			******  TESTING BETA  ******
-			BEQ NEWLINE				******  TESTING BETA  ******
-
-			MOVE.B #11,D0		* Moving task 11 into Data Register 0
-			ADDI #$0500,D1			******  TESTING BETA  ******
-			TRAP #15			* Position the cursor at [2Cxx] x - any number
-
-			MOVE.W (A4)+,D2			******  TESTING BETA  ******
-			BSR DISPLAY_HEX			******  TESTING BETA  ******
-			BRA CHECK_VALUE			******  TESTING BETA  ******
-
-NEWLINE		LEA NEWLINE_M,A1	* Loading NEWLINE into (A1) for next instruction
-			MOVE.B #14,D0		* Moving task 14 into Data Register 0
-			TRAP #15			* Display the string at (A1) without CR, LF
-			RTS					* Returns from subroutine
 
 
-************************ Display Hexadecimal Subroutine ************************
-* Displays an output of a single 16-bit instruction as a hexadecimal value
-* Take that prof. Nash (mostly Kim), I didn't want to use task #15 anyway
-
-*** IMPORTANT *** Load the value that you wish to display in hexadecimal in D2
-
-DISPLAY_0x0:
 
 *----------------- Moving the cursor to the desired location -------------------
 
@@ -215,40 +185,101 @@ DISPLAY_0x0:
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
 
-DISPLAY_HEX LEA HEX_BITMASK,A2
-			LEA HEX_VALUE,A3
+			BSR DISPLAY_WORD_HEX
 
-			ROL #4,D2			* Shifts to read the next hexadecimal digit
-			BSR LOOP_HEX		* Branch towards the loop of hex thingy
+CHECK_VALUE	CMP.W (A0),D2			******  TESTING BETA  ******
+			BEQ NEWLINE				******  TESTING BETA  ******
 
-			ROL #4,D2 			* I HATE THIS, SO MUCH REPEATING CODE
-			BSR LOOP_HEX		* I TRIED EVERYTHING WITHOUT USING ANOTHER
-			ROL #4,D2 			* DATA REGISTER. THAT IS SUCH A WASTE... GOSH
-			BSR LOOP_HEX		* SO I'M GOING TO LEAVE THIS HERE, BECUASE I 
-			ROL #4,D2 			* REALLY DON"T CARE. TOO MUCH TIME WAS WASTED
-			BSR LOOP_HEX		* ANNND YES!! NO MORE BAD CODE (IT WORKS DEAL)
+			MOVE.B #11,D0		* Moving task 11 into Data Register 0
+			ADDI #$0500,D1			******  TESTING BETA  ******
+			TRAP #15			* Position the cursor at [2Cxx] x - any number
 
-			RTS					* Returns from subroutine
+			MOVE.W (A4)+,D2			******  TESTING BETA  ******
+			BSR DISPLAY_WORD_HEX	******  TESTING BETA  ******
+			BRA CHECK_VALUE			******  TESTING BETA  ******
 
-LOOP_HEX	MOVE.W D2,D3		* Move the current 16-bits into data register 3
-			AND.W (A2),D3		* AND the current bitmask with temp instruction
-			CMP.W (A2),D3		* Compares the current bitmask in (A2) with D3
-			BNE NEXT_HEX
-
-			LEA (A3),A1
+NEWLINE		LEA NEWLINE_M,A1	* Loading NEWLINE into (A1) for next instruction
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
+			RTS					* Returns from subroutine
 
-			LEA HEX_BITMASK,A2
+
+************************ Display Hexadecimal Subroutine ************************
+* Displays an output of a single 16-bit instruction as a hexadecimal value
+* Take that prof. Nash (mostly Kim), I didn't want to use task #15 anyway
+
+*** IMPORTANT *** Load the value that you wish to display in hexadecimal in D2
+
+DISPLAY_LONG_HEX:
+
+			ROL.L #4,D2
+			BSR INTI_LOOP
+			ROL.L #4,D2	
+			BSR INTI_LOOP
+			ROL.L #4,D2	
+			BSR INTI_LOOP
+			ROL.L #4,D2	
+			BSR INTI_LOOP
+			ROL.L #4,D2	
+			BSR INTI_LOOP
+			ROL.L #4,D2
+			BSR INTI_LOOP
+			ROL.L #4,D2
+			BSR INTI_LOOP
+			ROL.L #4,D2
+			BSR INTI_LOOP
+
+			RTS
+
+DISPLAY_WORD_HEX:
+			
+			MOVE.W D1,D3 		* Saves the current position into D3 for later
+
+			ROL #4,D2			* Shifts to read the next hexadecimal digit
+			BSR INTI_LOOP		* Branch towards the loop of hex thingy
+
+			ROL #4,D2 			* I HATE THIS, SO MUCH REPEATING CODE
+			BSR INTI_LOOP		* I TRIED EVERYTHING WITHOUT USING ANOTHER
+			ROL #4,D2 			* DATA REGISTER. THAT IS SUCH A WASTE... GOSH
+			BSR INTI_LOOP		* SO I'M GOING TO LEAVE THIS HERE, BECUASE I 
+			ROL #4,D2 			* REALLY DON"T CARE. TOO MUCH TIME WAS WASTED
+			BSR INTI_LOOP		* ANNND YES!! NO MORE BAD CODE (IT WORKS DEAL)
+
+			MOVE.W D3,D1 		* Move the saved position from D1 before display
+			RTS					* Returns from subroutine
+
+*----------------- Heart of the hexadecimal display Algorithm ------------------
+
+INTI_LOOP	MOVE.W D2,D1		* Move the current 16-bits into data register 3
+
+			ANDI.W #$000F,D1
+			CMPI.B #9,D1
+			BGT	PRINT_HEX
+			
+			MOVE.B #3,D0		* Display signed number in D1.L in decimal
+			TRAP #15
+
+			RTS
+
+PRINT_HEX	LEA HEX_BITMASK,A2
 			LEA HEX_VALUE,A3
+
+LOOP_HEX	MOVE.B D1,D0
+			AND.W (A2),D0		* AND the current bitmask with temp instruction
+			CMP.W (A2),D0		* Compares the current bitmask in (A2) with D0
+			BNE NEXT_HEX
+
+			LEA (A3),A1 		* Loads the correct hex value to be printed
+			MOVE.W #14,D0		* Moving task 14 into Data Register 0
+			TRAP #15			* Display the string at (A1) without CR, LF
 			RTS					* Returns from subroutine
 
 NEXT_HEX	ADDA.W #WORD,A2		* Shifts to the next binary
 			ADDA.W #WORD,A3		* Shifts to the next hexadecimal char
 			BRA LOOP_HEX		* Go back to LOOP and test the new bitmask
 
-HEX_BITMASK	DC.W $F,$E,$D,$C,$B,$A,$9,$8,$7,$6,$5,$4,$3,$2,$1,$0
-HEX_VALUE	DC.W 'F','E','D','C','B','A','9','8','7','6','5','4','3','2','1','0'
+HEX_BITMASK	DC.W $F,$E,$D,$C,$B,$A
+HEX_VALUE   DC.W 'F','E','D','C','B','A'
 
 
 ************************ 8-Bit Displacement Subroutine *************************
@@ -268,7 +299,8 @@ DISPLACEMENT:
 			TRAP #15			* Display the string at (A1) without CR, LF
 
 
-*--- 8-bits 16-bits 32-bits ---*
+*----------------------- Display 8-bits 16-bits 32-bits ------------------------
+
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			TST.B D2
 			BEQ D_16_BIT
@@ -288,27 +320,21 @@ D_32_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 			SUBQ.L #4,D2
 			ADD.L A0,D2
 
-			SWAP D2
-
-			BSR DISPLAY_HEX
-			SWAP D2
-
-			BRA D_DONE			
-
+			BSR DISPLAY_LONG_HEX
+			RTS
 
 D_16_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			ADD.W A0,D2
-			BRA D_DONE			
-
+			BSR DISPLAY_WORD_HEX
+			RTS	
 
 D_8_BIT		MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			AND.W #BITMASK8,D2
 			ADDQ #2,D2
 			ORI.L #$FFFFFF00,D2
 			ADD.L A0,D2
-
-D_DONE		BSR DISPLAY_HEX	
+			BSR DISPLAY_WORD_HEX	
 			RTS					* Returns from subroutine
 
 
@@ -357,21 +383,22 @@ DISPLAY_ERROR:
 			TRAP #15			* Display the string at (A1) without CR, LF
 
 			MOVE.W (A0),D2
-			BSR DISPLAY_HEX	
+			BSR DISPLAY_WORD_HEX	
 			RTS
 
 
 ************************* Effective Address Algorithm **************************
 *-------------------------------------------------------------------------------
 * Type 1 mode xxxx xxxx ssoo oorrr
-* Subroutine for handling One Operand addressing looking for a mode and register 
+* Subroutine for handling One Operand addressing looking for a mode and register
 * value
 * Written by: David Heidgerken
 * Description.  16 bit Instruction will be passed to subroutine via D7
 * and will parse it to find which address mode and location is being used.
 * D6 used for Register value, D5 is mode D4 is the Size
 *-------------------------------------------------------------------------------
-EA_TYPE1	MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
+EA_TYPE1:
+			MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
 			MOVE.B	#%00000111, D5	;move primative 3 bitmask into D4
 			LSL.W	#3,D5			;shift mask in D5 left 3 times
 			MOVE.W  #%11000000, D4	;move size mask into D4
@@ -384,82 +411,82 @@ EA_TYPE1	MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3
 			MOVE.L	D4,D1			;load sizeinto D1
 			
 			CMP.B	#3,D1			;siz of %11(3) is invalid
-; 			BEQ		1INV_SIZE		;branch to invalid size block
+			BEQ		INV_SIZE		;branch to invalid size block
 			
-; 			BSR		DISPLAY_SIZE	;send to display size subr
+			BSR		DISPLAY_SIZE	;send to display size subr
 			
-; 			CMP.B 	#0, D5			;compare mode with 0
-; 			BEQ		1D_MODE			;branch to Data reg mode
+			CMP.B 	#0, D5			;compare mode with 0
+			BEQ		D_MODE			;branch to Data reg mode
 			
-; 			CMP.B	#1, D5			;compare mode with 1
-; 			BEQ		1A_MODE			;branch to Address reg mode
+			CMP.B	#1, D5			;compare mode with 1
+			BEQ		A_MODE			;branch to Address reg mode
 			
-; 			CMP.B	#2, D5			;compare mode with #2
-; 			BEQ		1IND_MODE		;branch to indirect Mode (Ax)
+			CMP.B	#2, D5			;compare mode with #2
+			BEQ		IND_MODE		;branch to indirect Mode (Ax)
 
-; 			CMP.B	#3, D5			;compare mode with 3
-; 			BEQ		1PI_MODE			; branch tp post incrementmodebr
+			CMP.B	#3, D5			;compare mode with 3
+			BEQ		PI_MODE			; branch tp post incrementmodebr
 			
-; 			CMP.B	#4, D5			;compare mode with 4
-; 			BEQ		1PD_MODE			;branchto Post decrement mode
+			CMP.B	#4, D5			;compare mode with 4
+			BEQ		PD_MODE			;branchto Post decrement mode
 			
-; 			CMP.B	#5, D5			; compare mode with 5 (not implemented)
-; 			BEQ		1INV_MODE		;brancht invalid mode
+			CMP.B	#5, D5			; compare mode with 5 (not implemented)
+			BEQ		INV_MODE		;brancht invalid mode
 			
-; 			CMP.B	#6, D5			; compare mode to 6 (not implemented)
-; 			BEQ		1INV_MODE		;brancht invalid mode
+			CMP.B	#6, D5			; compare mode to 6 (not implemented)
+			BEQ		INV_MODE		;brancht invalid mode
 
-; 			CMP.B	#7, D5			; compare mode with 7
-; 			BEQ		1DATA_MODE		; branc to data modes
+			CMP.B	#7, D5			; compare mode with 7
+			BEQ		DATA_MODE		; branc to data modes
 			
-; 1INV_SIZE	BSR		DISPLAY_ERROR	;display error	
-; 			BRA		1break			;break from type subroutine
+INV_SIZE	BSR		DISPLAY_ERROR	;display error	
+			BRA		break			;break from type subroutine
 			
-; 1INV_MODE 	BSR		DISPLAY_ERROR	;display error
-; 			BRA		1break			;break from type subroutine
+INV_MODE	BSR		DISPLAY_ERROR	;display error
+			BRA		break			;break from type subroutine
 			
-; 1D_MODE		MOVE.B	D6,D1			;move reg value to D1
-; 			BSR		DISPLAY_DATAREG	;send to data register display subr  ********
-; 			BRA		1break			;break
+D_MODE		MOVE.B	D6,D1			;move reg value to D1
+			BSR		DISPLAY_DATAREG	;send to data register display subr  ********
+			BRA		break			;break
 
-; 1A_MODE		BRA		INV_MODE		;invalid mode for this type
+A_MODE		BRA		INV_MODE		;invalid mode for this type
 
-; 1IND_MODE	MOVE.B	D6,D1			;move reg value to D1
-; 			BSR		DISPLAY_INDIR	;send to data register indirect subr  ********
-; 			BRA		1break			;break
+IND_MODE	MOVE.B	D6,D1			;move reg value to D1
+			BSR		DISPLAY_INDIR	;send to data register indirect subr  ********
+			BRA		break			;break
 			
-; 1PI_MODE		MOVE.B	D6,D1			;move reg value to D1
-; 			BSR		DISPLAY_POSTINC	;send to POSTINCR display sub  ********
-; 			BRA		1break			;break
+PI_MODE		MOVE.B	D6,D1			;move reg value to D1
+			BSR		DISPLAY_POSTINC	;send to POSTINCR display sub  ********
+			BRA		break			;break
 			
-; 1PD_MODE		MOVE.B	D6,D1			;move reg value to D1
-; 			BSR		DISPLAY_PREDEC	;send to data PREDEC display sub  ********
-; 			BRA		1break			;break
+PD_MODE		MOVE.B	D6,D1			;move reg value to D1
+			BSR		DISPLAY_PREDEC	;send to data PREDEC display sub  ********
+			BRA		break			;break
 			
-; 1DATA_MODE	CMP.B	#0,D6			; compare register to 000
-; 			BEQ		1worddata		;branch to word data
+DATA_MODE	CMP.B	#0,D6			; compare register to 000
+			BEQ		worddata		;branch to word data
 			
-; 			CMP.B	#1, D6			;compare register to 1
-; 			BEQ		1longdata		;branch to long data
-; 			BGT		1INV_MODE		;branch to invalid mode if reg greater than1
+			CMP.B	#1, D6			;compare register to 1
+			BEQ		longdata		;branch to long data
+			BGT		INV_MODE		;branch to invalid mode if reg greater than1
 						
-; 1worddata	BSR		DISPLAY_WORD	;display the .W
-; 			MOVE.W	(A6), D2		;pull word from datastream
-; 			ADDA	#WORD, A6		;increment data pointer
+worddata	*BSR		DISPLAY_WORD	;display the .W
+			MOVE.W	(A6), D2		;pull word from datastream
+			ADDA	#WORD, A6		;increment data pointer
 			
-; 			BSR		DISPLAY_0x0		; display word in hex
-; 			BRA		1break			; break from sub
+*			BSR		DISPLAY_0x0		; display word in hex
+			BRA		break			; break from sub
 
-; 1longdata	BSR		DISPLAY_LONG	;display the .L
-; 			MOVE.L 	(A6), D2		;pull long from datastream into D2
-; 			ADDA	#WORD, A6		;increment data pointer
-; 			ADDA	#WORD, A6
+longdata	*BSR		DISPLAY_LONG	;display the .L
+			MOVE.L	(A6), D2		;pull long from datastream into D2
+			ADDA	#WORD, A6		;increment data pointer
+			ADDA	#WORD, A6
 			
-; 			BSR		DISPLAY_0x0		; display long in hex
-; 			BRA		1break			; break from sub
+*			BSR		DISPLAY_0x0		; display long in hex
+			BRA		break			; break from sub
 
 		
-; 1break			RTS					;return to calling instruction
+break			RTS					;return to calling instruction
 
 
 *-------------------------------------------------------------------------------
@@ -717,7 +744,16 @@ MOVEM_T		LEA MOVEM_M,A1
 *- 023 NEG ------------------------- Negate ------------------------------------
 
 NEG_T		LEA NEG_M,A1
+
+
+			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
+			ANDI.W #$FF00,D2
+			CMP.W (A2),D2
+			BNE  DISPLAY_ERROR
+
 			BSR DISPLAY_SIZE
+
+			; BSR EA_TYPE1
 			RTS
 
 *- 024 LEA ----------------- Load Effective Address ----------------------------
@@ -790,12 +826,11 @@ PRESS_ANY   DC.B 	'  press ANY key to continue...',0
 INIT_HEX	DC.B	'0x',0
 INIT_MEM	DC.B	'$',0
 DATA_M		DC.B	'DATA ',0
+BYTE_M		DC.B  	'.B',0
+WORD_M		DC.B  	'.W',0
+LONG_M		DC.B  	'.L',0
 
-BYTE_M		DC.B  '.B',0
-WORD_M		DC.B  '.W',0
-LONG_M		DC.B  '.L',0
-
-DISPLAY_DATAREG DC.B 'Dx',0 
+DISPLAY_DATAREG DC.B 'Dx',0
 DISPLAY_ADDEREG DC.B 'Ax',0
 DISPLAY_INDIR   DC.B '(Ax)',0
 DISPLAY_POSTINC DC.B '(Ax)+',0
@@ -862,7 +897,15 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 
 *--------------------------------- Source Code ---------------------------------
 
-SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,0
+; SOURCE_C	DC.L  TEST_1,0
+
+; TEST_1		DC.W $4400
+; 			DC.W $4440
+; 			DC.W $4480
+; 			DC.W 0
+
+
+SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
 
 
 SOURCE_1	DC.W $4E75				RTS
@@ -935,7 +978,16 @@ SOURCE_4	DC.W $E118				ROL.B
 			DC.W $E1D0				LSL
 			DC.W 0
 
+SOURCE_5	DC.W $4E71
+			DC.W $6DFC
+			DC.W $6CFC
+			DC.W $68FC
+			DC.W $65FC
+			DC.W $60FC
+			DC.W 0
+
 	END		START				* last line of source
+
 
 
 *~Font name~Courier New~
