@@ -41,36 +41,61 @@ BITMASK3	EQU   $0007
 
 			ORG    START		* Program begins here
 
+			LEA SOURCE_C,A2		* Loading the source into address register A2
+
+NEXT_SOURCE	MOVEA.L (A2)+,A0		*******  TESTING BETA  ******
+
+			MOVE.L A2,SOURCE_LIST
+
 			LEA LINE,A1
 			MOVE.B #14,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
+			MOVE.B #13,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
-			BSR	NEWLINE
 
 			LEA HEADER,A1		* Load Dissassembler header message into A1 
-			MOVE.B #13,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) with CR, LF.
 
 			LEA LINE,A1
 			MOVE.B #14,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
+			MOVE.B #13,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
-			BSR	NEWLINE
+
 
 			ADDQ.W #3,POSITION  *** IMPORTANT: Shifts the row position by 3 ***
-
-
-			LEA SOURCE_C,A0		* Load the source code into address register 0
 
 			BSR INIT_OP			* Hunts down each Operation code like a mad man
 
 			LEA LINE,A1
 			MOVE.B #14,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
+			MOVE.B #13,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
+
+			LEA PRESS_ANY,A1
+			MOVE.B #14,D0		* Move task 13 into Data Register 0
+			TRAP #15			* Display the string at (A1) without CR, LF.
+
+
+			MOVE.B #5,D0		*******  TESTING BETA  ******
+			TRAP #15			*******  TESTING BETA  ******
+
+			MOVE.L SOURCE_LIST,A2
+
+			TST.L (A2)			*******  TESTING BETA  ******
+			BEQ END_PROGRAM		*******  TESTING BETA  ******
+
+			MOVE.B #11,D0 		* Moving task 11 into Data Register 0
+			MOVE.W #$FF00,D1	* Clear Screen : Set D1.W to $FF00
+			TRAP #15
 
 			CLR.W POSITION			*** TEST - RESET POSITION ***
 
+			BRA NEXT_SOURCE
+
+END_PROGRAM
+			CLR.W POSITION			*** TEST - RESET POSITION ***
 			STOP #EXIT			* Halt Simulator
 
 
@@ -81,8 +106,14 @@ INIT_OP		* Resets the list of bitmasks & english to the begining
 
 *----------- Displaying the current address as a hexadecimal value -------------
 
-			MOVE.W A0,D2		* Moving the current 16-bits address into D2
+			MOVE.L A0,D2		* Moving the current 16-bits address into D2
+			
+			; SWAP D2
+			; BSR DISPLAY_HEX
+
+			; SWAP D2
 			BSR DISPLAY_HEX
+
 
 			LEA BITMASK,A2		* Load the bitmask list into address register 2
 			LEA TASK_OP,A3		* Load the OP task list into address register 3
@@ -100,7 +131,9 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 			ADDI.W #$0A00,D1	* Setting up the desired column position
 			TRAP #15			* Position the cursor at [0Axx] x - any number
 
-	 		MOVE.L A0,SAVE_STATE	******  TESTING BETA  ******
+			MOVE.L A0,SAVE_STATE	******  TESTING BETA  ******
+
+			MOVE.B (A0),D7 		 ***** Saving current instruction in D7 *****
 
 *-------- Retrieve matched then execute task by jumping to subroutine ----------
 
@@ -123,11 +156,11 @@ SHIFT_OP	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 
 			MOVE.W POSITION,D0		******  TESTING BETA  ******
 			CMPI.B #$1F,D0			******  TESTING BETA  ******
-			BEQ PASS_CHECK			******  TESTING BETA  ******
+			BEQ POSI_CHECK		******  TESTING BETA  ******
 
 			ADDQ.W #1,POSITION  *** IMPORTANT: Shifts the row position by 1 ***
 
-PASS_CHECK	TST.W (A0)			* See if you reached the end of the instructions
+POSI_CHECK	TST.W (A0)			* See if you reached the end of the instructions
 			BNE INIT_OP			* (!=) Resets the bitmask & OP task lists
 			RTS					* Returns from subroutine
 
@@ -138,7 +171,7 @@ DISPLAY_INTRUCTION:
 
 *--------- Displaying the current instruction as a hexadecimal value -----------
 
-	 		MOVEA.L SAVE_STATE,A4	******  TESTING BETA  ******
+			MOVEA.L SAVE_STATE,A4	******  TESTING BETA  ******
 
 			MOVE.W (A4)+,D2		* Reloads the orignal 16-bits as a temp again
 			BSR DISPLAY_0x0		* Display the current 16-bits in Hexadecimal
@@ -166,7 +199,7 @@ NEWLINE		LEA NEWLINE_M,A1	* Loading NEWLINE into (A1) for next instruction
 * Take that prof. Nash (mostly Kim), I didn't want to use task #15 anyway
 
 *** IMPORTANT *** Load the value that you wish to display in hexadecimal in D2
-	
+
 DISPLAY_0x0:
 
 *----------------- Moving the cursor to the desired location -------------------
@@ -205,7 +238,7 @@ LOOP_HEX	MOVE.W D2,D3		* Move the current 16-bits into data register 3
 			LEA (A3),A1
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
-			
+
 			LEA HEX_BITMASK,A2
 			LEA HEX_VALUE,A3
 			RTS					* Returns from subroutine
@@ -228,7 +261,7 @@ DISPLACEMENT:
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			ANDI.W #$FF00,D2
 			CMP.W (A2),D2
-			BNE  DISPLAY_DATA
+			BNE  DISPLAY_ERROR
 
 *---------- PRINT OP: Prints the pre-loaded OP message to the output -----------
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
@@ -245,16 +278,21 @@ DISPLACEMENT:
 
 			BRA D_8_BIT
 
-D_32_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction	
+D_32_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			SWAP D2
+			
 			ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 
-			ADD.W A0,D2
+			SUBQ.L #4,D2
+			ADD.L A0,D2
+
 			SWAP D2
+
 			BSR DISPLAY_HEX
 			SWAP D2
+
 			BRA D_DONE			
 
 
@@ -266,19 +304,50 @@ D_16_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
 
 D_8_BIT		MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 			AND.W #BITMASK8,D2
-            ADDQ #2,D2
+			ADDQ #2,D2
 			ORI.L #$FFFFFF00,D2
 			ADD.L A0,D2
 
 D_DONE		BSR DISPLAY_HEX	
+			RTS					* Returns from subroutine
+
+
+******************** Display the Size (.B .W .L) Subroutine ********************
+
+DISPLAY_SIZE:
+
+			MOVE.B #14,D0		* Moving task 14 into Data Register 0
+			TRAP #15			* Display the string at (A1) without CR, LF
+
+			MOVE.W (A0),D1
+			ANDI.B #$C0,D1		0000 0000 1100 0000
+
+			CMPI.B #$C0,D1
+			BNE CHECK_A
 			RTS
 
+CHECK_A 	CMPI.B #$80,D1
+			BNE CHECK_B
 
-*******************************  DATA Subroutine *******************************
-*1000    DATA    $WXYZ
+			LEA LONG_M,A1		* Loading message '.L' into address register 1
+			BRA CHECK_D
+
+CHECK_B		CMPI.B #$40,D1
+			BNE CHECK_C
+
+			LEA WORD_M,A1		* Loading message '.W' into address register 1
+			BRA CHECK_D
+
+CHECK_C		LEA BYTE_M,A1		* Loading message '.B' into address register 1
+
+CHECK_D		TRAP #15			* Display the string at (A1) without CR, LF
+			RTS					* Returns from subroutine
+
+
+************************ DISPLAY ERROR DATA Subroutine *************************
+*1000	DATA	$WXYZ
 *
-DISPLAY_DATA:
-			
+DISPLAY_ERROR:
 			LEA DATA_M,A1
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
@@ -295,16 +364,16 @@ DISPLAY_DATA:
 ************************* Effective Address Algorithm **************************
 *-------------------------------------------------------------------------------
 * Type 1 mode xxxx xxxx ssoo oorrr
-* SubRoutine for handling One Operand addressing looking for a mode and register 
+* Subroutine for handling One Operand addressing looking for a mode and register 
 * value
 * Written by: David Heidgerken
 * Description.  16 bit Instruction will be passed to subroutine via D7
 * and will parse it to find which address mode and location is being used.
 * D6 used for Register value, D5 is mode D4 is the Size
-*-----------------------------------------------------------------------------
+*-------------------------------------------------------------------------------
 EA_TYPE1	MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
 			MOVE.B	#%00000111, D5	;move primative 3 bitmask into D4
-			LSL.W	3,D5			;shift mask in D5 left 3 times
+			LSL.W	#3,D5			;shift mask in D5 left 3 times
 			MOVE.W  #%11000000, D4	;move size mask into D4
 
 			
@@ -392,6 +461,7 @@ EA_TYPE1	MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3
 		
 1break			RTS					;return to calling instruction
 
+
 *-------------------------------------------------------------------------------
 * Type 2 xxxx xxxx dddd dddd
 * SubRoutine for handling One Operand Displacement.
@@ -413,24 +483,24 @@ EA_TYPE2	MOVE.B	#%11111111, D6	;move 8bitmask into D6
 * locations of the data.
 * source register stored in D3, source mode in D4 Dest mode in D5 dest register
 * in D6
-*-------------------------------------------------------------------------------			
+*-------------------------------------------------------------------------------
 EA_TYPE3	MOVE.B	#BITMASK3, D6	;move primative 3 bit mask into D6
 			MOVE.B	#BITMASK3, D5	;move primative 3 bitmask into D5
 			MOVE.B	#BITMASK3, D4	;move primative 3 bit mask into D4
 			MOVE.B	#BITMASK3, D3	;move primative 3 bit mask into D3
-			
+
 			LSL.W	#3,D5			;shift mask left 3 times
 			LSL.W	#6,D4			;shift mask left 6 times
 			LSL.W	#6,D3			;shift mask left 6 times
 			LSL.W	#6,D3			;shift mask left 3 times
-			
+
 			AND.L	D7,D6			;and D7 with D6 DestRegister
 			AND.L	D7,D5			;and D7 with D5	DestMode
 			AND.L	D7,D4			;and D7 with D4 SrcMode
 			AND.L	D7,D3			;and D7 with D3 SrcRegister
-			
+
 			; BSR
-			
+
 *-------------------------------------------------------------------------------
 * Type 4   - xxxx DDD1 ssoo orrr
 * Sub Routine to find Size and EA(mode and Register) and Data from instruction
@@ -438,14 +508,14 @@ EA_TYPE3	MOVE.B	#BITMASK3, D6	;move primative 3 bit mask into D6
 * D4 Stores Size
 * D5 stores Mode
 * D6 stores Register
-*-------------------------------------------------------------------------------			
+*-------------------------------------------------------------------------------
 EA_TYPE4	MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
 			MOVE.B	#%00000111, D5	;move primative 3 bitmask into D4
 			LSL.W	#3,D5			;shift mask in D5 left 3 times
 			MOVE.W  #%11000000, D4	;move size mask into D4
 			MOVE.W	#%00001110, D3	; move Datamask into D3
 			LSL.W	#8,D3			; shift datamask 8 places
-			
+
 			AND.W	D7,D6			;and D7 and D6 store in D6 Register
 			AND.W	D7,D5			;and D7 and D5 store in D5 Mode
 			AND.W	D7,D4			;and D7 and D4 store in D4 Size
@@ -489,7 +559,7 @@ EA_TYPE6 	MOVE.B 	#%00001110, D3	;move data maskinto D3
 			MOVE.B	#%11000000, D4	;move size masking into D4
 			MOVE.B	#%00100000,	D5	;move i masking into D5
 			MOVE.B	#%00000111,	D6	;move register mask into D6
-			
+
 			AND.W	D7,D3			;value of Data in D3
 			AND.W	D7,D4			;value of size in D4
 			AND.W	D7,D5			;value of i in D5
@@ -499,46 +569,40 @@ EA_TYPE6 	MOVE.B 	#%00001110, D3	;move data maskinto D3
 
 ******************** OP-CODE: Individual Task Subroutine Set *******************
 
-*- 000 ROL ------------------------------------------------------ Rotate Left --
+*- 000 ROL ---------------------- Rotate Left ----------------------------------
 
 ROL_T		LEA ROL_M,A1
-			MOVE.B #14,D0		* Moving task 14 into Data Register 0
-			TRAP #15			* Display the string at (A1) without CR, LF
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 001 LSL ------------------- Logical Shift Left ------------------------------
 
 LSL_T		LEA LSL_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 002 ASL ----------------- Arithmetic Shift Left -----------------------------
 
 ASL_T		LEA ASL_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 003 ROR ---------------------- Rotate Right ---------------------------------
 
 ROR_T		LEA ROR_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 004 LSL ------------------ Logical Shift Right ------------------------------
 
 LSR_T		LEA LSR_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 005 ASR ----------------- Arithmetic Shift Right ----------------------------
 
 ASR_T		LEA ASR_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 006 ADDA --------------------- Add Address ----------------------------------
@@ -551,8 +615,7 @@ ADDA_T		LEA ADDA_M,A1
 *- 007 ADD -------------------------- Add --------------------------------------
 
 ADD_T		LEA ADD_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 008 MULS ------------------- Signed Multiply --------------------------------
@@ -565,15 +628,13 @@ MULS_T		LEA MULS_M,A1
 *- 009 CMP ------------------------ Compare ------------------------------------
 
 CMP_T		LEA CMP_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 010 SUB ------------------------ Subtract -----------------------------------
 
 SUB_T		LEA SUB_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 011 DIVS -------------------- Signed Divide ---------------------------------
@@ -586,8 +647,7 @@ DIVS_T		LEA DIVS_M,A1
 *- 012 OR ------------------- Inclusive OR Logical -----------------------------
 
 OR_T		LEA OR_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 013 BLT -------------------- Branch Less Than -------------------------------
@@ -623,8 +683,7 @@ BRA_T		LEA BRA_M,A1 		* Loading the OP name into address register 1
 *- 018 SUBQ -------------------- Subtract Quick --------------------------------
 
 SUBQ_T		LEA SUBQ_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 019 JSR ------------------- Jump to Subroutine ------------------------------
@@ -658,8 +717,7 @@ MOVEM_T		LEA MOVEM_M,A1
 *- 023 NEG ------------------------- Negate ------------------------------------
 
 NEG_T		LEA NEG_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 024 LEA ----------------- Load Effective Address ----------------------------
@@ -707,8 +765,7 @@ MOB_T		LEA MOB_M,A1
 *- 030 CMPI ------------------ Compare Immediate -------------------------------
 
 CMPI_T		LEA CMPI_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 *- 031 BCLR ----------------- Test a Bit and Clear -----------------------------
@@ -721,8 +778,7 @@ BCLR_T		LEA BCLR_M,A1
 *- 032 ORI ----------------- Inclusive OR Immediate ----------------------------
 
 ORI_T		LEA ORI_M,A1
-			MOVE.B #14,D0
-			TRAP #15
+			BSR DISPLAY_SIZE
 			RTS
 
 
@@ -730,17 +786,30 @@ ORI_T		LEA ORI_M,A1
 
 HEADER		DC.B	'Address   OP-Code	  Operand      			 Instruction', 0
 LINE 		DC.B 	'----------------------------------------',0
+PRESS_ANY   DC.B 	'  press ANY key to continue...',0
 INIT_HEX	DC.B	'0x',0
 INIT_MEM	DC.B	'$',0
 DATA_M		DC.B	'DATA ',0
+
+BYTE_M		DC.B  '.B',0
+WORD_M		DC.B  '.W',0
+LONG_M		DC.B  '.L',0
+
+DISPLAY_DATAREG DC.B 'Dx',0 
+DISPLAY_ADDEREG DC.B 'Ax',0
+DISPLAY_INDIR   DC.B '(Ax)',0
+DISPLAY_POSTINC DC.B '(Ax)+',0
+DISPLAY_PREDEC  DC.B '-(Ax)',0
+
+; DISPLAY_WORD - displays 16bits of data can just use DISPLAY_0x0 if needed.
+; DISPLAY_LONG - displays 32 bits of data, maybe just a wrapper for DISPLAY_0x0?
+; DISPLAY_REGS - for use in MOVEM where we need to display a / delimited list of Registers and ranges of registers.
+
 NEWLINE_M	DC.B  CR,LF,0
 
 POSITION 	DC.W  $0000
-SAVE_STATE	DS.L  1    
-
-; Byte_M		DC.B  '.B ',0
-; Word_M		DC.B  '.W ',0
-; Long_M		DC.B  '.L ',0
+SAVE_STATE	DS.L  1
+SOURCE_LIST DS.L  1   
 
 ROL_M		DC.B	'ROL',0		* Tested	0xE118
 LSL_M		DC.B	'LSL',0		* Tested	0xE108
@@ -792,28 +861,81 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 			DC.W $0C00,$01C0,$0000
 
 *--------------------------------- Source Code ---------------------------------
-SOURCE_C    DC.W  $4E75,$D6C7,$4EB8,$4487,$D5C2,$4E71,$4EB9,$D280,$303C,$4E75
-; 				   RTS   ADDA  JSR   NEG   ADDA  NOP   JSR   ADD   MOVE.W RTS
- 			DC.W  $66FC,$EE45,$6CFF,$0002,$6A12,$E6AA,$E439,$2646,$EF45,$62FC
-; 				   DATA  ASR   BGE   DATA  DATA  LSR   ROR   MOVEA ASL   DATA  
- 			DC.W  $E539,$6078,$EF45,$68CD,$BBBB,$E6AA,$EE45,$85C3,$AAAA
-; 				   ROL   BRA   ASL   BVC   ERROR LSR   ASR   DIVS  ERROR
+
+SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,0
+
+
+SOURCE_1	DC.W $4E75				RTS
+			DC.W $D6C7				ADDA
+			DC.W $4EB8				JSR
+			DC.W $4487				NEG.L
+			DC.W $D5C2				ADDA
+			DC.W $4E71				NOP
+			DC.W $4EB9				JSR
+			DC.W $D280				ADD.L
+			DC.W $303C				MOVE.W
+			DC.W $4E75				RTS
+			DC.W 0
+
+SOURCE_2	DC.W $66FC				DATA
+			DC.W $EE45				ASR.W
+			DC.W $6CFF,$0002,$6A12	BGE
+			DC.W $E6AA				LSR.L
+			DC.W $E439				ROR.B
+			DC.W $2646				MOVEA.L
+			DC.W $EF45				ASL.W
+			DC.W $62FC				DATA
+			DC.W $E539				ROL.B
+			DC.W $60AA				BRA
+			DC.W $EF45				ASL.W
+			DC.W $68CD				BVC
+			DC.W $BBBB				ERROR (CMP.L)
+			DC.W $E6AA				LSR.L
+			DC.W $EE45				ASR.W
+			DC.W $85C3				DIVS
+			DC.W $AAAA				ERROR (OR.L)
+			DC.W 0
 
 **** Displacement TESTING - REMOVE WHEN DONE ****
-			DC.W  $4E71,$3204,$B045,$66F8,$6DFA,$4E71,$3A0B,$61F4,$60EE,$65FA
 
-			DC.W  $6FFC,$6EFC,$6DFC,$6C00,$6BFC,$6AFC,$69FC,$68FF,$2803,$67FC
-
-			DC.W  $66FC,$65FC,$64FC,$63FC,$62FC,$60FC,$3202,$6D00,$000C,$3C0B
-
-			DC.W  $6000,$0004,$3201,$4E71,$5241,$6CFF,$0002,$6A12,$66FC,$65FC
+SOURCE_3	DC.W $6FFC				BLE	1111
+			DC.W $6EFC				BGT	1110
+			DC.W $6DFC				BLT	1101
+			DC.W $6C00,$0004		BGE	1100
+			DC.W $6BFC				BMI	1011
+			DC.W $6AFC				BPL	1010
+			DC.W $69FC				BVS	1001
+			DC.W $68FF,$2803,$3201	BVC	1000
+			DC.W $67FC				BEQ	0111
+			DC.W $66FC				BNE	0110
+			DC.W $65FC				BCS	0101
+			DC.W $64FC				BCC	0100
+			DC.W $63FC				BLS	0011
+			DC.W $62FC				BHI	0010
+			DC.W $60FC				BRA
+			DC.W $60FF,$0000,$000A	BRA
+			DC.W $60FF,$1234,$5678	BRA
+			DC.W 0
 			
-			DC.W  $64FC,$63FC,$62FC,$60FC,0
+**** Size BYTE,WORD,LONG TESTING - REMOVE WHEN DONE ****
 
+SOURCE_4	DC.W $E118				ROL.B
+			DC.W $E158				ROL.W
+			DC.W $E198				ROL.L
+			DC.W $E1D8				ROL
+
+			DC.W $E018				LOL.B
+			DC.W $E058				LOL.W
+			DC.W $E098				LOL.L
+			DC.W $E0D8				LOL	
+
+			DC.W $E110				LSL.B
+			DC.W $E150				LSL.W
+			DC.W $E190				LSL.L
+			DC.W $E1D0				LSL
+			DC.W 0
 
 	END		START				* last line of source
-
-
 
 
 *~Font name~Courier New~
