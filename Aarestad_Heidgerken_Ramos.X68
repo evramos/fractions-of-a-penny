@@ -443,12 +443,11 @@ DISPLAY_INDIR:
 
 			MOVE.B #3,D0		* Display signed number in D1.L in decimal
 			TRAP #15
-			RTS
 			
 			LEA INDIRC_M,A1
 			MOVE.B #14,D0
 			TRAP #15
-			
+			RTS
 
 POSTO_M   DC.B '(A',0
 POSTC_M   DC.B ')+',0			
@@ -460,11 +459,12 @@ DISPLAY_POSTINC:
 
 			MOVE.B #3,D0		* Display signed number in D1.L in decimal
 			TRAP #15
-			RTS
+			
 			
 			LEA POSTC_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			RTS
 			
 PREO_M   DC.B '(A',0
 PREC_M   DC.B ')+',0			
@@ -476,12 +476,11 @@ DISPLAY_PREDEC:
 
 			MOVE.B #3,D0		* Display signed number in D1.L in decimal
 			TRAP #15
-			RTS
-			
+					
 			LEA PREC_M,A1
 			MOVE.B #14,D0
 			TRAP #15
-
+			RTS
 
 ************************* Effective Address Algorithm **************************
 *-------------------------------------------------------------------------------
