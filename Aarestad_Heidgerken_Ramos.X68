@@ -13,7 +13,7 @@ LF			EQU   $000A
 START		EQU   $1000			* Program starting address
 EXIT		EQU   $2700			* Simulator stoping code
 WORD		EQU   $0002			* Advance address by a word
-
+LONG		EQU   $0004			* Advance address by a long
 BITMASK8	EQU   $00FF
 BITMASK4	EQU   $000F
 BITMASK3	EQU   $0007
@@ -346,7 +346,7 @@ DISPLAY_SIZE:
 			TRAP #15			* Display the string at (A1) without CR, LF
 
 			MOVE.W (A0),D1
-			ANDI.B #$C0,D1		0000 0000 1100 0000
+			ANDI.B #$C0,D1
 
 			CMPI.B #$C0,D1
 			BNE CHECK_A
