@@ -412,7 +412,7 @@ EA_TYPE1:
 			MOVE.L	D4,D1			;load sizeinto D1
 			
 			CMP.B	#3,D1			;siz of %11(3) is invalid
-			BEQ		INV_SIZE		;branch to invalid size block
+			BEQ		.INV_SIZE		;branch to invalid size block
 			
 			BSR		DISPLAY_SIZE	;send to display size subr
 			
@@ -423,22 +423,22 @@ EA_TYPE1:
 			BEQ		A_MODE			;branch to Address reg mode
 			
 			CMP.B	#2, D5			;compare mode with #2
-			BEQ		IND_MODE		;branch to indirect Mode (Ax)
+			BEQ		.IND_MODE		;branch to indirect Mode (Ax)
 
 			CMP.B	#3, D5			;compare mode with 3
-			BEQ		PI_MODE			; branch tp post incrementmodebr
+			BEQ		.PI_MODE			; branch tp post incrementmodebr
 			
 			CMP.B	#4, D5			;compare mode with 4
-			BEQ		PD_MODE			;branchto Post decrement mode
+			BEQ		.PD_MODE			;branchto Post decrement mode
 			
 			CMP.B	#5, D5			; compare mode with 5 (not implemented)
-			BEQ		INV_MODE		;brancht invalid mode
+			BEQ		.INV_MODE		;brancht invalid mode
 			
 			CMP.B	#6, D5			; compare mode to 6 (not implemented)
-			BEQ		INV_MODE		;brancht invalid mode
+			BEQ		.INV_MODE		;brancht invalid mode
 
 			CMP.B	#7, D5			; compare mode with 7
-			BEQ		DATA_MODE		; branc to data modes
+			BEQ		.DATA_MODE		; branc to data modes
 			
 .INV_SIZE	BSR		DISPLAY_ERROR	;display error	
 			BRA		break			;break from type subroutine
