@@ -440,54 +440,51 @@ EA_TYPE1:
 			CMP.B	#7, D5			; compare mode with 7
 			BEQ		DATA_MODE		; branc to data modes
 			
-INV_SIZE	BSR		DISPLAY_ERROR	;display error	
+.INV_SIZE	BSR		DISPLAY_ERROR	;display error	
 			BRA		break			;break from type subroutine
 			
-INV_MODE	BSR		DISPLAY_ERROR	;display error
+.INV_MODE 	BSR		DISPLAY_ERROR	;display error
 			BRA		break			;break from type subroutine
 			
-D_MODE		MOVE.B	D6,D1			;move reg value to D1
+.D_MODE		MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_DATAREG	;send to data register display subr  ********
 			BRA		break			;break
 
-A_MODE		BRA		INV_MODE		;invalid mode for this type
+.A_MODE		BRA		INV_MODE		;invalid mode for this type
 
-IND_MODE	MOVE.B	D6,D1			;move reg value to D1
+.IND_MODE	MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_INDIR	;send to data register indirect subr  ********
 			BRA		break			;break
 			
-PI_MODE		MOVE.B	D6,D1			;move reg value to D1
+.PI_MODE		MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_POSTINC	;send to POSTINCR display sub  ********
 			BRA		break			;break
 			
-PD_MODE		MOVE.B	D6,D1			;move reg value to D1
+.PD_MODE		MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_PREDEC	;send to data PREDEC display sub  ********
 			BRA		break			;break
 			
-DATA_MODE	CMP.B	#0,D6			; compare register to 000
+.DATA_MODE	CMP.B	#0,D6			; compare register to 000
 			BEQ		worddata		;branch to word data
 			
 			CMP.B	#1, D6			;compare register to 1
 			BEQ		longdata		;branch to long data
 			BGT		INV_MODE		;branch to invalid mode if reg greater than1
 						
-worddata	*BSR		DISPLAY_WORD	;display the .W
-			MOVE.W	(A6), D2		;pull word from datastream
+.worddata	MOVE.W	(A6), D2		;pull word from datastream
 			ADDA	#WORD, A6		;increment data pointer
 			
-*			BSR		DISPLAY_0x0		; display word in hex
+			BSR		DISPLAY_WORD_HEX		; display word in hex
 			BRA		break			; break from sub
 
-longdata	*BSR		DISPLAY_LONG	;display the .L
-			MOVE.L	(A6), D2		;pull long from datastream into D2
-			ADDA	#WORD, A6		;increment data pointer
-			ADDA	#WORD, A6
+.longdata	MOVE.L 	(A6), D2		;pull long from datastream into D2
+			ADDA	#LONG, A0		;increment data pointer
 			
-*			BSR		DISPLAY_0x0		; display long in hex
+			BSR		DISPLAY_LONG_HEX	; display long in hex
 			BRA		break			; break from sub
 
 		
-break			RTS					;return to calling instruction
+.break			RTS					;return to calling instruction
 
 
 *-------------------------------------------------------------------------------
