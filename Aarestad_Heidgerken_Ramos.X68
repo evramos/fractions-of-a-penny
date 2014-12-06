@@ -229,7 +229,6 @@ DISPLAY_LONG_HEX:
 			BSR INTI_LOOP
 			ROL.L #4,D2
 			BSR INTI_LOOP
-
 			RTS
 
 DISPLAY_WORD_HEX:
@@ -249,6 +248,13 @@ DISPLAY_WORD_HEX:
 			MOVE.W D3,D1 		* Move the saved position from D1 before display
 			RTS					* Returns from subroutine
 
+DISPLAY_BYTE_HEX:
+
+			ROL.B #4,D2			* Shifts to read the next hexadecimal digit
+			BSR INTI_LOOP		* Branch towards the loop of hex thingy
+			ROL.B #4,D2
+			BSR INTI_LOOP
+			RTS
 *----------------- Heart of the hexadecimal display Algorithm ------------------
 
 INTI_LOOP	MOVE.W D2,D1		* Move the current 16-bits into data register 3
