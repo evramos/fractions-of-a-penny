@@ -749,9 +749,9 @@ NEG_T		LEA NEG_M,A1
 			CMP.W (A2),D2
 			BNE  DISPLAY_ERROR
 
-			BSR DISPLAY_SIZE
+			;BSR DISPLAY_SIZE
 
-			; BSR EA_TYPE1
+		    BSR EA_TYPE1
 			RTS
 
 *- 024 LEA ----------------- Load Effective Address ----------------------------
@@ -895,15 +895,15 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 
 *--------------------------------- Source Code ---------------------------------
 
-; SOURCE_C	DC.L  TEST_1,0
+SOURCE_C	DC.L  TEST_1,0
 
-; TEST_1		DC.W $4400
-; 			DC.W $4440
-; 			DC.W $4480
-; 			DC.W 0
+TEST_1		DC.W $4400
+ 			DC.W $4440
+ 			DC.W $4480
+ 			DC.W 0
 
 
-SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
+;SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
 
 
 SOURCE_1	DC.W $4E75				RTS
@@ -985,6 +985,7 @@ SOURCE_5	DC.W $4E71
 			DC.W 0
 
 	END		START				* last line of source
+
 
 
 
