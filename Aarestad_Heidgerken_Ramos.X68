@@ -249,6 +249,15 @@ DISPLAY_WORD_HEX:
 			MOVE.W D3,D1 		* Move the saved position from D1 before display
 			RTS					* Returns from subroutine
 
+DISPLAY_BYTE_HEX:
+
+			ROL #4,D2			* Shifts to read the next hexadecimal digit
+			BSR INTI_LOOP		* Branch towards the loop of hex thingy
+			ROL #4,D2
+			BSR INTI_LOOP
+			RTS					* Returns from subroutine
+
+
 *----------------- Heart of the hexadecimal display Algorithm ------------------
 
 INTI_LOOP	MOVE.W D2,D1		* Move the current 16-bits into data register 3
@@ -346,9 +355,6 @@ DISPLAY_SIZE:
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
 
-			MOVE.W (A0),D1
-			ANDI.B #$C0,D1
-
 			CMPI.B #$C0,D1
 			BNE CHECK_A
 			RTS
@@ -370,14 +376,18 @@ CHECK_C		LEA BYTE_M,A1		* Loading message '.B' into address register 1
 CHECK_D		TRAP #15			* Display the string at (A1) without CR, LF
 
 
+			MOVE.W D1,D2 				******  TESTING BETA  ******
+
 
 *----------------- Moving the cursor to the desired location -------------------
 
 			MOVE.B #11,D0		* Moving task 11 into Data Register 0
 			MOVE.W POSITION,D1  * Setting up the desired row position
-			ADDI #$3500,D1		* Setting up the desired column position
-			TRAP #15			* Position the cursor at [2Cxx] x - any number
-			
+			ADDI #$1600,D1		* Setting up the desired column position
+			TRAP #15			* Position the cursor at [2Cxx] x - any number	
+
+
+			MOVE.W D2,D1 				******  TESTING BETA  ******
 
 			RTS					* Returns from subroutine
 
@@ -402,13 +412,14 @@ DISPLAY_ERROR:
 ****************** DISPLAY Dx,Ax,(Ax),(Ax)+,-(Ax) Subroutine *******************
 
 DATA_REG_M DC.B 'D', 0
-
 DISPLAY_DATAREG:
 
 			LEA DATA_REG_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 
+			MOVE.B #3,D0		* Display signed number in D1.L in decimal
+			TRAP #15
 			RTS
 
 
@@ -850,7 +861,7 @@ ORI_T		LEA ORI_M,A1
 
 ********************************* Data Section *********************************
 
-HEADER		DC.B	'Address   OP-Code	  Operand      			 Instruction', 0
+HEADER		DC.B	'Address   OP-Code	Operand				    Instruction', 0
 LINE 		DC.B 	'----------------------------------------',0
 PRESS_ANY   DC.B 	'  press ANY key to continue...',0
 INIT_HEX	DC.B	'0x',0
