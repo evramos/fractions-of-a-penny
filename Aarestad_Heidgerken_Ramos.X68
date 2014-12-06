@@ -450,7 +450,7 @@ EA_TYPE1:
 			BSR		DISPLAY_DATAREG	;send to data register display subr  ********
 			BRA		.break			;break
 
-.A_MODE		BRA		INV_MODE		;invalid mode for this type
+.A_MODE		BRA		.INV_MODE		;invalid mode for this type
 
 .IND_MODE	MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_INDIR	;send to data register indirect subr  ********
@@ -465,11 +465,11 @@ EA_TYPE1:
 			BRA		.break			;break
 			
 .DATA_MODE	CMP.B	#0,D6			; compare register to 000
-			BEQ		worddata		;branch to word data
+			BEQ		.worddata		;branch to word data
 			
 			CMP.B	#1, D6			;compare register to 1
-			BEQ		longdata		;branch to long data
-			BGT		INV_MODE		;branch to invalid mode if reg greater than1
+			BEQ		.longdata		;branch to long data
+			BGT		.INV_MODE		;branch to invalid mode if reg greater than1
 						
 .worddata	MOVE.W	(A6), D2		;pull word from datastream
 			ADDA	#WORD, A6		;increment data pointer
