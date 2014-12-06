@@ -12,6 +12,7 @@ CR			EQU   $000D
 LF			EQU   $000A
 START		EQU   $1000			* Program starting address
 EXIT		EQU   $2700			* Simulator stoping code
+BYTE 		EQU   $0001 		* Advance address by a byte
 WORD		EQU   $0002			* Advance address by a word
 LONG		EQU   $0004			* Advance address by a long
 BITMASK8	EQU   $00FF
