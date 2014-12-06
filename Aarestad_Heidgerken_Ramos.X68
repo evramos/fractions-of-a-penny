@@ -417,10 +417,10 @@ EA_TYPE1:
 			BSR		DISPLAY_SIZE	;send to display size subr
 			
 			CMP.B 	#0, D5			;compare mode with 0
-			BEQ		D_MODE			;branch to Data reg mode
+			BEQ		.D_MODE			;branch to Data reg mode
 			
 			CMP.B	#1, D5			;compare mode with 1
-			BEQ		A_MODE			;branch to Address reg mode
+			BEQ		.A_MODE			;branch to Address reg mode
 			
 			CMP.B	#2, D5			;compare mode with #2
 			BEQ		.IND_MODE		;branch to indirect Mode (Ax)
