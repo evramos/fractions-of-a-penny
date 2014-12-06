@@ -441,28 +441,28 @@ EA_TYPE1:
 			BEQ		.DATA_MODE		; branc to data modes
 			
 .INV_SIZE	BSR		DISPLAY_ERROR	;display error	
-			BRA		break			;break from type subroutine
+			BRA		.break			;break from type subroutine
 			
 .INV_MODE 	BSR		DISPLAY_ERROR	;display error
-			BRA		break			;break from type subroutine
+			BRA		.break			;break from type subroutine
 			
 .D_MODE		MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_DATAREG	;send to data register display subr  ********
-			BRA		break			;break
+			BRA		.break			;break
 
 .A_MODE		BRA		INV_MODE		;invalid mode for this type
 
 .IND_MODE	MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_INDIR	;send to data register indirect subr  ********
-			BRA		break			;break
+			BRA		.break			;break
 			
 .PI_MODE		MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_POSTINC	;send to POSTINCR display sub  ********
-			BRA		break			;break
+			BRA		.break			;break
 			
 .PD_MODE		MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_PREDEC	;send to data PREDEC display sub  ********
-			BRA		break			;break
+			BRA		.break			;break
 			
 .DATA_MODE	CMP.B	#0,D6			; compare register to 000
 			BEQ		worddata		;branch to word data
@@ -475,13 +475,13 @@ EA_TYPE1:
 			ADDA	#WORD, A6		;increment data pointer
 			
 			BSR		DISPLAY_WORD_HEX		; display word in hex
-			BRA		break			; break from sub
+			BRA		.break			; break from sub
 
 .longdata	MOVE.L 	(A6), D2		;pull long from datastream into D2
 			ADDA	#LONG, A0		;increment data pointer
 			
 			BSR		DISPLAY_LONG_HEX	; display long in hex
-			BRA		break			; break from sub
+			BRA		.break			; break from sub
 
 		
 .break			RTS					;return to calling instruction
