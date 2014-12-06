@@ -229,6 +229,7 @@ DISPLAY_LONG_HEX:
 			BSR INTI_LOOP
 			ROL.L #4,D2
 			BSR INTI_LOOP
+
 			RTS
 
 DISPLAY_WORD_HEX:
@@ -248,13 +249,6 @@ DISPLAY_WORD_HEX:
 			MOVE.W D3,D1 		* Move the saved position from D1 before display
 			RTS					* Returns from subroutine
 
-DISPLAY_BYTE_HEX:
-
-			ROL.B #4,D2			* Shifts to read the next hexadecimal digit
-			BSR INTI_LOOP		* Branch towards the loop of hex thingy
-			ROL.B #4,D2
-			BSR INTI_LOOP
-			RTS
 *----------------- Heart of the hexadecimal display Algorithm ------------------
 
 INTI_LOOP	MOVE.W D2,D1		* Move the current 16-bits into data register 3
@@ -374,6 +368,17 @@ CHECK_B		CMPI.B #$40,D1
 CHECK_C		LEA BYTE_M,A1		* Loading message '.B' into address register 1
 
 CHECK_D		TRAP #15			* Display the string at (A1) without CR, LF
+
+
+
+*----------------- Moving the cursor to the desired location -------------------
+
+			MOVE.B #11,D0		* Moving task 11 into Data Register 0
+			MOVE.W POSITION,D1  * Setting up the desired row position
+			ADDI #$3500,D1		* Setting up the desired column position
+			TRAP #15			* Position the cursor at [2Cxx] x - any number
+			
+
 			RTS					* Returns from subroutine
 
 
@@ -394,10 +399,31 @@ DISPLAY_ERROR:
 			RTS
 
 
+****************** DISPLAY Dx,Ax,(Ax),(Ax)+,-(Ax) Subroutine *******************
+
+DATA_REG_M DC.B 'D', 0
+
+DISPLAY_DATAREG:
+
+			LEA DATA_REG_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+
+			RTS
+
+
+
+
+DISPLAY_ADDEREG DC.B 'Ax',0
+DISPLAY_INDIR   DC.B '(Ax)',0
+DISPLAY_POSTINC DC.B '(Ax)+',0
+DISPLAY_PREDEC  DC.B '-(Ax)',0
+
+
 ************************* Effective Address Algorithm **************************
 *-------------------------------------------------------------------------------
 * Type 1 mode xxxx xxxx ssoo oorrr
-* Subroutine for handling One Operand addressing looking for a mode and register
+* Subroutine for handling One Operand addressing looking for a mode and register 
 * value
 * Written by: David Heidgerken
 * Description.  16 bit Instruction will be passed to subroutine via D7
@@ -418,76 +444,76 @@ EA_TYPE1:
 			MOVE.L	D4,D1			;load sizeinto D1
 			
 			CMP.B	#3,D1			;siz of %11(3) is invalid
-			BEQ		INV_SIZE		;branch to invalid size block
+			BEQ		.INV_SIZE		;branch to invalid size block
 			
 			BSR		DISPLAY_SIZE	;send to display size subr
 			
 			CMP.B 	#0, D5			;compare mode with 0
-			BEQ		D_MODE			;branch to Data reg mode
+			BEQ		.D_MODE			;branch to Data reg mode
 			
 			CMP.B	#1, D5			;compare mode with 1
-			BEQ		A_MODE			;branch to Address reg mode
+			BEQ		.A_MODE			;branch to Address reg mode
 			
 			CMP.B	#2, D5			;compare mode with #2
-			BEQ		IND_MODE		;branch to indirect Mode (Ax)
+			BEQ		.IND_MODE		;branch to indirect Mode (Ax)
 
 			CMP.B	#3, D5			;compare mode with 3
-			BEQ		PI_MODE			; branch tp post incrementmodebr
+			BEQ		.PI_MODE			; branch tp post incrementmodebr
 			
 			CMP.B	#4, D5			;compare mode with 4
-			BEQ		PD_MODE			;branchto Post decrement mode
+			BEQ		.PD_MODE			;branchto Post decrement mode
 			
 			CMP.B	#5, D5			; compare mode with 5 (not implemented)
-			BEQ		INV_MODE		;brancht invalid mode
+			BEQ		.INV_MODE		;brancht invalid mode
 			
 			CMP.B	#6, D5			; compare mode to 6 (not implemented)
-			BEQ		INV_MODE		;brancht invalid mode
+			BEQ		.INV_MODE		;brancht invalid mode
 
 			CMP.B	#7, D5			; compare mode with 7
-			BEQ		DATA_MODE		; branc to data modes
+			BEQ		.DATA_MODE		; branc to data modes
 			
 .INV_SIZE	BSR		DISPLAY_ERROR	;display error	
-			BRA		break			;break from type subroutine
+			BRA		.break			;break from type subroutine
 			
 .INV_MODE 	BSR		DISPLAY_ERROR	;display error
-			BRA		break			;break from type subroutine
+			BRA		.break			;break from type subroutine
 			
 .D_MODE		MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_DATAREG	;send to data register display subr  ********
-			BRA		break			;break
+			BRA		.break			;break
 
-.A_MODE		BRA		INV_MODE		;invalid mode for this type
+.A_MODE		BRA		.INV_MODE		;invalid mode for this type
 
 .IND_MODE	MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_INDIR	;send to data register indirect subr  ********
-			BRA		break			;break
+			BRA		.break			;break
 			
 .PI_MODE		MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_POSTINC	;send to POSTINCR display sub  ********
-			BRA		break			;break
+			BRA		.break			;break
 			
 .PD_MODE		MOVE.B	D6,D1			;move reg value to D1
 			BSR		DISPLAY_PREDEC	;send to data PREDEC display sub  ********
-			BRA		break			;break
+			BRA		.break			;break
 			
 .DATA_MODE	CMP.B	#0,D6			; compare register to 000
-			BEQ		worddata		;branch to word data
+			BEQ		.worddata		;branch to word data
 			
 			CMP.B	#1, D6			;compare register to 1
-			BEQ		longdata		;branch to long data
-			BGT		INV_MODE		;branch to invalid mode if reg greater than1
+			BEQ		.longdata		;branch to long data
+			BGT		.INV_MODE		;branch to invalid mode if reg greater than1
 						
 .worddata	MOVE.W	(A6), D2		;pull word from datastream
 			ADDA	#WORD, A6		;increment data pointer
 			
 			BSR		DISPLAY_WORD_HEX		; display word in hex
-			BRA		break			; break from sub
+			BRA		.break			; break from sub
 
 .longdata	MOVE.L 	(A6), D2		;pull long from datastream into D2
 			ADDA	#LONG, A0		;increment data pointer
 			
 			BSR		DISPLAY_LONG_HEX	; display long in hex
-			BRA		break			; break from sub
+			BRA		.break			; break from sub
 
 		
 .break			RTS					;return to calling instruction
@@ -750,14 +776,14 @@ MOVEM_T		LEA MOVEM_M,A1
 NEG_T		LEA NEG_M,A1
 
 
-			MOVE.W (A0),D2		* Moving the current 16-bits address into D2
-			ANDI.W #$FF00,D2
-			CMP.W (A2),D2
-			BNE  DISPLAY_ERROR
+			; MOVE.W (A0),D2		* Moving the current 16-bits address into D2
+			; ANDI.W #$FF00,D2
+			; CMP.W (A2),D2
+			; BNE  DISPLAY_ERROR
 
-			BSR DISPLAY_SIZE
+			; BSR DISPLAY_SIZE
 
-			; BSR EA_TYPE1
+			BSR EA_TYPE1
 			RTS
 
 *- 024 LEA ----------------- Load Effective Address ----------------------------
@@ -834,14 +860,12 @@ BYTE_M		DC.B  	'.B',0
 WORD_M		DC.B  	'.W',0
 LONG_M		DC.B  	'.L',0
 
-DISPLAY_DATAREG DC.B 'Dx',0
-DISPLAY_ADDEREG DC.B 'Ax',0
-DISPLAY_INDIR   DC.B '(Ax)',0
-DISPLAY_POSTINC DC.B '(Ax)+',0
-DISPLAY_PREDEC  DC.B '-(Ax)',0
+; DISPLAY_DATAREG DC.B 'Dx' 0
+; DISPLAY_ADDEREG DC.B 'Ax',0
+; DISPLAY_INDIR   DC.B '(Ax)',0
+; DISPLAY_POSTINC DC.B '(Ax)+',0
+; DISPLAY_PREDEC  DC.B '-(Ax)',0
 
-; DISPLAY_WORD - displays 16bits of data can just use DISPLAY_0x0 if needed.
-; DISPLAY_LONG - displays 32 bits of data, maybe just a wrapper for DISPLAY_0x0?
 ; DISPLAY_REGS - for use in MOVEM where we need to display a / delimited list of Registers and ranges of registers.
 
 NEWLINE_M	DC.B  CR,LF,0
@@ -901,15 +925,15 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 
 *--------------------------------- Source Code ---------------------------------
 
-; SOURCE_C	DC.L  TEST_1,0
+SOURCE_C	DC.L  TEST_1,0
 
-; TEST_1		DC.W $4400
-; 			DC.W $4440
-; 			DC.W $4480
-; 			DC.W 0
+TEST_1		DC.W $4400
+			DC.W $4440
+			DC.W $4480
+			DC.W 0
 
 
-SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
+; SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
 
 
 SOURCE_1	DC.W $4E75				RTS
