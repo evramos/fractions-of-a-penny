@@ -495,20 +495,20 @@ DISPLAY_PREDEC:
 EA_TYPE1:
 			MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
 			MOVE.B	#%00000111, D5	;move primative 3 bitmask into D4
-			LSL.W	#3,D5			;shift mask in D5 left 3 times
-			MOVE.W  #%11000000, D4	;move size mask into D4
+			LSL.W	3,D5			;shift mask in D5 left 3 times
+;			MOVE.W  #%11000000, D4	;move size mask into D4
 
 			
 			AND.W	D7,D6			;and D7 and D6 store in D6 Register
 			AND.W	D7,D5			;and D7 and D5 store in D5 Mode
-			AND.W	D7,D4			;and D7 and D4 store in D4 Size
+;			AND.W	D7,D4			;and D7 and D4 store in D4 Size
 			
-			MOVE.L	D4,D1			;load sizeinto D1
+;			MOVE.L	D4,D1			;load sizeinto D1
 			
-			CMP.B	#3,D1			;siz of %11(3) is invalid
-			BEQ		.INV_SIZE		;branch to invalid size block
+;			CMP.B	#3,D1			;siz of %11(3) is invalid
+;			BEQ		.INV_SIZE		;branch to invalid size block
 			
-			BSR		DISPLAY_SIZE	;send to display size subr
+;			BSR		DISPLAY_SIZE	;send to display size subr
 			
 			CMP.B 	#0, D5			;compare mode with 0
 			BEQ		.D_MODE			;branch to Data reg mode
