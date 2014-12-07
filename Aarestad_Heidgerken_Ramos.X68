@@ -12,7 +12,7 @@ CR			EQU   $000D
 LF			EQU   $000A
 START		EQU   $1000			* Program starting address
 EXIT		EQU   $2700			* Simulator stoping code
-BYTE 		EQU   $0001 		* Advance address by a byte
+BYTE		EQU   $0001			* Advance address by a byte
 WORD		EQU   $0002			* Advance address by a word
 LONG		EQU   $0004			* Advance address by a long
 BITMASK8	EQU   $00FF
@@ -56,7 +56,7 @@ NEXT_SOURCE	MOVEA.L (A2)+,A0		*******  TESTING BETA  ******
 			MOVE.B #13,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
 
-			LEA HEADER,A1		* Load Dissassembler header message into A1 
+			LEA HEADER,A1		* Load Dissassembler header message into A1
 			TRAP #15			* Display the string at (A1) with CR, LF.
 
 			LEA LINE,A1
@@ -239,11 +239,11 @@ DISPLAY_WORD_HEX:
 			ROL #4,D2			* Shifts to read the next hexadecimal digit
 			BSR INTI_LOOP		* Branch towards the loop of hex thingy
 
-			ROL #4,D2 			* I HATE THIS, SO MUCH REPEATING CODE
+			ROL #4,D2			* I HATE THIS, SO MUCH REPEATING CODE
 			BSR INTI_LOOP		* I TRIED EVERYTHING WITHOUT USING ANOTHER
-			ROL #4,D2 			* DATA REGISTER. THAT IS SUCH A WASTE... GOSH
+			ROL #4,D2			* DATA REGISTER. THAT IS SUCH A WASTE... GOSH
 			BSR INTI_LOOP		* SO I'M GOING TO LEAVE THIS HERE, BECUASE I
-			ROL #4,D2 			* REALLY DON"T CARE. TOO MUCH TIME WAS WASTED
+			ROL #4,D2			* REALLY DON"T CARE. TOO MUCH TIME WAS WASTED
 			BSR INTI_LOOP		* ANNND YES!! NO MORE BAD CODE (IT WORKS DEAL)
 
 			MOVE.W D3,D1		* Move the saved position from D1 before display
@@ -360,7 +360,9 @@ DISPLAY_SIZE:
 
 			CMPI.B #$C0,D1
 			BNE CHECK_A
-			RTS
+
+			; RTS
+			BRA CHECK_E  				******  TESTING BETA  ******
 
 CHECK_A		CMPI.B #$80,D1
 			BNE CHECK_B
@@ -378,17 +380,14 @@ CHECK_C		LEA BYTE_M,A1		* Loading message '.B' into address register 1
 
 CHECK_D		TRAP #15			* Display the string at (A1) without CR, LF
 
-
 			MOVE.W D1,D2 				******  TESTING BETA  ******
-
 
 *----------------- Moving the cursor to the desired location -------------------
 
-			MOVE.B #11,D0		* Moving task 11 into Data Register 0
+CHECK_E		MOVE.B #11,D0		* Moving task 11 into Data Register 0
 			MOVE.W POSITION,D1  * Setting up the desired row position
 			ADDI #$1600,D1		* Setting up the desired column position
 			TRAP #15			* Position the cursor at [2Cxx] x - any number	
-
 
 			MOVE.W D2,D1 				******  TESTING BETA  ******
 
@@ -414,9 +413,7 @@ DISPLAY_ERROR:
 
 ****************** DISPLAY Dx,Ax,(Ax),(Ax)+,-(Ax) Subroutine *******************
 
-DATA_REG_M DC.B 'D',0
 DISPLAY_DATAREG:
-
 			LEA DATA_REG_M,A1
 			MOVE.B #14,D0
 			TRAP #15
@@ -425,63 +422,38 @@ DISPLAY_DATAREG:
 			TRAP #15
 			RTS
 
-ADDER_REG_M DC.B 'A',0
 DISPLAY_ADDEREG:
-
-			LEA ADDER_REG_M,A1
+			LEA ADDRESS_Ax,A1
 			MOVE.B #14,D0
 			TRAP #15
 
 			MOVE.B #3,D0		* Display signed number in D1.L in decimal
 			TRAP #15
 			RTS
-			
-INDIRO_M   DC.B '(A',0
-INDIRC_M   DC.B ')',0			
-DISPLAY_INDIR:
 
-			LEA INDIRO_M,A1
-			MOVE.B #14,D0
-			TRAP #15
-
-			MOVE.B #3,D0		* Display signed number in D1.L in decimal
-			TRAP #15
-			
-			LEA INDIRC_M,A1
-			MOVE.B #14,D0
-			TRAP #15
-			RTS
-
-POSTO_M   DC.B '(A',0
-POSTC_M   DC.B ')+',0			
 DISPLAY_POSTINC:
+			LEA NEGATIVE_M,A1
+			MOVE.B #14,D0
+			TRAP #15
 
-			LEA POSTO_M,A1
+DISPLAY_INDIR:
+			LEA PRE_BRACKET,A1
 			MOVE.B #14,D0
 			TRAP #15
 
 			MOVE.B #3,D0		* Display signed number in D1.L in decimal
 			TRAP #15
-			
-			
-			LEA POSTC_M,A1
+
+			LEA POST_BRACKE,A1
 			MOVE.B #14,D0
 			TRAP #15
 			RTS
-			
-PREO_M   DC.B '-(A',0
-PREC_M   DC.B ')',0			
-DISPLAY_PREDEC:
-
-			LEA PREO_M,A1
-			MOVE.B #14,D0
-			TRAP #15
-
-			MOVE.B #3,D0		* Display signed number in D1.L in decimal
-			TRAP #15
 					
-			LEA PREC_M,A1
-			MOVE.B #14,D0
+DISPLAY_PREDEC:
+			BSR DISPLAY_INDIR
+
+			MOVE.B #$2B,D1
+			MOVE.B #6,D0
 			TRAP #15
 			RTS
 
@@ -489,7 +461,7 @@ DISPLAY_PREDEC:
 ************************* Effective Address Algorithm **************************
 *-------------------------------------------------------------------------------
 * Type 1 mode xxxx xxxx ssoo oorrr
-* Subroutine for handling One Operand addressing looking for a mode and register 
+* Subroutine for handling One Operand addressing looking for a mode and register
 * value
 * Written by: David Heidgerken
 * Description.  16 bit Instruction will be passed to subroutine via D7
@@ -497,80 +469,73 @@ DISPLAY_PREDEC:
 * D6 used for Register value, D5 is mode D4 is the Size
 *-------------------------------------------------------------------------------
 EA_TYPE1:
-			MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3
-			MOVE.B	#%00000111, D5	;move primative 3 bitmask into D4
-			LSL.W	#3,D5			;shift mask in D5 left 3 times
+			MOVE.B	#%00111000, D5	* move primative 3 bitmask into D4 	0x38 (OPMODE)
+			MOVE.B	#%00000111, D6	* move primative 3 bitmask into D3 	0x07 (REGISTER)
 
-			AND.W	D7,D6			;and D7 and D6 store in D6 Register
-			AND.W	D7,D5			;and D7 and D5 store in D5 Mode
+			AND.W	D7,D5			* and D7 and D5 store in D5 (OPMODE)
+			AND.W	D7,D6			* and D7 and D6 store in D6 (REGISTER)
+			LSR.B	#3,D5			* Shifts the temp OPMODE right 3 places
 			
-			CMP.L	#0, D5			;compare mode with 0
-			BEQ		.D_MODE			;branch to Data reg mode
-			
-			CMP.L	#1, D5			;compare mode with 1
-			BEQ		.A_MODE			;branch to Address reg mode
-			
-			CMP.L	#2, D5			;compare mode with #2
-			BEQ		.IND_MODE		;branch to indirect Mode (Ax)
+			MOVE.L	D6,D1			* Move register value to D1
 
-			CMP.L	#3, D5			;compare mode with 3
-			BEQ		.PI_MODE			; branch tp post incrementmodebr
-			
-			CMP.L	#4, D5			;compare mode with 4
-			BEQ		.PD_MODE			;branchto Post decrement mode
-			
-			CMP.L	#5, D5			; compare mode with 5 (not implemented)
-			BEQ		.INV_MODE		;brancht invalid mode
-			
-			CMP.L	#6, D5			; compare mode to 6 (not implemented)
-			BEQ		.INV_MODE		;brancht invalid mode
+*------------------------ Compares between OPMODE 0-6 --------------------------
 
-			CMP.L	#7, D5			; compare mode with 7
-			BEQ		.DATA_MODE		; branc to data modes
-			
+			TST.B	D5				* Compare OpMode with 000	Dx  ************
+			BNE		.A_MODE			* Branch to OpMode Data Register
+			BRA		DISPLAY_DATAREG	* Send to data register display subr
 
+.A_MODE		CMP.B	#1, D5			* compare opmode with 001	Ax  ************
+			BNE		.IND_MODE		* branch to Address reg mode
+			BRA		DISPLAY_ERROR	* Invalid mode for this type
 			
-.INV_MODE	BSR		DISPLAY_ERROR	;display error
-			BRA		.break			;break from type subroutine
-			
-.D_MODE		MOVE.L	D6,D1			;move reg value to D1
-			BSR		DISPLAY_DATAREG	;send to data register display subr  ********
-			BRA		.break			;break
+.IND_MODE	CMP.B	#2, D5			* compare opmode with 010  (Ax) ************
+			BNE		.PI_MODE		* branch to indirect Mode
+			BRA		DISPLAY_INDIR	* Send to data register indirect subr
 
-.A_MODE		BRA		.INV_MODE		;invalid mode for this type
+.PI_MODE	CMP.B	#3, D5			* compare opmode with 011  (Ax)+ ***********
+			BNE		.PD_MODE		* branch tp post incrementmodebr
+			BRA		DISPLAY_POSTINC	* Send to POSTINCR display sub
 
-.IND_MODE	MOVE.L	D6,D1			;move reg value to D1
-			BSR		DISPLAY_INDIR	;send to data register indirect subr  ********
-			BRA		.break			;break
+.PD_MODE	CMP.B	#4, D5			* compare opmode with 100 -(Ax) ************
+			BNE		.DATA_MODE		* branchto Post decrement mode
+			BRA		DISPLAY_PREDEC
+
+			; CMP.B	#5, D5			* compare opmode with 101 (not implemented)
+			; BEQ		.INV_MODE		* brancht invalid mode
 			
-.PI_MODE	MOVE.L	D6,D1			;move reg value to D1
-			BSR		DISPLAY_POSTINC	;send to POSTINCR display sub  ********
-			BRA		.break			;break
+			; CMP.B	#6, D5			* compare opmode with 110 (not implemented)
+			; BEQ		.INV_MODE		* brancht invalid mode
+
+*---------------- Compares between OPMODE 7 (xxx).W or (xxx).L -----------------
+
+.DATA_MODE	CMP.B	#7, D5			* compare opmode with 111 .W .L ************
+			BNE		.INV_MODE		* branc to data modes
+
+			TST.B	D6				* compare register to 000 (xxx).W
+			BEQ		.WORDDATA		;branch to word data
 			
-.PD_MODE	MOVE.L	D6,D1			;move reg value to D1
-			BSR		DISPLAY_PREDEC	;send to data PREDEC display sub  ********
-			BRA		.break			;break
-			
-.DATA_MODE	CMP.B	#0,D6			; compare register to 000
-			BEQ		.worddata		;branch to word data
-			
-			CMP.B	#1, D6			;compare register to 1
-			BEQ		.longdata		;branch to long data
-			BGT		.INV_MODE		;branch to invalid mode if reg greater than1
+			CMP.B	#1, D6			* compare register to 001 (xxx).L
+			BEQ		.LONGDATA		;branch to long data
+			BRA		DISPLAY_ERROR	;branch to invalid mode if reg greater than1
 						
-.worddata	MOVE.W	(A6), D2		;pull word from datastream
-			ADDA	#WORD, A6		;increment data pointer
-			
-			BSR		DISPLAY_WORD_HEX		; display word in hex
-			BRA		.break			; break from sub
+.WORDDATA	LEA INIT_MEM,A1
+			MOVE.B #14,D0
+			TRAP #15
 
-.longdata	MOVE.L	(A6), D2		;pull long from datastream into D2
-			ADDA	#LONG, A0		;increment data pointer
-			
-			BSR		DISPLAY_LONG_HEX	; display long in hex
-			BRA		.break			; break from sub
-		
-.break		RTS					;return to calling instruction
+			ADDA.W #WORD,A0
+			MOVE.W (A0),D2
+			BRA	DISPLAY_WORD_HEX		; display word in hex
+
+.LONGDATA	LEA INIT_MEM,A1
+			MOVE.B #14,D0
+			TRAP #15
+
+			ADDA.W #WORD,A0
+			MOVE.L (A0),D2
+			ADDA.W #WORD,A0
+			BRA	DISPLAY_LONG_HEX	; display long in hex
+
+.INV_MODE	BRA		DISPLAY_ERROR	* Display error
 
 
 ******************** OP-CODE: Individual Task Subroutine Set *******************
@@ -658,32 +623,32 @@ OR_T		LEA OR_M,A1
 
 *- 013 BLT -------------------- Branch Less Than -------------------------------
 
-BLT_T		LEA BLT_M,A1 		* Loading the OP name into address register 1
-			BSR DISPLACEMENT 	* Branches to the displacement subroutine
+BLT_T		LEA BLT_M,A1		* Loading the OP name into address register 1
+			BSR DISPLACEMENT	* Branches to the displacement subroutine
 			RTS					* Returns from subroutine
 
 *- 014 BGE ---------------- Branch Greater OR Equal ----------------------------
 
 BGE_T		LEA BGE_M,A1 		* Loading the OP name into address register 1
-			BSR DISPLACEMENT 	* Branches to the displacement subroutine
+			BSR DISPLACEMENT	* Branches to the displacement subroutine
 			RTS					* Returns from subroutine
 
 *- 015 BVC ----------------- Branch Overflow Clear -----------------------------
 
-BVC_T		LEA BVC_M,A1 		* Loading the OP name into address register 1
-			BSR DISPLACEMENT 	* Branches to the displacement subroutine
+BVC_T		LEA BVC_M,A1		* Loading the OP name into address register 1
+			BSR DISPLACEMENT	* Branches to the displacement subroutine
 			RTS					* Returns from subroutine
 
 *- 015 BVS -------------------- Branch Carry Set -------------------------------
 
-BCS_T		LEA BCS_M,A1 		* Loading the OP name into address register 1
-			BSR DISPLACEMENT 	* Branches to the displacement subroutine
+BCS_T		LEA BCS_M,A1		* Loading the OP name into address register 1
+			BSR DISPLACEMENT	* Branches to the displacement subroutine
 			RTS					* Returns from subroutine
 
 *- 017 BRA --------------------- Branch Always ---------------------------------
 
-BRA_T		LEA BRA_M,A1 		* Loading the OP name into address register 1
-			BSR DISPLACEMENT 	* Branches to the displacement subroutine
+BRA_T		LEA BRA_M,A1		* Loading the OP name into address register 1
+			BSR DISPLACEMENT	* Branches to the displacement subroutine
 			RTS					* Returns from subroutine
 
 *- 018 SUBQ -------------------- Subtract Quick --------------------------------
@@ -800,20 +765,22 @@ ORI_T		LEA ORI_M,A1
 ********************************* Data Section *********************************
 
 HEADER		DC.B	'Address   OP-Code	Operand				    Instruction', 0
-LINE 		DC.B 	'----------------------------------------',0
-PRESS_ANY   DC.B 	'  press ANY key to continue...',0
+LINE		DC.B	'----------------------------------------',0
+PRESS_ANY	DC.B	'  press ANY key to continue...',0
+
 INIT_HEX	DC.B	'0x',0
 INIT_MEM	DC.B	'$',0
 DATA_M		DC.B	'DATA ',0
-BYTE_M		DC.B  	'.B',0
-WORD_M		DC.B  	'.W',0
-LONG_M		DC.B  	'.L',0
 
-; DISPLAY_DATAREG DC.B 'Dx' 0
-; DISPLAY_ADDEREG DC.B 'Ax',0
-; DISPLAY_INDIR   DC.B '(Ax)',0
-; DISPLAY_POSTINC DC.B '(Ax)+',0
-; DISPLAY_PREDEC  DC.B '-(Ax)',0
+BYTE_M		DC.B	'.B',0
+WORD_M		DC.B	'.W',0
+LONG_M		DC.B	'.L',0
+
+NEGATIVE_M	DC.B	'-',0
+PRE_BRACKET	DC.B 	'(A',0
+POST_BRACKE	DC.B 	')',0
+ADDRESS_Ax	DC.B 	'A',0
+DATA_REG_M	DC.B 	'D',0
 
 ; DISPLAY_REGS - for use in MOVEM where we need to display a / delimited list of Registers and ranges of registers.
 
@@ -874,21 +841,64 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 
 *--------------------------------- Source Code ---------------------------------
 
-SOURCE_C	DC.L  TEST_1,0
+SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,0
 
-TEST_1		DC.W $4400 	0100 0100 00 00 0 000
-			DC.W $4401 	0100 0100 00 00 0 001
-			DC.W $4402 	0100 0100 00 00 0 010
-
-			DC.W $4403 	0100 0100 00 00 0 011
-			DC.W $4404 	0100 0100 00 00 0 100
-			DC.W $4405 	0100 0100 00 00 0 101
-
-			DC.W $4406 	0100 0100 00 00 0 110
-			DC.W $4407 	0100 0100 00 00 0 111
-
+TEST_0		DC.W $4440
+			DC.W $4451
+			DC.W $4462
+			DC.W $445B
+			DC.W $4478,$2001
+			DC.W $4479,$1000,$2001
 			DC.W 0
 
+* Displays Dx 1-7
+TEST_1		DC.W %0100010000000000		
+			DC.W %0100010001000001
+			DC.W %0100010010000010
+			DC.W %0100010011000011
+			DC.W %0100010000000100
+			DC.W %0100010001000101
+			DC.W %0100010010000110
+			DC.W %0100010011000111
+			DC.W 0
+
+* Displays (Ax) 1-7
+TEST_2		DC.W %0100010000010000		
+			DC.W %0100010000010001
+			DC.W %0100010000010010
+			DC.W %0100010000010011
+			DC.W %0100010000010100
+			DC.W %0100010000010101
+			DC.W %0100010000010110
+			DC.W %0100010000010111
+			DC.W 0
+
+* Displays (Ax)+ 1-7
+TEST_3		DC.W %0100010000011000		
+			DC.W %0100010000011001
+			DC.W %0100010000011010
+			DC.W %0100010000011011
+			DC.W %0100010000011100
+			DC.W %0100010000011101
+			DC.W %0100010000011110
+			DC.W %0100010000011111
+			DC.W 0
+
+* Displays -(Ax) 1-7
+TEST_4		DC.W %0100010000100000		
+			DC.W %0100010000100001
+			DC.W %0100010000100010
+			DC.W %0100010000100011
+			DC.W %0100010000100100
+			DC.W %0100010000100101
+			DC.W %0100010000100110
+			DC.W %0100010000100111
+			DC.W 0
+
+* Displays (xxx).W
+TEST_5		DC.W %0100010000111000,$2000		
+			DC.W %0100010000111001,$3000,$4000
+			DC.W 0
 
 ; SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
 
