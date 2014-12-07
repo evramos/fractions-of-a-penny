@@ -234,7 +234,7 @@ DISPLAY_LONG_HEX:
 
 DISPLAY_WORD_HEX:
 			
-			MOVE.W D1,D3 		* Saves the current position into D3 for later
+			MOVE.W D1,D3		* Saves the current position into D3 for later
 
 			ROL #4,D2			* Shifts to read the next hexadecimal digit
 			BSR INTI_LOOP		* Branch towards the loop of hex thingy
@@ -242,11 +242,11 @@ DISPLAY_WORD_HEX:
 			ROL #4,D2 			* I HATE THIS, SO MUCH REPEATING CODE
 			BSR INTI_LOOP		* I TRIED EVERYTHING WITHOUT USING ANOTHER
 			ROL #4,D2 			* DATA REGISTER. THAT IS SUCH A WASTE... GOSH
-			BSR INTI_LOOP		* SO I'M GOING TO LEAVE THIS HERE, BECUASE I 
+			BSR INTI_LOOP		* SO I'M GOING TO LEAVE THIS HERE, BECUASE I
 			ROL #4,D2 			* REALLY DON"T CARE. TOO MUCH TIME WAS WASTED
 			BSR INTI_LOOP		* ANNND YES!! NO MORE BAD CODE (IT WORKS DEAL)
 
-			MOVE.W D3,D1 		* Move the saved position from D1 before display
+			MOVE.W D3,D1		* Move the saved position from D1 before display
 			RTS					* Returns from subroutine
 
 DISPLAY_BYTE_HEX:
@@ -362,7 +362,7 @@ DISPLAY_SIZE:
 			BNE CHECK_A
 			RTS
 
-CHECK_A 	CMPI.B #$80,D1
+CHECK_A		CMPI.B #$80,D1
 			BNE CHECK_B
 
 			LEA LONG_M,A1		* Loading message '.L' into address register 1
@@ -414,7 +414,7 @@ DISPLAY_ERROR:
 
 ****************** DISPLAY Dx,Ax,(Ax),(Ax)+,-(Ax) Subroutine *******************
 
-DATA_REG_M DC.B 'D', 0
+DATA_REG_M DC.B 'D',0
 DISPLAY_DATAREG:
 
 			LEA DATA_REG_M,A1
@@ -497,50 +497,40 @@ DISPLAY_PREDEC:
 * D6 used for Register value, D5 is mode D4 is the Size
 *-------------------------------------------------------------------------------
 EA_TYPE1:
-			MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
+			MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3
 			MOVE.B	#%00000111, D5	;move primative 3 bitmask into D4
 			LSL.W	#3,D5			;shift mask in D5 left 3 times
 
 			AND.W	D7,D6			;and D7 and D6 store in D6 Register
 			AND.W	D7,D5			;and D7 and D5 store in D5 Mode
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-			LSR.W	#3,D5			;shift bits right
-			AND.W	D7,D4			;and D7 and D4 store in D4 Size
 			
-		
-=======
->>>>>>> origin/Davids
-			
->>>>>>> origin/Davids
-			CMP.B 	#0, D5			;compare mode with 0
+			CMP.L	#0, D5			;compare mode with 0
 			BEQ		.D_MODE			;branch to Data reg mode
 			
-			CMP.B	#1, D5			;compare mode with 1
+			CMP.L	#1, D5			;compare mode with 1
 			BEQ		.A_MODE			;branch to Address reg mode
 			
-			CMP.B	#2, D5			;compare mode with #2
+			CMP.L	#2, D5			;compare mode with #2
 			BEQ		.IND_MODE		;branch to indirect Mode (Ax)
 
-			CMP.B	#3, D5			;compare mode with 3
+			CMP.L	#3, D5			;compare mode with 3
 			BEQ		.PI_MODE			; branch tp post incrementmodebr
 			
-			CMP.B	#4, D5			;compare mode with 4
+			CMP.L	#4, D5			;compare mode with 4
 			BEQ		.PD_MODE			;branchto Post decrement mode
 			
-			CMP.B	#5, D5			; compare mode with 5 (not implemented)
+			CMP.L	#5, D5			; compare mode with 5 (not implemented)
 			BEQ		.INV_MODE		;brancht invalid mode
 			
-			CMP.B	#6, D5			; compare mode to 6 (not implemented)
+			CMP.L	#6, D5			; compare mode to 6 (not implemented)
 			BEQ		.INV_MODE		;brancht invalid mode
 
-			CMP.B	#7, D5			; compare mode with 7
+			CMP.L	#7, D5			; compare mode with 7
 			BEQ		.DATA_MODE		; branc to data modes
 			
 
 			
-.INV_MODE 	BSR		DISPLAY_ERROR	;display error
+.INV_MODE	BSR		DISPLAY_ERROR	;display error
 			BRA		.break			;break from type subroutine
 			
 .D_MODE		MOVE.L	D6,D1			;move reg value to D1
@@ -574,17 +564,13 @@ EA_TYPE1:
 			BSR		DISPLAY_WORD_HEX		; display word in hex
 			BRA		.break			; break from sub
 
-.longdata	MOVE.L 	(A6), D2		;pull long from datastream into D2
+.longdata	MOVE.L	(A6), D2		;pull long from datastream into D2
 			ADDA	#LONG, A0		;increment data pointer
 			
 			BSR		DISPLAY_LONG_HEX	; display long in hex
 			BRA		.break			; break from sub
-
 		
-.break			RTS					;return to calling instruction
-
-
-
+.break		RTS					;return to calling instruction
 
 
 ******************** OP-CODE: Individual Task Subroutine Set *******************
