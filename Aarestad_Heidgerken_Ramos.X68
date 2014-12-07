@@ -425,13 +425,65 @@ DISPLAY_DATAREG:
 			TRAP #15
 			RTS
 
+ADDER_REG_M DC.B 'A',0
+DISPLAY_ADDEREG:
 
+			LEA ADDER_REG_M,A1
+			MOVE.B #14,D0
+			TRAP #15
 
+			MOVE.B #3,D0		* Display signed number in D1.L in decimal
+			TRAP #15
+			RTS
+			
+INDIRO_M   DC.B '(A',0
+INDIRC_M   DC.B ')',0			
+DISPLAY_INDIR:
 
-DISPLAY_ADDEREG DC.B 'Ax',0
-DISPLAY_INDIR   DC.B '(Ax)',0
-DISPLAY_POSTINC DC.B '(Ax)+',0
-DISPLAY_PREDEC  DC.B '-(Ax)',0
+			LEA INDIRO_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+
+			MOVE.B #3,D0		* Display signed number in D1.L in decimal
+			TRAP #15
+			
+			LEA INDIRC_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+			RTS
+
+POSTO_M   DC.B '(A',0
+POSTC_M   DC.B ')+',0			
+DISPLAY_POSTINC:
+
+			LEA POSTO_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+
+			MOVE.B #3,D0		* Display signed number in D1.L in decimal
+			TRAP #15
+			
+			
+			LEA POSTC_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+			RTS
+			
+PREO_M   DC.B '-(A',0
+PREC_M   DC.B ')',0			
+DISPLAY_PREDEC:
+
+			LEA PREO_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+
+			MOVE.B #3,D0		* Display signed number in D1.L in decimal
+			TRAP #15
+					
+			LEA PREC_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+			RTS
 
 
 ************************* Effective Address Algorithm **************************
@@ -448,7 +500,6 @@ EA_TYPE1:
 			MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
 			MOVE.B	#%00000111, D5	;move primative 3 bitmask into D4
 			LSL.W	#3,D5			;shift mask in D5 left 3 times
-			MOVE.W  #%11000000, D4	;move size mask into D4
 
 			AND.W	D7,D6			;and D7 and D6 store in D6 Register
 			AND.W	D7,D5			;and D7 and D5 store in D5 Mode
