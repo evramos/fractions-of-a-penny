@@ -234,7 +234,7 @@ DISPLAY_LONG_HEX:
 
 DISPLAY_WORD_HEX:
 			
-			MOVE.W D1,D3 		* Saves the current position into D3 for later
+			MOVE.W D1,D3		* Saves the current position into D3 for later
 
 			ROL #4,D2			* Shifts to read the next hexadecimal digit
 			BSR INTI_LOOP		* Branch towards the loop of hex thingy
@@ -242,11 +242,11 @@ DISPLAY_WORD_HEX:
 			ROL #4,D2 			* I HATE THIS, SO MUCH REPEATING CODE
 			BSR INTI_LOOP		* I TRIED EVERYTHING WITHOUT USING ANOTHER
 			ROL #4,D2 			* DATA REGISTER. THAT IS SUCH A WASTE... GOSH
-			BSR INTI_LOOP		* SO I'M GOING TO LEAVE THIS HERE, BECUASE I 
+			BSR INTI_LOOP		* SO I'M GOING TO LEAVE THIS HERE, BECUASE I
 			ROL #4,D2 			* REALLY DON"T CARE. TOO MUCH TIME WAS WASTED
 			BSR INTI_LOOP		* ANNND YES!! NO MORE BAD CODE (IT WORKS DEAL)
 
-			MOVE.W D3,D1 		* Move the saved position from D1 before display
+			MOVE.W D3,D1		* Move the saved position from D1 before display
 			RTS					* Returns from subroutine
 
 DISPLAY_BYTE_HEX:
@@ -362,7 +362,7 @@ DISPLAY_SIZE:
 			BNE CHECK_A
 			RTS
 
-CHECK_A 	CMPI.B #$80,D1
+CHECK_A		CMPI.B #$80,D1
 			BNE CHECK_B
 
 			LEA LONG_M,A1		* Loading message '.L' into address register 1
@@ -414,7 +414,7 @@ DISPLAY_ERROR:
 
 ****************** DISPLAY Dx,Ax,(Ax),(Ax)+,-(Ax) Subroutine *******************
 
-DATA_REG_M DC.B 'D', 0
+DATA_REG_M DC.B 'D',0
 DISPLAY_DATAREG:
 
 			LEA DATA_REG_M,A1
@@ -497,41 +497,40 @@ DISPLAY_PREDEC:
 * D6 used for Register value, D5 is mode D4 is the Size
 *-------------------------------------------------------------------------------
 EA_TYPE1:
-			MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
+			MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3
 			MOVE.B	#%00000111, D5	;move primative 3 bitmask into D4
 			LSL.W	#3,D5			;shift mask in D5 left 3 times
 
 			AND.W	D7,D6			;and D7 and D6 store in D6 Register
 			AND.W	D7,D5			;and D7 and D5 store in D5 Mode
 			
-			CMP.B 	#0, D5			;compare mode with 0
+			CMP.L	#0, D5			;compare mode with 0
 			BEQ		.D_MODE			;branch to Data reg mode
 			
-			CMP.B	#1, D5			;compare mode with 1
+			CMP.L	#1, D5			;compare mode with 1
 			BEQ		.A_MODE			;branch to Address reg mode
 			
-			CMP.B	#2, D5			;compare mode with #2
+			CMP.L	#2, D5			;compare mode with #2
 			BEQ		.IND_MODE		;branch to indirect Mode (Ax)
 
-			CMP.B	#3, D5			;compare mode with 3
+			CMP.L	#3, D5			;compare mode with 3
 			BEQ		.PI_MODE			; branch tp post incrementmodebr
 			
-			CMP.B	#4, D5			;compare mode with 4
+			CMP.L	#4, D5			;compare mode with 4
 			BEQ		.PD_MODE			;branchto Post decrement mode
 			
-			CMP.B	#5, D5			; compare mode with 5 (not implemented)
+			CMP.L	#5, D5			; compare mode with 5 (not implemented)
 			BEQ		.INV_MODE		;brancht invalid mode
 			
-			CMP.B	#6, D5			; compare mode to 6 (not implemented)
+			CMP.L	#6, D5			; compare mode to 6 (not implemented)
 			BEQ		.INV_MODE		;brancht invalid mode
 
-			CMP.B	#7, D5			; compare mode with 7
+			CMP.L	#7, D5			; compare mode with 7
 			BEQ		.DATA_MODE		; branc to data modes
 			
-.INV_SIZE	BSR		DISPLAY_ERROR	;display error	
-			BRA		.break			;break from type subroutine
+
 			
-.INV_MODE 	BSR		DISPLAY_ERROR	;display error
+.INV_MODE	BSR		DISPLAY_ERROR	;display error
 			BRA		.break			;break from type subroutine
 			
 .D_MODE		MOVE.L	D6,D1			;move reg value to D1
@@ -544,11 +543,11 @@ EA_TYPE1:
 			BSR		DISPLAY_INDIR	;send to data register indirect subr  ********
 			BRA		.break			;break
 			
-.PI_MODE		MOVE.B	D6,D1			;move reg value to D1
+.PI_MODE	MOVE.L	D6,D1			;move reg value to D1
 			BSR		DISPLAY_POSTINC	;send to POSTINCR display sub  ********
 			BRA		.break			;break
 			
-.PD_MODE		MOVE.B	D6,D1			;move reg value to D1
+.PD_MODE	MOVE.L	D6,D1			;move reg value to D1
 			BSR		DISPLAY_PREDEC	;send to data PREDEC display sub  ********
 			BRA		.break			;break
 			
@@ -565,119 +564,13 @@ EA_TYPE1:
 			BSR		DISPLAY_WORD_HEX		; display word in hex
 			BRA		.break			; break from sub
 
-.longdata	MOVE.L 	(A6), D2		;pull long from datastream into D2
+.longdata	MOVE.L	(A6), D2		;pull long from datastream into D2
 			ADDA	#LONG, A0		;increment data pointer
 			
 			BSR		DISPLAY_LONG_HEX	; display long in hex
 			BRA		.break			; break from sub
-
 		
-.break			RTS					;return to calling instruction
-
-
-*-------------------------------------------------------------------------------
-* Type 2 xxxx xxxx dddd dddd
-* SubRoutine for handling One Operand Displacement.
-* Written by: David Heidgerken
-* Description.  16 bit Instruction will be passed to subroutine via D7
-* and will parse the instruciton to determine the offset being used stored in D6
-*-------------------------------------------------------------------------------
-EA_TYPE2	MOVE.B	#%11111111, D6	;move 8bitmask into D6
-			AND.L	D7,D6			;and D7 with D6(Offset)
-			; BSR
-
-*-------------------------------------------------------------------------------
-* Type 3 xxxx rrrooo oorrr
-* SubRoutine for handling two Operand Effective addressing to find 2 3 bit modes
-* and two 3 bit registers
-* Written by: David Heidgerken
-* Description.  16 bit Instruction will be passed to subroutine via D7
-* and will parse the last 12 bits to determine the addressing mode and 
-* locations of the data.
-* source register stored in D3, source mode in D4 Dest mode in D5 dest register
-* in D6
-*-------------------------------------------------------------------------------
-EA_TYPE3	MOVE.B	#BITMASK3, D6	;move primative 3 bit mask into D6
-			MOVE.B	#BITMASK3, D5	;move primative 3 bitmask into D5
-			MOVE.B	#BITMASK3, D4	;move primative 3 bit mask into D4
-			MOVE.B	#BITMASK3, D3	;move primative 3 bit mask into D3
-
-			LSL.W	#3,D5			;shift mask left 3 times
-			LSL.W	#6,D4			;shift mask left 6 times
-			LSL.W	#6,D3			;shift mask left 6 times
-			LSL.W	#6,D3			;shift mask left 3 times
-
-			AND.L	D7,D6			;and D7 with D6 DestRegister
-			AND.L	D7,D5			;and D7 with D5	DestMode
-			AND.L	D7,D4			;and D7 with D4 SrcMode
-			AND.L	D7,D3			;and D7 with D3 SrcRegister
-
-			; BSR
-
-*-------------------------------------------------------------------------------
-* Type 4   - xxxx DDD1 ssoo orrr
-* Sub Routine to find Size and EA(mode and Register) and Data from instruction
-* D3 stores Databits
-* D4 Stores Size
-* D5 stores Mode
-* D6 stores Register
-*-------------------------------------------------------------------------------
-EA_TYPE4	MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
-			MOVE.B	#%00000111, D5	;move primative 3 bitmask into D4
-			LSL.W	#3,D5			;shift mask in D5 left 3 times
-			MOVE.W  #%11000000, D4	;move size mask into D4
-			MOVE.W	#%00001110, D3	; move Datamask into D3
-			LSL.W	#8,D3			; shift datamask 8 places
-
-			AND.W	D7,D6			;and D7 and D6 store in D6 Register
-			AND.W	D7,D5			;and D7 and D5 store in D5 Mode
-			AND.W	D7,D4			;and D7 and D4 store in D4 Size
-			AND.W	D7,D3			;and D7 and D3 store in D3 Data
-	
-			; BSR						;return to calling instruction
-
-*-------------------------------------------------------------------------------
-* Type 5 mode xxxx xDxx ssoo oorrr
-* SubRoutine for handling One Operand addressing looking for a mode and register 
-* value
-* Written by: David Heidgerken
-* Description.  16 bit Instruction will be passed to subroutine via D7
-* and will parse it to find which address mode and location is being used.
-* D6 used for Register value, D5 is mode D4 is the Size D3 is direction bit
-*-----------------------------------------------------------------------------
-EA_TYPE5	MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
-			MOVE.B	#%00000111, D5	;move primative 3 bitmask into D4
-			LSL.W	#3,D5			;shift mask in D5 left 3 times
-			MOVE.W  #%11000000, D4	;move size mask into D4
-			MOVE.W	#%00000100, D3	;move data mask into D3
-			LSL.W	#8,D3			;shift mask 8 bits in D3
-
-			
-			AND.W	D7,D6			;and D7 and D6 store in D6 Register
-			AND.W	D7,D5			;and D7 and D5 store in D5 Mode
-			AND.W	D7,D4			;and D7 and D4 store in D4 Size
-			AND.W	D7,D3			;and D7 and D3 store in D3 Direction
-			; BSR						;return to calling instruction
-
-*-------------------------------------------------------------------------------
-* Type 6 mode xxxx DDDx ssix xrrr	
-* Subroutine for Shift and rotate funcitons
-* D3 - stores Data
-* D4 -stores Size
-* D5 stores i(immediate or Register)
-* D6 stores register
-*-------------------------------------------------------------------------------
-EA_TYPE6 	MOVE.B 	#%00001110, D3	;move data maskinto D3
-			LSL.W	#8,D3			; Shift it left into the upper 8 bytes
-			MOVE.B	#%11000000, D4	;move size masking into D4
-			MOVE.B	#%00100000,	D5	;move i masking into D5
-			MOVE.B	#%00000111,	D6	;move register mask into D6
-
-			AND.W	D7,D3			;value of Data in D3
-			AND.W	D7,D4			;value of size in D4
-			AND.W	D7,D5			;value of i in D5
-			AND.W	D7,D6			;value of register in D6
-			; BSR
+.break		RTS					;return to calling instruction
 
 
 ******************** OP-CODE: Individual Task Subroutine Set *******************
