@@ -355,6 +355,9 @@ DISPLAY_SIZE:
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
 
+			MOVE.W (A0),D1
+			ANDI.B #$C0,D1
+
 			CMPI.B #$C0,D1
 			BNE CHECK_A
 			RTS
@@ -443,12 +446,11 @@ DISPLAY_INDIR:
 
 			MOVE.B #3,D0		* Display signed number in D1.L in decimal
 			TRAP #15
-			RTS
 			
 			LEA INDIRC_M,A1
 			MOVE.B #14,D0
 			TRAP #15
-			
+			RTS
 
 POSTO_M   DC.B '(A',0
 POSTC_M   DC.B ')+',0			
@@ -460,14 +462,15 @@ DISPLAY_POSTINC:
 
 			MOVE.B #3,D0		* Display signed number in D1.L in decimal
 			TRAP #15
-			RTS
+			
 			
 			LEA POSTC_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			RTS
 			
-PREO_M   DC.B '(A',0
-PREC_M   DC.B ')+',0			
+PREO_M   DC.B '-(A',0
+PREC_M   DC.B ')',0			
 DISPLAY_PREDEC:
 
 			LEA PREO_M,A1
@@ -476,11 +479,11 @@ DISPLAY_PREDEC:
 
 			MOVE.B #3,D0		* Display signed number in D1.L in decimal
 			TRAP #15
-			RTS
-			
+					
 			LEA PREC_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			RTS
 
 
 ************************* Effective Address Algorithm **************************
@@ -497,15 +500,17 @@ EA_TYPE1:
 			MOVE.B	#%00000111, D6	;move primative 3 bit mask into D3 
 			MOVE.B	#%00000111, D5	;move primative 3 bitmask into D4
 			LSL.W	#3,D5			;shift mask in D5 left 3 times
-			MOVE.W  #%11000000, D4	;move size mask into D4
 
-			
 			AND.W	D7,D6			;and D7 and D6 store in D6 Register
 			AND.W	D7,D5			;and D7 and D5 store in D5 Mode
+<<<<<<< HEAD
 			LSR.W	#3,D5			;shift bits right
 			AND.W	D7,D4			;and D7 and D4 store in D4 Size
 			
 		
+=======
+			
+>>>>>>> origin/Davids
 			CMP.B 	#0, D5			;compare mode with 0
 			BEQ		.D_MODE			;branch to Data reg mode
 			
@@ -729,15 +734,7 @@ MOVEM_T		LEA MOVEM_M,A1
 *- 023 NEG ------------------------- Negate ------------------------------------
 
 NEG_T		LEA NEG_M,A1
-
-
-			; MOVE.W (A0),D2		* Moving the current 16-bits address into D2
-			; ANDI.W #$FF00,D2
-			; CMP.W (A2),D2
-			; BNE  DISPLAY_ERROR
-
-			; BSR DISPLAY_SIZE
-
+			BSR DISPLAY_SIZE
 			BSR EA_TYPE1
 			RTS
 
@@ -787,6 +784,10 @@ MOB_T		LEA MOB_M,A1
 
 CMPI_T		LEA CMPI_M,A1
 			BSR DISPLAY_SIZE
+
+			*** ADD YOUR CODE HERE
+
+			BSR EA_TYPE1
 			RTS
 
 *- 031 BCLR ----------------- Test a Bit and Clear -----------------------------
@@ -800,6 +801,10 @@ BCLR_T		LEA BCLR_M,A1
 
 ORI_T		LEA ORI_M,A1
 			BSR DISPLAY_SIZE
+
+			*** ADD YOUR CODE HERE
+
+			BSR EA_TYPE1
 			RTS
 
 
@@ -882,9 +887,17 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 
 SOURCE_C	DC.L  TEST_1,0
 
-TEST_1		DC.W $4400
-			DC.W $4440
-			DC.W $4480
+TEST_1		DC.W $4400 	0100 0100 00 00 0 000
+			DC.W $4401 	0100 0100 00 00 0 001
+			DC.W $4402 	0100 0100 00 00 0 010
+
+			DC.W $4403 	0100 0100 00 00 0 011
+			DC.W $4404 	0100 0100 00 00 0 100
+			DC.W $4405 	0100 0100 00 00 0 101
+
+			DC.W $4406 	0100 0100 00 00 0 110
+			DC.W $4407 	0100 0100 00 00 0 111
+
 			DC.W 0
 
 
