@@ -541,21 +541,21 @@ EA_TYPE1:
 .INV_MODE 	BSR		DISPLAY_ERROR	;display error
 			BRA		.break			;break from type subroutine
 			
-.D_MODE		MOVE.B	D6,D1			;move reg value to D1
+.D_MODE		MOVE.W	D6,D1			;move reg value to D1
 			BSR		DISPLAY_DATAREG	;send to data register display subr  ********
 			BRA		.break			;break
 
 .A_MODE		BRA		.INV_MODE		;invalid mode for this type
 
-.IND_MODE	MOVE.B	D6,D1			;move reg value to D1
+.IND_MODE	MOVE.W	D6,D1			;move reg value to D1
 			BSR		DISPLAY_INDIR	;send to data register indirect subr  ********
 			BRA		.break			;break
 			
-.PI_MODE		MOVE.B	D6,D1			;move reg value to D1
+.PI_MODE		MOVE.W	D6,D1			;move reg value to D1
 			BSR		DISPLAY_POSTINC	;send to POSTINCR display sub  ********
 			BRA		.break			;break
 			
-.PD_MODE		MOVE.B	D6,D1			;move reg value to D1
+.PD_MODE		MOVE.W	D6,D1			;move reg value to D1
 			BSR		DISPLAY_PREDEC	;send to data PREDEC display sub  ********
 			BRA		.break			;break
 			
