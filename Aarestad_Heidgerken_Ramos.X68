@@ -566,6 +566,130 @@ EA_TYPE1:
 
 .INV_MODE	BRA		DISPLAY_ERROR	* Display error
 
+*-------------------------------------------------------------------------------
+* Type 3 xxxx rrrooo oorrr
+* SubRoutine for handling two Operand Effective addressing to find 2 3 bit modes
+* and two 3 bit registers
+* Written by: David Heidgerken
+* Description.  16 bit Instruction will be passed to subroutine via D7
+* and will parse the last 12 bits to determine the addressing mode and 
+* locations of the data.
+* source register stored in D3, source mode in D4 Dest mode in D5 dest register
+* in D6
+*-------------------------------------------------------------------------------		
+EA_TYPE3:
+			MOVE.B	#%00001110, D3	* move primative 3 bitmask into D3 	0xD (REGISTER)
+			LSL.W	#8, D3			* shift right eight time into upper bit 0x0D00
+			MOVE.B	#%11100000, D4	* move primative 3 bitmask into D4 	0xD0 (OPMODE)
+			LSL.B	#1, D4			* shiftleft 1 time 0x01C0
+			MOVE.B	#%00111000, D5	* move primative 3 bitmask into D5 0x38(EA MODE)
+			MOVE.B 	#%00000111, D6	* move primative 3 bit maskinto D6 0x7(EA REGISTER)
+
+			AND.W	D7, D3			* and D7 and D5 store in D3 (REGISTER)
+			LSR.W	#8, D3			* shift it right 8 times
+			AND.W	D7, D4			* and D7 and D6 store in D4 (OPMODE)
+			LSR.W	#6, D4			* Shifts the temp OPMODE right 6 places.
+			AND.W	D7, D5			* and D7 and D5 (EA MODE)
+			LSR.W	#3, D5			* shift right 3 times
+			AND.W	D7, D6			* and D7 and D6 (EA REGISTER)
+			
+			MOVE.L	D6,D1			* Move register value to D1
+
+*------------------------ Compares Destination or Source Modes -----------------
+.OPMODE		CMP.B	#3,D4			;compare opmode to 3
+			BGT		.D_MODE			;do EA comparrisons first
+			BLT		.DEST_MODE		;send to destination mode
+			BEQ		.INV_MODE		; #3 is invalid mode for this type.
+
+.SRC_MODE	MOVE.L	D3, D1			;load D3 into D1 for printing.
+			BSR		DISPLAY_DATAREG	;display Data Reg first.
+			BRA		.exit
+			
+.DEST_MODE	MOVE.L	D3, D1			;load D3 into D1 for printing.
+			BSR		DISPLAY_DATAREG	;display Data Reg first.
+			BRA		.D_MODE			;send to addressmode comparrisons	
+			
+*------------------------ Compares between EA MODE 0-6 --------------------------
+
+.D_MODE		TST.B	D5				* Compare OpMode with 000	Dx  ************
+			BNE		.A_MODE			* Branch to A register mode
+			MOVE.L	D6, D1			* load D6 into D1 for printing.
+			BSR		DISPLAY_DATAREG	* Send to data register display subr
+			BRA		.BREAK
+
+.A_MODE		CMP.B	#1, D5			* compare opmode with 001	Ax  ************
+			BNE		.IND_MODE		* branch to indir mode
+			BSR		DISPLAY_ERROR	* Invalid mode for this type
+			
+.IND_MODE	CMP.B	#2, D5			* compare opmode with 010  (Ax) ************
+			BNE		.PI_MODE		* branch to post incr mode
+			MOVE.L	D6, D1			* load D6 into D1 for printing.
+			BSR		DISPLAY_INDIR	* Send to data register indirect subr
+
+.PI_MODE	CMP.B	#3, D5			* compare opmode with 011  (Ax)+ ***********
+			BNE		.PD_MODE		* branch tp pre dec
+			BSR		DISPLAY_POSTINC	* Send to POSTINCR display sub
+
+.PD_MODE	CMP.B	#4, D5			* compare opmode with 100 -(Ax) ************
+			BNE		.DATA_MODE		* branchto Post data mode
+			MOVE.L	D6, D1			* load D6 into D1 for printing.
+			BSR		DISPLAY_PREDEC
+
+			; CMP.B	#5, D5			* compare opmode with 101 (not implemented)
+			; BEQ		.INV_MODE		* brancht invalid mode
+			
+			; CMP.B	#6, D5			* compare opmode with 110 (not implemented)
+			; BEQ		.INV_MODE		* brancht invalid mode
+
+*---------------- Compares between OPMODE 7 (xxx).W or (xxx).L -----------------
+
+.DATA_MODE	CMP.B	#7, D5			* compare opmode with 111 .W .L ************
+			BNE		.INV_MODE		* branch to invalid mode
+
+			TST.B	D6				* compare register to 000 (xxx).W
+			BEQ		.WORDDATA		;branch to word data
+			
+			CMP.B	#1, D6			* compare register to 001 (xxx).L
+			BEQ		.LONGDATA		;branch to long data
+			
+			CMP.B	#4,D6			* compare register to 100 (xxx).B
+			BEQ		.BYTEDATA
+			
+			BRA		DISPLAY_ERROR	;branch to invalid mode if reg greater than1
+
+.BYTEDATA	LEA INIT_MEM,A1
+			MOVE.B #14,D0
+			TRAP #15
+
+			ADDA.W #WORD,A0
+			MOVE.W (A0),D2
+			; ADDA.B #BYTE, A0
+			BSR	DISPLAY_BYTE_HEX
+						
+.WORDDATA	LEA INIT_MEM,A1
+			MOVE.B #14,D0
+			TRAP #15
+
+			ADDA.W #WORD,A0
+			MOVE.W (A0),D2
+			BSR	DISPLAY_WORD_HEX		; display word in hex
+
+.LONGDATA	LEA INIT_MEM,A1
+			MOVE.B #14,D0
+			TRAP #15
+
+			ADDA.W #WORD,A0
+			MOVE.L (A0),D2
+			ADDA.W #WORD,A0
+			BSR	DISPLAY_LONG_HEX	; display long in hex
+
+.INV_MODE	BRA		DISPLAY_ERROR	* Display error
+
+.BREAK		CMP.B	#3,D4			;compare opmode to 3
+			BGT		.SRC_MODE		;send to src mode
+	
+.EXIT		RTS
+
 
 ******************** OP-CODE: Individual Task Subroutine Set *******************
 
@@ -648,6 +772,7 @@ DIVS_T		LEA DIVS_M,A1
 
 OR_T		LEA OR_M,A1
 			BSR DISPLAY_SIZE
+			BSR EA_TYPE3
 			RTS
 
 *- 013 BLT -------------------- Branch Less Than -------------------------------
@@ -870,7 +995,9 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 
 *--------------------------------- Source Code ---------------------------------
 
-SOURCE_C	DC.L  ORI_1,ORI_2,ORI_3,0
+SOURCE_C	DC.L  OR_1,ORI_1,ORI_2,ORI_3,0
+
+OR_1		DC.W $8455,0
 
 ORI_1		DC.W $0000,$00AB
 			DC.W $0041,$ABCD
