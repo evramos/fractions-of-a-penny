@@ -127,16 +127,15 @@ LOOP_OP		MOVE.W (A0),D3		* Move the current 16-bits into data register 3
 			ADDI.W #$0A00,D1	* Setting up the desired column position
 			TRAP #15			* Position the cursor at [0Axx] x - any number
 
-			MOVE.L A0,SAVE_STATE	******  TESTING BETA  ******
-
-			MOVE.W (A0),D7 		 ***** Saving current instruction in D7 *****
+			MOVE.L A0,SAVE_STATE	******  BETA (Save the current address to display later) ******
+			MOVE.W (A0),D7 			******  BETA (Saving current instruction in D7 for EA David) ******
 
 *-------- Retrieve matched then execute task by jumping to subroutine ----------
 
 			MOVEA.W (A3),A3		* Moves the task address into the same (An)
 			JSR (A3)			* Jumps to the current task subroutine from A3
 
-			BSR DISPLAY_INTRUCTION	******  TESTING BETA  ******
+			BSR DISPLAY_INTRUCTION	******  BETA (display the whole set of instructions used)  ******
 
 			BRA SHIFT_OP		* Shifts to the next 16-bits of the source code
 
@@ -179,8 +178,7 @@ DISPLAY_INTRUCTION:
 			MOVE.W POSITION,D1  * Setting up the desired row position
 			ADDI #$3500,D1		* Setting up the desired column position
 			TRAP #15			* Position the cursor at [2Cxx] x - any number
-
-			ADDI #$0200,D1			******  TESTING BETA  ******
+			ADDI #$0200,D1		* Increase the cursor two spaces '__'
 
 			LEA INIT_HEX,A1
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
@@ -213,8 +211,8 @@ NEWLINE		LEA NEWLINE_M,A1	* Loading NEWLINE into (A1) for next instruction
 
 DISPLAY_LONG_HEX:
 
-			ROL.L #4,D2
-			BSR INTI_LOOP
+			ROL.L #4,D2			* Shifts to read the next hexadecimal digit
+			BSR INTI_LOOP		* Branch towards the loop of hex thingy
 			ROL.L #4,D2	
 			BSR INTI_LOOP
 			ROL.L #4,D2	
@@ -236,14 +234,14 @@ DISPLAY_WORD_HEX:
 			
 			MOVE.W D1,D3		* Saves the current position into D3 for later
 
-			ROL #4,D2			* Shifts to read the next hexadecimal digit
+			ROL.W #4,D2			* Shifts to read the next hexadecimal digit
 			BSR INTI_LOOP		* Branch towards the loop of hex thingy
 
-			ROL #4,D2			* I HATE THIS, SO MUCH REPEATING CODE
+			ROL.W #4,D2			* I HATE THIS, SO MUCH REPEATING CODE
 			BSR INTI_LOOP		* I TRIED EVERYTHING WITHOUT USING ANOTHER
-			ROL #4,D2			* DATA REGISTER. THAT IS SUCH A WASTE... GOSH
+			ROL.W #4,D2			* DATA REGISTER. THAT IS SUCH A WASTE... GOSH
 			BSR INTI_LOOP		* SO I'M GOING TO LEAVE THIS HERE, BECUASE I
-			ROL #4,D2			* REALLY DON"T CARE. TOO MUCH TIME WAS WASTED
+			ROL.W #4,D2			* REALLY DON"T CARE. TOO MUCH TIME WAS WASTED
 			BSR INTI_LOOP		* ANNND YES!! NO MORE BAD CODE (IT WORKS DEAL)
 
 			MOVE.W D3,D1		* Move the saved position from D1 before display
@@ -268,7 +266,6 @@ INTI_LOOP	MOVE.W D2,D1		* Move the current 16-bits into data register 3
 			
 			MOVE.B #3,D0		* Display signed number in D1.L in decimal
 			TRAP #15
-
 			RTS
 
 PRINT_HEX	LEA HEX_BITMASK,A2
@@ -362,7 +359,7 @@ DISPLAY_SIZE:
 			CMPI.B #$C0,D3
 			BNE CHECK_A
 
-			BRA CHECK_E  				******  TESTING BETA  ******
+			BRA OPERAND_POSITION  		******  TESTING BETA  ******
 
 CHECK_A		CMPI.B #2,D3
 			BNE CHECK_B
@@ -382,7 +379,8 @@ CHECK_D		TRAP #15			* Display the string at (A1) without CR, LF
 
 *----------------- Moving the cursor to the desired location -------------------
 
-CHECK_E		MOVE.B #11,D0		* Moving task 11 into Data Register 0
+OPERAND_POSITION:
+			MOVE.B #11,D0		* Moving task 11 into Data Register 0
 			MOVE.W POSITION,D1  * Setting up the desired row position
 			ADDI #$1600,D1		* Setting up the desired column position
 			TRAP #15			* Position the cursor at [2Cxx] x - any number	
