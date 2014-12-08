@@ -251,9 +251,9 @@ DISPLAY_WORD_HEX:
 
 DISPLAY_BYTE_HEX:
 
-			ROL #4,D2			* Shifts to read the next hexadecimal digit
+			ROL.B #4,D2			* Shifts to read the next hexadecimal digit
 			BSR INTI_LOOP		* Branch towards the loop of hex thingy
-			ROL #4,D2
+			ROL.B #4,D2
 			BSR INTI_LOOP
 			RTS					* Returns from subroutine
 
@@ -355,22 +355,22 @@ DISPLAY_SIZE:
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
 
-			MOVE.W (A0),D1
-			ANDI.B #$C0,D1
+			MOVE.W (A0),D3
+			ANDI.B #$C0,D3
+			LSR.B #6,D3
 
-			CMPI.B #$C0,D1
+			CMPI.B #$C0,D3
 			BNE CHECK_A
 
-			; RTS
 			BRA CHECK_E  				******  TESTING BETA  ******
 
-CHECK_A		CMPI.B #$80,D1
+CHECK_A		CMPI.B #2,D3
 			BNE CHECK_B
 
 			LEA LONG_M,A1		* Loading message '.L' into address register 1
 			BRA CHECK_D
 
-CHECK_B		CMPI.B #$40,D1
+CHECK_B		CMPI.B #1,D3
 			BNE CHECK_C
 
 			LEA WORD_M,A1		* Loading message '.W' into address register 1
@@ -380,8 +380,6 @@ CHECK_C		LEA BYTE_M,A1		* Loading message '.B' into address register 1
 
 CHECK_D		TRAP #15			* Display the string at (A1) without CR, LF
 
-			MOVE.W D1,D2 				******  TESTING BETA  ******
-
 *----------------- Moving the cursor to the desired location -------------------
 
 CHECK_E		MOVE.B #11,D0		* Moving task 11 into Data Register 0
@@ -389,9 +387,42 @@ CHECK_E		MOVE.B #11,D0		* Moving task 11 into Data Register 0
 			ADDI #$1600,D1		* Setting up the desired column position
 			TRAP #15			* Position the cursor at [2Cxx] x - any number	
 
-			MOVE.W D2,D1 				******  TESTING BETA  ******
-
 			RTS					* Returns from subroutine
+
+
+********************* Display the Data Immediate Subroutine ********************
+
+DISPLAY_IMMEDIATE:
+
+			LEA INIT_DATA,A1
+			MOVE.B #14,D0
+			TRAP #15
+
+			TST.B D3
+			BNE WORD_DATA
+
+			ADDA.W #WORD,A0
+			MOVE.W (A0),D2
+			BSR DISPLAY_BYTE_HEX
+			BRA END_DATA
+
+WORD_DATA	CMP.B #1,D3
+			BNE LONG_DATA
+
+			ADDA.W #WORD,A0
+			MOVE.W (A0),D2
+			BSR DISPLAY_WORD_HEX
+			BRA END_DATA
+
+LONG_DATA	ADDA.W #WORD,A0
+			MOVE.L (A0),D2
+			BSR DISPLAY_LONG_HEX
+			ADDA.W #WORD,A0
+
+END_DATA 	LEA COMMA_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+			RTS
 
 
 ************************ DISPLAY ERROR DATA Subroutine *************************
@@ -738,9 +769,7 @@ MOB_T		LEA MOB_M,A1
 
 CMPI_T		LEA CMPI_M,A1
 			BSR DISPLAY_SIZE
-
-			*** ADD YOUR CODE HERE
-
+			BSR DISPLAY_IMMEDIATE
 			BSR EA_TYPE1
 			RTS
 
@@ -755,9 +784,7 @@ BCLR_T		LEA BCLR_M,A1
 
 ORI_T		LEA ORI_M,A1
 			BSR DISPLAY_SIZE
-
-			*** ADD YOUR CODE HERE
-
+			BSR DISPLAY_IMMEDIATE
 			BSR EA_TYPE1
 			RTS
 
@@ -770,6 +797,10 @@ PRESS_ANY	DC.B	'  press ANY key to continue...',0
 
 INIT_HEX	DC.B	'0x',0
 INIT_MEM	DC.B	'$',0
+INIT_DATA	DC.B	'#$',0
+
+COMMA_M		DC.B 	',',0
+
 DATA_M		DC.B	'DATA ',0
 
 BYTE_M		DC.B	'.B',0
@@ -841,9 +872,26 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 
 *--------------------------------- Source Code ---------------------------------
 
-SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5
-			DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
+SOURCE_C	DC.L  ORI_1,ORI_2,ORI_3,0
 
+ORI_1		DC.W $0000,$00AB
+			DC.W $0041,$ABCD
+			DC.W $0082,$89AB,$CDEF
+			DC.W 0
+
+ORI_2		DC.W $0038,$00AB,$3000
+			DC.W $0078,$ABCD,$4000
+			DC.W $00B8,$89AB,$CDEF,$5000
+			DC.W 0
+
+ORI_3		DC.W $0039,$00AB,$3000,$4000
+			DC.W $0079,$ABCD,$4000,$5000
+			DC.W $00B9,$89AB,$CDEF,$5000,$6000
+			DC.W 0
+
+*-------------------------------------------------------------------------------
+
+; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,0
 
 TEST_0		DC.W $4440
 			DC.W $4451
@@ -902,6 +950,10 @@ TEST_5		DC.W %0100010000111000,$2000
 			DC.W %0100010000111001,$3000,$4000
 			DC.W 0
 
+
+*-------------------------------------------------------------------------------
+
+; SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
 
 SOURCE_1	DC.W $4E75				RTS
 			DC.W $D6C7				ADDA
@@ -982,6 +1034,7 @@ SOURCE_5	DC.W $4E71
 			DC.W 0
 
 	END		START				* last line of source
+
 
 
 
