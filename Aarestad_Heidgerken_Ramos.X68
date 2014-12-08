@@ -388,17 +388,10 @@ CHECK_E		MOVE.B #11,D0		* Moving task 11 into Data Register 0
 			TRAP #15			* Position the cursor at [2Cxx] x - any number	
 
 			RTS					* Returns from subroutine
-<<<<<<< HEAD
-
 
 ********************* Display the Data Immediate Subroutine ********************
 
-=======
 
-
-********************* Display the Data Immediate Subroutine ********************
-
->>>>>>> origin/Davids
 DISPLAY_IMMEDIATE:
 
 			LEA INIT_DATA,A1
@@ -509,7 +502,6 @@ DISPLAY_POSTINC:
 EA_TYPE1:
 			MOVE.B	#%00111000, D5	* move primative 3 bitmask into D4 	0x38 (OPMODE)
 			MOVE.B	#%00000111, D6	* move primative 3 bitmask into D3 	0x07 (REGISTER)
-<<<<<<< HEAD
 
 			AND.W	D7,D5			* and D7 and D5 store in D5 (OPMODE)
 			AND.W	D7,D6			* and D7 and D6 store in D6 (REGISTER)
@@ -549,7 +541,7 @@ EA_TYPE1:
 
 .DATA_MODE	CMP.B	#7, D5			* compare opmode with 111 .W .L ************
 			BNE		.INV_MODE		* branc to data modes
-=======
+
 
 			AND.W	D7,D5			* and D7 and D5 store in D5 (OPMODE)
 			AND.W	D7,D6			* and D7 and D6 store in D6 (REGISTER)
@@ -695,18 +687,15 @@ EA_TYPE3:
 
 .DATA_MODE	CMP.B	#7, D5			* compare opmode with 111 .W .L ************
 			BNE		.INV_MODE		* branch to invalid mode
->>>>>>> origin/Davids
 
 			TST.B	D6				* compare register to 000 (xxx).W
 			BEQ		.WORDDATA		;branch to word data
 			
 			CMP.B	#1, D6			* compare register to 001 (xxx).L
 			BEQ		.LONGDATA		;branch to long data
-<<<<<<< HEAD
 			BRA		DISPLAY_ERROR	;branch to invalid mode if reg greater than1
 						
 .WORDDATA	LEA INIT_MEM,A1
-=======
 			
 			CMP.B	#4,D6			* compare register to 100 (xxx).B
 			BEQ		.BYTEDATA
@@ -714,12 +703,10 @@ EA_TYPE3:
 			BRA		DISPLAY_ERROR	;branch to invalid mode if reg greater than1
 						
 .BTYEDATA	LEA INIT_MEM,A1
->>>>>>> origin/Davids
 			MOVE.B #14,D0
 			TRAP #15
 
 			ADDA.W #WORD,A0
-<<<<<<< HEAD
 			MOVE.W (A0),D2
 			BRA	DISPLAY_WORD_HEX		; display word in hex
 
@@ -733,7 +720,7 @@ EA_TYPE3:
 			BRA	DISPLAY_LONG_HEX	; display long in hex
 
 .INV_MODE	BRA		DISPLAY_ERROR	* Display error
-=======
+
 			MOVE.B (A0),D2
 			ADDA.B #BYTE, A0
 			BSR	DISPLAY_BYTE_HEX
@@ -754,7 +741,6 @@ EA_TYPE3:
 			MOVE.L (A0),D2
 			ADDA.W #WORD,A0
 			BSR	DISPLAY_LONG_HEX	; display long in hex
->>>>>>> origin/Davids
 
 .INV_MODE	BRA		DISPLAY_ERROR	* Display error
 
