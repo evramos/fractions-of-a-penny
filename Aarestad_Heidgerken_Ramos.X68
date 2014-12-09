@@ -12,12 +12,12 @@ CR			EQU   $000D
 LF			EQU   $000A
 START		EQU   $1000			* Program starting address
 EXIT		EQU   $2700			* Simulator stoping code
-BYTE		EQU   $0001			* Advance address by a byte
+; BYTE		EQU   $0001			* Advance address by a byte
 WORD		EQU   $0002			* Advance address by a word
-LONG		EQU   $0004			* Advance address by a long
+; LONG		EQU   $0004			* Advance address by a long
 BITMASK8	EQU   $00FF
-BITMASK4	EQU   $000F
-BITMASK3	EQU   $0007
+; BITMASK4	EQU   $000F
+; BITMASK3	EQU   $0007
 
 *----------------------- Address Register / Data Register ----------------------
 * A0: Designated for Source Code
@@ -313,7 +313,6 @@ DISPLACEMENT:
 
 			CMPI.B #$FF,D2			******  TESTING BETA  ******
 			BEQ D_32_BIT			******  TESTING BETA  ******
-
 			BRA D_8_BIT
 
 D_32_BIT	ADDA.W #WORD,A0		* Shifts to the next set of 16-bits instruction
@@ -383,7 +382,6 @@ OPERAND_POSITION:
 			MOVE.W POSITION,D1  * Setting up the desired row position
 			ADDI #$1600,D1		* Setting up the desired column position
 			TRAP #15			* Position the cursor at [2Cxx] x - any number	
-
 			RTS					* Returns from subroutine
 
 
