@@ -170,8 +170,6 @@ DISPLAY_INTRUCTION:
 
 			MOVE.W (A4)+,D2		* Reloads the orignal 16-bits as a temp again
 
-
-
 *----------------- Moving the cursor to the desired location -------------------
 
 			MOVE.B #11,D0		* Moving task 11 into Data Register 0
@@ -529,16 +527,10 @@ EA_TYPE1:
 			BNE		.DATA_MODE		* branchto Post decrement mode
 			BRA		DISPLAY_PREDEC
 
-			; CMP.B	#5, D5			* compare opmode with 101 (not implemented)
-			; BEQ		.INV_MODE		* brancht invalid mode
-			
-			; CMP.B	#6, D5			* compare opmode with 110 (not implemented)
-			; BEQ		.INV_MODE		* brancht invalid mode
-
 *---------------- Compares between OPMODE 7 (xxx).W or (xxx).L -----------------
 
 .DATA_MODE	CMP.B	#7, D5			* compare opmode with 111 .W .L ************
-			BNE		.INV_MODE		* branc to data modes
+			BNE		DISPLAY_ERROR	* branc to data modes
 
 			TST.B	D6				* compare register to 000 (xxx).W
 			BEQ		.WORDDATA		;branch to word data
@@ -563,8 +555,6 @@ EA_TYPE1:
 			MOVE.L (A0),D2
 			ADDA.W #WORD,A0
 			BRA	DISPLAY_LONG_HEX	; display long in hex
-
-.INV_MODE	BRA		DISPLAY_ERROR	* Display error
 
 
 *-------------------------------------------------------------------------------
