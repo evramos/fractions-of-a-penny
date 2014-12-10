@@ -1062,6 +1062,7 @@ ASR_T		LEA ASR_M,A1
 ADDA_T		LEA ADDA_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR OPERAND_POSITION
 			BSR EA_TYPE3
 			RTS
 
@@ -1104,6 +1105,7 @@ DIVS_T		LEA DIVS_M,A1
 
 OR_T		LEA OR_M,A1
 			BSR DISPLAY_SIZE
+			BSR OPERAND_POSITION
 			BSR EA_TYPE3
 			RTS
 
@@ -1198,6 +1200,7 @@ MOAW_T		LEA MOAW_M,A1
 MOW_T		LEA MOW_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR OPERAND_POSITION
 			BSR EA_TYPE3
 			RTS
 
@@ -1213,6 +1216,7 @@ MOAL_T		LEA MOAL_M,A1
 MOL_T		LEA MOL_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR OPERAND_POSITION
 			BSR EA_TYPE3
 			RTS
 
@@ -1221,6 +1225,7 @@ MOL_T		LEA MOL_M,A1
 MOB_T		LEA MOB_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR OPERAND_POSITION
 			BSR EA_TYPE3
 			RTS
 
@@ -1257,7 +1262,6 @@ PRESS_ANY	DC.B	'  press ANY key to continue...',0
 INIT_HEX	DC.B	'0x',0
 INIT_MEM	DC.B	'$',0
 INIT_DATA	DC.B	'#$',0
-
 COMMA_M		DC.B 	',',0
 
 DATA_M		DC.B	'DATA ',0
@@ -1331,18 +1335,24 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 
 *--------------------------------- Source Code ---------------------------------
 
-SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,0
+SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3
+			DC.L  ORI_1,ORI_2,ORI_3
+			DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7
+			DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
 
-*		LSD 1110 0[01]D 11[xx xxxx]  	LSL 1110 0011 11[00 0000]
-*									   	LSR 1110 0010 11[00 0000]
 
-*		ASD	1110 0[00]D 11[xx xxxx]		ASL 1110 0001 11[00 0000]
-*										ASR 1110 0000 11[00 0000]
-*		ROD 1110 0[11]D 11[xx xxxx]
-*										ROL 1110 0111 11[00 0000]
-*										ROR 1110 0110 11[00 0000]
-*									BITMASK 1110 0000 1100 0000
-*									E0C0
+; *		LSD 1110 0[01]D 11[xx xxxx]  	LSL 1110 0011 11[00 0000]
+; *									   	LSR 1110 0010 11[00 0000]
+
+; *		ASD	1110 0[00]D 11[xx xxxx]		ASL 1110 0001 11[00 0000]
+; *										ASR 1110 0000 11[00 0000]
+; *		ROD 1110 0[11]D 11[xx xxxx]
+; *										ROL 1110 0111 11[00 0000]
+; *										ROR 1110 0110 11[00 0000]
+; *									BITMASK 1110 0000 1100 0000
+; *									E0C0
+
+; SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3,0
 
 ROD_TEST_1	DC.W $E31F
 			DC.W $E55E
@@ -1376,9 +1386,7 @@ ROD_TEST_3 	DC.W $E7D0 	ROL (A0)
 			DC.W $E2D5  LSR (A5)
 			DC.W $FFFF
 
-; SOURCE_C	DC.L  ORI_1,ORI_2,ORI_3
-; 			DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5
-; 			DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
+*-------------------------------------------------------------------------------
 
 ; SOURCE_C	DC.L  ORI_1,ORI_2,ORI_3
 ; OR_1		DC.W $8455,0
@@ -1400,8 +1408,7 @@ ORI_3		DC.W $0039,$00AB,$3000,$4000
 
 *-------------------------------------------------------------------------------
 
-; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,0
-SOURCE_C	DC.L 	TEST_7,0
+; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7,0
 
 TEST_0		DC.W $4440
 			DC.W $4451
@@ -1477,8 +1484,6 @@ TEST_7		DC.W %0101011101111000,$2000	;SUBQ
 *-------------------------------------------------------------------------------
 
 ; SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
-; SOURCE_C	DC.L  SOURCE_4,0
-
 
 SOURCE_1	DC.W $4E75				RTS
 			DC.W $D6C7				ADDA
@@ -1491,6 +1496,7 @@ SOURCE_1	DC.W $4E75				RTS
 			DC.W $303C				MOVE.W
 			DC.W $4E75				RTS
 			DC.W $FFFF
+
 
 SOURCE_2	DC.W $66FC				DATA
 			DC.W $EE45				ASR.W
@@ -1511,8 +1517,8 @@ SOURCE_2	DC.W $66FC				DATA
 			DC.W $AAAA				ERROR (OR.L)
 			DC.W $FFFF
 
-**** Displacement TESTING - REMOVE WHEN DONE ****
 
+**** Displacement TESTING - REMOVE WHEN DONE ****
 SOURCE_3	DC.W $6FFC				BLE	1111
 			DC.W $6EFC				BGT	1110
 			DC.W $6DFC				BLT	1101
@@ -1532,8 +1538,8 @@ SOURCE_3	DC.W $6FFC				BLE	1111
 			DC.W $60FF,$1234,$5678	BRA
 			DC.W $FFFF
 			
-**** Size BYTE,WORD,LONG TESTING - REMOVE WHEN DONE ****
 
+**** Size BYTE,WORD,LONG TESTING - REMOVE WHEN DONE ****
 SOURCE_4	DC.W $E118				ROL.B
 			DC.W $E158				ROL.W
 			DC.W $E198				ROL.L
@@ -1559,9 +1565,6 @@ SOURCE_5	DC.W $4E71
 			DC.W $FFFF
 
 	END		START				* last line of source
-
-
-
 
 
 *~Font name~Courier New~
