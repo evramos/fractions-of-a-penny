@@ -785,7 +785,7 @@ EA_TYPE4:
 .INV_MODE	BRA		DISPLAY_ERROR	* Display error
 
 
-;*-------------------------------------------------------------------------------
+; *-------------------------------------------------------------------------------
 ; * Type 5 mode xxxx xDxx xxoo oorrr   MOVEM needs Range work....
 ; * SubRoutine for handling One Operand addressing looking for a mode and register 
 ; * value  assumes that size has already been parsed by opcode.
@@ -868,88 +868,66 @@ EA_TYPE4:
 ; .exit		RTS					;return to calling instruction
 
 
-; *-------------------------------------------------------------------------------
-; * Type 6 mode xxxx DDDx xxix xrrr	
-; * Subroutine for Shift and rotate functions assumes size has been parsed.
-; * D4 - stores Data (1-8) add 1 if immediate
-; * D5 stores i(imediate or Register)
-; * D6 stores register
-; *-------------------------------------------------------------------------------
-; EA_TYPE6:
-; 			MOVE.B	#%00001110, D4	* move primative 3 bit mask into D4 0xE (DATA)
-; 			LSL.W	#8, D4			* shift mask into upper byte
-; 			MOVE.B	#%00100000, D5	* move primative 1 bitmask into D5 	0x20 (I/R)
-; 			MOVE.B	#%00000111, D6	* move primative 3 bitmask into D6 	0x07 (REGISTER)
+*-------------------------------------------------------------------------------
+* Type 6 mode xxxx DDDx xxix xrrr	
+* Subroutine for Shift and rotate functions assumes size has been parsed.
+* D4 - stores Data (1-8) add 1 if immediate
+* D5 stores i(imediate or Register)
+* D6 stores register
+*-------------------------------------------------------------------------------
+EA_TYPE6:
+			MOVE.W	#$0E00,D4		* move primative 3 bit mask into D4 0xE00 (COUNT/REGISTER)
+			MOVE.B	#$20,D5			* move primative 1 bitmask into D5 	0x20 (I/R)
+			MOVE.B	#$7,D6			* move primative 3 bitmask into D6 	0x07 (REGISTER)
 
-; 			AND.W	D7, D4			* and D7 with D4 (DATA)
-; 			LSR.W	#8, D4			* shift value into lower byte
-; 			LSR.W	#1, D4			* shift again into bottom three bits (0-7)
-; 			AND.W	D7, D5			* and D7 and D5 store in D5 (I/R)
-; 			LSR.B	#5, D5			* shift value right 5 places (0-1)
-; 			AND.W	D7, D6			* and D7 and D6 store in D6 (REGISTER)
+			AND.W 	D7,D4			* AND D7 (Instruction) with D4 Bitmask (COUNT/REGISTER)
+			ROL.W 	#7,D4 			* Shift the needed bits to the lower byte
+; 			[0000 1110 0000 0000] into [0000 0000 0000 0111]
 
-; 			CMP.B	#0, D5			;compare i/r bit to 0
-; 			BEQ		.regmode		;D3 is a Reg
-; 			BNE		.immmode		;D3 is immediate
+			AND.W	D7,D5			* and D7 and D5 store in D5 (I/R)
+			LSR.B	#5, D5			* shift value right 5 places (0-1)
+; 			[0000 0000 0010 0000] into [0000 0000 0000 0001]
 
-; .regmode	MOVE.L	D4, D1			;move DATA into D1
-; 			BSR		DISPLAY_DATAREG	;display DataReg
-; 			BRA		.IND_MODE			;evaluate eamode
+			AND.W	D7, D6			* and D7 and D6 store in D6 (REGISTER)
+
+*------------------------------- Compares (I/R) --------------------------------
+
+			TST.B 	D5				* Checks if i/r bit is an immediate value of 0
+			BNE		.regmode		* D3 (I/R) is a Register Rotate Count
 			
-; .immmode	MOVE.L	D4, D1			; move DATA into D1
-; 			ADD.B	#1, D1			; add 1.
+; If i/r = 0, this field contains the rotate count. The values 1 – 7 represent
+; counts of 1 – 7, and zero specifies a count of eight.
+
+			MOVE.B #$23,D1 			* Prints '#' into the output
+			MOVE.B #6,D0
+			TRAP #15
 			
-; 			LEA INIT_MEM,A1			;load '#'MSG into 
-; 			MOVE.B #14,D0
-; 			TRAP #15
-			
-; 			BSR		DISPLAY_BYTE_HEX	;display immediate value
-; 			BRA 	.IND_MODE			;evaluate EAmode	
-			
-; *------------------------ Compares between OPMODE 0-6 --------------------------
+			MOVE.W D4,D1			; move DATA into D1
 
-; .IND_MODE	CMP.B	#2, D5			* compare opmode with 010  (Ax) ************
-; 			BNE		.PI_MODE		* branch to indirect Mode
-; 			BRA		DISPLAY_INDIR	* Send to data register indirect subr
+			TST.B D1
+			BEQ .PRINT_8
 
-; .PI_MODE	CMP.B	#3, D5			* compare opmode with 011  (Ax)+ ***********
-; 			BNE		.PD_MODE		* branch tp post incrementmodebr
-; 			BRA		DISPLAY_POSTINC	* Send to POSTINCR display sub
+			MOVE.B 	#3,D0
+			TRAP #15
+			BRA		.DONE			;evaluate eamode	
 
-; .PD_MODE	CMP.B	#4, D5			* compare opmode with 100 -(Ax) ************
-; 			BNE		.DATA_MODE		* branchto Post decrement mode
-; 			BRA		DISPLAY_PREDEC
+.PRINT_8	MOVE.B 	#8,D1			
+			MOVE.B 	#3,D0
+			TRAP #15
+			BRA		.DONE			;evaluate eamode	
 
-; *---------------- Compares between OPMODE 7 (xxx).W or (xxx).L -----------------
+; If i/r = 1, this field specifies a data register that contains the rotate
+; count (modulo 64).
 
-; .DATA_MODE	CMP.B	#7, D5			* compare opmode with 111 .W .L ************
-; 			BNE		.INV_MODE		* branc to data modes
+.regmode	MOVE.W	D4,D1			* move the register number into D1
+			BSR		DISPLAY_DATAREG	* display DataReg
 
-; 			TST.B	D6				* compare register to 000 (xxx).W
-; 			BEQ		.WORDDATA		;branch to word data
-			
-; 			CMP.B	#1, D6			* compare register to 001 (xxx).L
-; 			BEQ		.LONGDATA		;branch to long data
-; 			BRA		DISPLAY_ERROR	;branch to invalid mode if reg greater than1
-						
-; .WORDDATA	LEA INIT_MEM,A1
-; 			MOVE.B #14,D0
-; 			TRAP #15
+.DONE		LEA COMMA_M,A1
+			MOVE.B #14,D0		* Move task 13 into Data Register 0
+			TRAP #15			* Display the string at (A1) without CR, LF.
 
-; 			ADDA.W #WORD,A0
-; 			MOVE.W (A0),D2
-; 			BRA	DISPLAY_WORD_HEX		; display word in hex
-
-; .LONGDATA	LEA INIT_MEM,A1
-; 			MOVE.B #14,D0
-; 			TRAP #15
-
-; 			ADDA.W #WORD,A0
-; 			MOVE.L (A0),D2
-; 			ADDA.W #WORD,A0
-; 			BRA	DISPLAY_LONG_HEX	; display long in hex
-
-; .INV_MODE	BRA		DISPLAY_ERROR	* Display error
+			MOVE.W D6,D1			; move DATA into D1
+			BRA DISPLAY_DATAREG
 
 
 ; *-------------------------------------------------------------------------------
@@ -1044,6 +1022,7 @@ EA_TYPE4:
 
 ROL_T		LEA ROL_M,A1
 			BSR DISPLAY_SIZE
+			BSR EA_TYPE6
 			RTS
 
 *- 001 LSL ------------------- Logical Shift Left ------------------------------
@@ -1062,6 +1041,8 @@ ASL_T		LEA ASL_M,A1
 
 ROR_T		LEA ROR_M,A1
 			BSR DISPLAY_SIZE
+			BSR EA_TYPE6
+
 			RTS
 
 *- 004 LSL ------------------ Logical Shift Right ------------------------------
@@ -1081,6 +1062,7 @@ ASR_T		LEA ASR_M,A1
 ADDA_T		LEA ADDA_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR OPERAND_POSITION
 			BSR EA_TYPE3
 			RTS
 
@@ -1123,6 +1105,7 @@ DIVS_T		LEA DIVS_M,A1
 
 OR_T		LEA OR_M,A1
 			BSR DISPLAY_SIZE
+			BSR OPERAND_POSITION
 			BSR EA_TYPE3
 			RTS
 
@@ -1217,6 +1200,7 @@ MOAW_T		LEA MOAW_M,A1
 MOW_T		LEA MOW_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR OPERAND_POSITION
 			BSR EA_TYPE3
 			RTS
 
@@ -1232,6 +1216,7 @@ MOAL_T		LEA MOAL_M,A1
 MOL_T		LEA MOL_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR OPERAND_POSITION
 			BSR EA_TYPE3
 			RTS
 
@@ -1240,6 +1225,7 @@ MOL_T		LEA MOL_M,A1
 MOB_T		LEA MOB_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR OPERAND_POSITION
 			BSR EA_TYPE3
 			RTS
 
@@ -1276,7 +1262,6 @@ PRESS_ANY	DC.B	'  press ANY key to continue...',0
 INIT_HEX	DC.B	'0x',0
 INIT_MEM	DC.B	'$',0
 INIT_DATA	DC.B	'#$',0
-
 COMMA_M		DC.B 	',',0
 
 DATA_M		DC.B	'DATA ',0
@@ -1350,9 +1335,60 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 
 *--------------------------------- Source Code ---------------------------------
 
-; SOURCE_C	DC.L  ORI_1,ORI_2,ORI_3,0
+SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3
+			DC.L  ORI_1,ORI_2,ORI_3
+			DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7
+			DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
 
 
+; *		LSD 1110 0[01]D 11[xx xxxx]  	LSL 1110 0011 11[00 0000]
+; *									   	LSR 1110 0010 11[00 0000]
+
+; *		ASD	1110 0[00]D 11[xx xxxx]		ASL 1110 0001 11[00 0000]
+; *										ASR 1110 0000 11[00 0000]
+; *		ROD 1110 0[11]D 11[xx xxxx]
+; *										ROL 1110 0111 11[00 0000]
+; *										ROR 1110 0110 11[00 0000]
+; *									BITMASK 1110 0000 1100 0000
+; *									E0C0
+
+; SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3,0
+
+ROD_TEST_1	DC.W $E31F
+			DC.W $E55E
+			DC.W $E79D
+
+			DC.W $E91C
+			DC.W $EB5B
+			DC.W $ED9A
+
+			DC.W $EF19
+			DC.W $E158
+			DC.W $FFFF
+
+ROD_TEST_2 	DC.W $E13F
+			DC.W $E37E
+			DC.W $E5BD
+			DC.W $E73C
+			DC.W $E97B
+			DC.W $EBBA
+			DC.W $ED39
+			DC.W $EF78
+			DC.W $FFFF
+
+ROD_TEST_3 	DC.W $E7D0 	ROL (A0)
+			DC.W $E6D1  ROR (A1)
+
+			DC.W $E1D2  ASL (A2)
+			DC.W $E0D3  ASR (A3)
+
+			DC.W $E3D4  LSL (A4)
+			DC.W $E2D5  LSR (A5)
+			DC.W $FFFF
+
+*-------------------------------------------------------------------------------
+
+; SOURCE_C	DC.L  ORI_1,ORI_2,ORI_3
 ; OR_1		DC.W $8455,0
 
 ORI_1		DC.W $0000,$00ABD
@@ -1372,9 +1408,7 @@ ORI_3		DC.W $0039,$00AB,$3000,$4000
 
 *-------------------------------------------------------------------------------
 
-; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,0
-SOURCE_C	DC.L 	TEST_7,0
-
+; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7,0
 
 TEST_0		DC.W $4440
 			DC.W $4451
@@ -1450,8 +1484,6 @@ TEST_7		DC.W %0101011101111000,$2000	;SUBQ
 *-------------------------------------------------------------------------------
 
 ; SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
-; SOURCE_C	DC.L  SOURCE_4,0
-
 
 SOURCE_1	DC.W $4E75				RTS
 			DC.W $D6C7				ADDA
@@ -1464,6 +1496,7 @@ SOURCE_1	DC.W $4E75				RTS
 			DC.W $303C				MOVE.W
 			DC.W $4E75				RTS
 			DC.W $FFFF
+
 
 SOURCE_2	DC.W $66FC				DATA
 			DC.W $EE45				ASR.W
@@ -1484,8 +1517,8 @@ SOURCE_2	DC.W $66FC				DATA
 			DC.W $AAAA				ERROR (OR.L)
 			DC.W $FFFF
 
-**** Displacement TESTING - REMOVE WHEN DONE ****
 
+**** Displacement TESTING - REMOVE WHEN DONE ****
 SOURCE_3	DC.W $6FFC				BLE	1111
 			DC.W $6EFC				BGT	1110
 			DC.W $6DFC				BLT	1101
@@ -1505,8 +1538,8 @@ SOURCE_3	DC.W $6FFC				BLE	1111
 			DC.W $60FF,$1234,$5678	BRA
 			DC.W $FFFF
 			
-**** Size BYTE,WORD,LONG TESTING - REMOVE WHEN DONE ****
 
+**** Size BYTE,WORD,LONG TESTING - REMOVE WHEN DONE ****
 SOURCE_4	DC.W $E118				ROL.B
 			DC.W $E158				ROL.W
 			DC.W $E198				ROL.L
@@ -1533,28 +1566,6 @@ SOURCE_5	DC.W $4E71
 
 	END		START				* last line of source
 
-
-
-
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
-
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
-
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
-
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
 
 *~Font name~Courier New~
 *~Font size~10~
