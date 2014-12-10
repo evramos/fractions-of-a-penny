@@ -1200,6 +1200,7 @@ LEA_T		LEA LEA_M,A1
 MOAW_T		LEA MOAW_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR OPERAND_POSITION
 			BSR	EA_TYPE7
 			RTS
 
@@ -1217,6 +1218,7 @@ MOW_T		LEA MOW_M,A1
 MOAL_T		LEA MOAL_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR OPERAND_POSITION
 			BSR	EA_TYPE7
 			RTS
 
@@ -1251,6 +1253,7 @@ CMPI_T		LEA CMPI_M,A1
 BCLR_T		LEA BCLR_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR OPERAND_POSITION
 			BSR	EA_TYPE7
 			RTS
 
@@ -1418,13 +1421,9 @@ ORI_3		DC.W $0039,$00AB,$3000,$4000
 
 *-------------------------------------------------------------------------------
 
-<<<<<<< HEAD
 ; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,0
 SOURCE_C	DC.L 	TEST_8,0
 
-=======
-; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7,0
->>>>>>> origin/master
 
 TEST_0		DC.W $4440
 			DC.W $4451
