@@ -347,19 +347,18 @@ D_8_BIT		MOVE.W (A0),D2		* Moving the current 16-bits address into D2
 
 DISPLAY_SIZE:
 
-			MOVE.B #14,D0		* Moving task 14 into Data Register 0
-			TRAP #15			* Display the string at (A1) without CR, LF
+			MOVE.W (A0),D3 		* Make a temp copy of the current instruction in D3
+			ANDI.B #$C0,D3 		* Bitmask the current instruction to obtain only the size bits
+			LSR.B #6,D3 		* Shift the obtained size bits to be the least bits in the register
 
-			MOVE.W (A0),D3
-			ANDI.B #$C0,D3
-			LSR.B #6,D3
-
-			CMPI.B #$C0,D3
+			CMPI.B #3,D3
 			BNE CHECK_A
+			BRA DISPLAY_ERROR 		******  TESTING BETA  ******
 
-			BRA OPERAND_POSITION  		******  TESTING BETA  ******
-
-CHECK_A		CMPI.B #2,D3
+CHECK_A		MOVE.B #14,D0		* Moving task 14 into Data Register 0
+			TRAP #15			* Display the string at (A1) without CR, LF
+			
+			CMPI.B #2,D3
 			BNE CHECK_B
 
 			LEA LONG_M,A1		* Loading message '.L' into address register 1
@@ -434,8 +433,10 @@ DISPLAY_ERROR:
 
 			MOVE.W (A0),D2
 			BSR DISPLAY_WORD_HEX	
-			RTS
+			; RTS
 
+			MOVE.L (A7)+,D2			**** SOME HOW POP FROM A7 ****
+			BRA NEWLINE
 
 ****************** DISPLAY Dx,Ax,(Ax),(Ax)+,-(Ax) Subroutine *******************
 
@@ -1329,9 +1330,8 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 
 *--------------------------------- Source Code ---------------------------------
 
-SOURCE_C	DC.L  ORI_1,ORI_2,ORI_3
-			DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5
-			DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
+; SOURCE_C	DC.L  ORI_1,ORI_2,ORI_3,0
+
 
 ; OR_1		DC.W $8455,0
 
@@ -1353,6 +1353,8 @@ ORI_3		DC.W $0039,$00AB,$3000,$4000
 *-------------------------------------------------------------------------------
 
 ; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,0
+SOURCE_C	DC.L 	TEST_1,0
+
 
 TEST_0		DC.W $4440
 			DC.W $4451
@@ -1415,6 +1417,8 @@ TEST_5		DC.W %0100010000111000,$2000
 *-------------------------------------------------------------------------------
 
 ; SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
+; SOURCE_C	DC.L  SOURCE_4,0
+
 
 SOURCE_1	DC.W $4E75				RTS
 			DC.W $D6C7				ADDA
