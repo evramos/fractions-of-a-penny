@@ -658,6 +658,7 @@ EA_TYPE1:
 
  			ADDA.W #WORD,A0
  			MOVE.W (A0),D2
+ 			; ADDA.W #WORD, A0
  			BSR	DISPLAY_BYTE_HEX
  			BRA     .BREAK
 						
@@ -1327,7 +1328,7 @@ MOAL_M		DC.B	'MOVEA.L',0				0x2040
 MOL_M		DC.B	'MOVE.L',0				0x2000
 MOB_M		DC.B	'MOVE.B',0				0x1000
 CMPI_M		DC.B	'CMPI',0				0x0C00
-BCLR_M		DC.B	'BCLR',0				0x01C0
+BCLR_M		DC.B	'BCLR',0				0x0B40
 ORI_M		DC.B	'ORI',0					0x0000
 
 *---------------------------- Task Operation List ------------------------------
@@ -1343,11 +1344,11 @@ TASK_OP		DC.W ROL_T,LSL_T,ASL_T,ROR_T,LSR_T,ASR_T,ADDA_T,ADD_T,MULS_T,CMP_T
 BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 			DC.W $9000,$81C0,$8000,$6D00,$6C00,$6800,$6500,$6000,$5100,$4E80
 			DC.W $4E75,$4E71,$4880,$4400,$41C0,$3040,$3000,$2040,$2000,$1000
-			DC.W $0C00,$01C0,$0000
+			DC.W $0C00,$0B40,$0000
 
 *--------------------------------- Source Code ---------------------------------
 
-;SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3
+SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3
 			DC.L  ORI_1,ORI_2,ORI_3
 			DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7
 			DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
@@ -1419,12 +1420,9 @@ ORI_3		DC.W $0039,$00AB,$3000,$4000
 			DC.W $FFFF
 
 *-------------------------------------------------------------------------------
-; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7,0
 
-
-
-SOURCE_C	DC.L 	TEST_8,0
-
+; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,,TEST_6,,TEST_7
+			; DC.L  TEST_8,0
 
 
 TEST_0		DC.W $4440
@@ -1517,7 +1515,7 @@ SOURCE_1	DC.W $4E75				RTS
 			DC.W $D280				ADD.L
 			DC.W $303C				MOVE.W
 			DC.W $4E75				RTS
-			DC.W $FFFF
+			DC.W $FFFF,$FFFF,$FFFF,$FFFF
 
 
 SOURCE_2	DC.W $66FC				DATA
