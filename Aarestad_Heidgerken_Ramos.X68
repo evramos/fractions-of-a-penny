@@ -1345,7 +1345,7 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 
 *--------------------------------- Source Code ---------------------------------
 
-SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3
+;SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3
 			DC.L  ORI_1,ORI_2,ORI_3
 			DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7
 			DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
@@ -1418,13 +1418,13 @@ ORI_3		DC.W $0039,$00AB,$3000,$4000
 
 *-------------------------------------------------------------------------------
 
-<<<<<<< HEAD
+
 ; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,0
 SOURCE_C	DC.L 	TEST_8,0
 
-=======
+
 ; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7,0
->>>>>>> origin/master
+
 
 TEST_0		DC.W $4440
 			DC.W $4451
@@ -1497,9 +1497,9 @@ TEST_6		DC.W %1101000010111000,$2000	;ADD
 TEST_7		DC.W %0101011101111000,$2000	;SUBQ
 			DC.W $FFFF
 			
-TEST_8		;DC.W %000011111000001011	;BCLR
-			DC.W %0011111001010010		;MOVEA.W
-			DC.W %0010111001010010		;MOVEA.L
+TEST_8		DC.W %0000111110010010	;BCLR
+			DC.W %0011100101010010		;MOVEA.W
+			DC.W %0010100101010010		;MOVEA.L
 			DC.W $FFFF
 			
 *-------------------------------------------------------------------------------
