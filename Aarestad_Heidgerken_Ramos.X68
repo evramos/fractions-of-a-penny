@@ -689,97 +689,103 @@ EA_TYPE1:
 	
 .EXIT		RTS
 
-; *-------------------------------------------------------------------------------
-; * Type 4   - xxxx DDD1 xxoo orrr
-; * assumes that size has already been parsed and displayed in opcode.
-; * Sub Routine to find EA(mode and Register) and Data from instruction
-; * D4 stores Databits (1-8) 3bits add 1.
-; * D5 stores Mode
-; * D6 stores Register
-; *-------------------------------------------------------------------------------		
-; EA_TYPE4:
-; 			MOVE.B	#%00001110, D4	* move primative 3 bitmask into D4 	0x0D (DATA)
-; 			LSL.W	#8, D4			* shift data mask into upper byte.
-; 			MOVE.B	#%00111000, D5	* move Primative 3 bit mask into D5 0x38 (EA MODE)
-; 			MOVE.B	#%00000111, D6	* move primative 3 bitmask into D6 	0x07 (EA REGISTER)
+*-------------------------------------------------------------------------------
+* Type 4   - xxxx DDD1 xxoo orrr
+* assumes that size has already been parsed and displayed in opcode.
+* Sub Routine to find EA(mode and Register) and Data from instruction
+* D4 stores Databits (1-8) 3bits add 1.
+* D5 stores Mode
+* D6 stores Register
+* SUBQ - 0101rrr1sseeeeee
+*-------------------------------------------------------------------------------		
+EA_TYPE4:
+			MOVE.B	#%00001110, D4	* move primative 3 bitmask into D4 	0x0D (DATA)
+			LSL.W	#8, D4			* shift data mask into upper byte.
+			MOVE.B	#%00111000, D5	* move Primative 3 bit mask into D5 0x38 (EA MODE)
+			MOVE.B	#%00000111, D6	* move primative 3 bitmask into D6 	0x07 (EA REGISTER)
 
-; 			AND.W	D7, D4			* and D7 and D4 store in D4 (DATA)
-; 			LSR.W	#1, D4			* shift right 1 time.
-; 			ADD.B	#1, D4			* add one to DATA value
-; 			AND.W	D7, D5			* and D7 and D5 store in D5 (OPMODE)
-; 			LSR.W	#3, D5			* shift value right 3 times
-; 			AND.W	D7, D6			* and D7 and D6 store in D6 (REGISTER)
+ 			AND.W	D7, D4			* and D7 and D4 store in D4 (DATA)
+			LSR.W	#8, D4			* shift into lower bit
+ 			LSR.W	#1, D4			* shift right 1 time.
+ 			AND.W	D7, D5			* and D7 and D5 store in D5 (OPMODE)
+ 			LSR.W	#3, D5			* shift value right 3 times
+ 			AND.W	D7, D6			* and D7 and D6 store in D6 (REGISTER)
+		
+			MOVE.L #$23,D1
+			MOVE.L #6,D0
+			TRAP #15
 			
-; 			LEA INIT_MEM,A1			* move '#'
-; 			MOVE.B #14,D0
-; 			TRAP #15
 			
-; 			MOVE.L	D4, D1			* move #DATA value into D1
-; 			BRA	DISPLAY_BYTE_HEX	* display byte in hex
+ 			MOVE.L	D4, D1			* move #DATA value into D1
+			CMP 	#0, D1
+			BNE	.display
+			ADDI	#8,D1
 			
-; 			MOVE.L	D6,D1			* Move register value to D1
-
-; *------------------------ Compares between OPMODE 0-6 --------------------------
-
-; 			TST.B	D5				* Compare OpMode with 000	Dx  ************
-; 			BNE		.A_MODE			* Branch to OpMode Data Register
-; 			BRA		DISPLAY_DATAREG	* Send to data register display subr
-
-; .A_MODE		CMP.B	#1, D5			* compare opmode with 001	Ax  ************
-; 			BNE		.IND_MODE		* branch to Address reg mode
-; 			BRA		DISPLAY_ERROR	* Invalid mode for this type
+.display	MOVE.L	#3, D0
+			TRAP	#15
 			
-; .IND_MODE	CMP.B	#2, D5			* compare opmode with 010  (Ax) ************
-; 			BNE		.PI_MODE		* branch to indirect Mode
-; 			BRA		DISPLAY_INDIR	* Send to data register indirect subr
-
-; .PI_MODE	CMP.B	#3, D5			* compare opmode with 011  (Ax)+ ***********
-; 			BNE		.PD_MODE		* branch tp post incrementmodebr
-; 			BRA		DISPLAY_POSTINC	* Send to POSTINCR display sub
-
-; .PD_MODE	CMP.B	#4, D5			* compare opmode with 100 -(Ax) ************
-; 			BNE		.DATA_MODE		* branchto Post decrement mode
-; 			BRA		DISPLAY_PREDEC
-
-; 			; CMP.B	#5, D5			* compare opmode with 101 (not implemented)
-; 			; BEQ		.INV_MODE		* brancht invalid mode
+			LEA COMMA_M,A1
+			MOVE.B #14,D0
+			TRAP #15
 			
-; 			; CMP.B	#6, D5			* compare opmode with 110 (not implemented)
-; 			; BEQ		.INV_MODE		* brancht invalid mode
+ 			MOVE.L	D6,D1			* Move register value to D1
 
-; *---------------- Compares between OPMODE 7 (xxx).W or (xxx).L -----------------
+*------------------------ Compares between OPMODE 0-6 --------------------------
 
-; .DATA_MODE	CMP.B	#7, D5			* compare opmode with 111 .W .L ************
-; 			BNE		.INV_MODE		* branc to data modes
+ 			TST.B	D5				* Compare OpMode with 000	Dx  ************
+ 			BNE		.A_MODE			* Branch to OpMode Data Register
+ 			BRA		DISPLAY_DATAREG	* Send to data register display subr
 
-; 			TST.B	D6				* compare register to 000 (xxx).W
-; 			BEQ		.WORDDATA		;branch to word data
+.A_MODE		CMP.B	#1, D5			* compare opmode with 001	Ax  ************
+ 			BNE		.IND_MODE		* branch to Address reg mode
+ 			BRA		DISPLAY_ERROR	* Invalid mode for this type
 			
-; 			CMP.B	#1, D6			* compare register to 001 (xxx).L
-; 			BEQ		.LONGDATA		;branch to long data
-; 			BRA		DISPLAY_ERROR	;branch to invalid mode if reg greater than1
+.IND_MODE	CMP.B	#2, D5			* compare opmode with 010  (Ax) ************
+ 			BNE		.PI_MODE		* branch to indirect Mode
+ 			BRA		DISPLAY_INDIR	* Send to data register indirect subr
+
+.PI_MODE	CMP.B	#3, D5			* compare opmode with 011  (Ax)+ ***********
+ 			BNE		.PD_MODE		* branch tp post incrementmodebr
+ 			BRA		DISPLAY_POSTINC	* Send to POSTINCR display sub
+
+.PD_MODE	CMP.B	#4, D5			* compare opmode with 100 -(Ax) ************
+ 			BNE		.DATA_MODE		* branchto Post decrement mode
+ 			BRA		DISPLAY_PREDEC
+
+ 
+*---------------- Compares between OPMODE 7 (xxx).W or (xxx).L -----------------
+
+.DATA_MODE	CMP.B	#7, D5			* compare opmode with 111 .W .L ************
+ 			BNE		.INV_MODE		* branc to data modes
+
+ 			TST.B	D6				* compare register to 000 (xxx).W
+ 			BEQ		.WORDDATA		;branch to word data
+			
+ 			CMP.B	#1, D6			* compare register to 001 (xxx).L
+ 			BEQ		.LONGDATA		;branch to long data
+ 			BRA		DISPLAY_ERROR	;branch to invalid mode if reg greater than1
 						
-; .WORDDATA	LEA INIT_MEM,A1
-; 			MOVE.B #14,D0
-; 			TRAP #15
+.WORDDATA	LEA INIT_MEM,A1
+ 			MOVE.B #14,D0
+ 			TRAP #15
 
-; 			ADDA.W #WORD,A0
-; 			MOVE.W (A0),D2
-; 			BRA	DISPLAY_WORD_HEX		; display word in hex
+ 			ADDA.W #WORD,A0
+ 			MOVE.W (A0),D2
+ 			BRA	DISPLAY_WORD_HEX		; display word in hex
 
-; .LONGDATA	LEA INIT_MEM,A1
-; 			MOVE.B #14,D0
-; 			TRAP #15
+.LONGDATA	LEA INIT_MEM,A1
+ 			MOVE.B #14,D0
+ 			TRAP #15
 
-; 			ADDA.W #WORD,A0
-; 			MOVE.L (A0),D2
-; 			ADDA.W #WORD,A0
-; 			BRA	DISPLAY_LONG_HEX	; display long in hex
+ 			ADDA.W #WORD,A0
+ 			MOVE.L (A0),D2
+ 			ADDA.W #WORD,A0
+ 			BRA	DISPLAY_LONG_HEX	; display long in hex
 
-; .INV_MODE	BRA		DISPLAY_ERROR	* Display error
+.INV_MODE	BRA		DISPLAY_ERROR	* Display error
 
 
-; *-------------------------------------------------------------------------------
+;*-------------------------------------------------------------------------------
 ; * Type 5 mode xxxx xDxx xxoo oorrr   MOVEM needs Range work....
 ; * SubRoutine for handling One Operand addressing looking for a mode and register 
 ; * value  assumes that size has already been parsed by opcode.
@@ -1154,6 +1160,7 @@ BRA_T		LEA BRA_M,A1		* Loading the OP name into address register 1
 
 SUBQ_T		LEA SUBQ_M,A1
 			BSR DISPLAY_SIZE
+			BSR EA_TYPE4
 			RTS
 
 *- 019 JSR ------------------- Jump to Subroutine ------------------------------
@@ -1366,7 +1373,7 @@ ORI_3		DC.W $0039,$00AB,$3000,$4000
 *-------------------------------------------------------------------------------
 
 ; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,0
-SOURCE_C	DC.L 	TEST_6,0
+SOURCE_C	DC.L 	TEST_7,0
 
 
 TEST_0		DC.W $4440
@@ -1435,6 +1442,9 @@ TEST_6		DC.W %1101000010111000,$2000	;ADD
 			DC.W %0010011010111000,$2000	;MOVE.L
 			DC.W %1000011010111000,$2000	;OR
 			DC.W %1001011010111000,$2000	;SUB
+			DC.W $FFFF
+
+TEST_7		DC.W %0101011101111000,$2000	;SUBQ
 			DC.W $FFFF
 			
 *-------------------------------------------------------------------------------
@@ -1525,6 +1535,11 @@ SOURCE_5	DC.W $4E71
 
 
 
+
+*~Font name~Courier New~
+*~Font size~10~
+*~Tab type~1~
+*~Tab size~4~
 
 *~Font name~Courier New~
 *~Font size~10~
