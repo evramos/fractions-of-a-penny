@@ -1085,6 +1085,7 @@ ADD_T		LEA ADD_M,A1
 MULS_T		LEA MULS_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR EA_TYPE7
 			RTS
 
 *- 009 CMP ------------------------ Compare ------------------------------------
@@ -1106,6 +1107,7 @@ SUB_T		LEA SUB_M,A1
 DIVS_T		LEA DIVS_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR EA_TYPE7
 			RTS
 
 *- 012 OR ------------------- Inclusive OR Logical -----------------------------
@@ -1193,6 +1195,7 @@ NEG_T		LEA NEG_M,A1
 LEA_T		LEA LEA_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR EA_TYPE7
 			RTS
 
 *- 025 MOVEA.W -------------- Move Address (WORD) ------------------------------
