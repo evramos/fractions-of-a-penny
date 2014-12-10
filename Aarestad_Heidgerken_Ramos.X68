@@ -1328,7 +1328,7 @@ MOAL_M		DC.B	'MOVEA.L',0				0x2040
 MOL_M		DC.B	'MOVE.L',0				0x2000
 MOB_M		DC.B	'MOVE.B',0				0x1000
 CMPI_M		DC.B	'CMPI',0				0x0C00
-BCLR_M		DC.B	'BCLR',0				0x0B40
+BCLR_M		DC.B	'BCLR',0				0x0180
 ORI_M		DC.B	'ORI',0					0x0000
 
 *---------------------------- Task Operation List ------------------------------
@@ -1344,7 +1344,7 @@ TASK_OP		DC.W ROL_T,LSL_T,ASL_T,ROR_T,LSR_T,ASR_T,ADDA_T,ADD_T,MULS_T,CMP_T
 BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 			DC.W $9000,$81C0,$8000,$6D00,$6C00,$6800,$6500,$6000,$5100,$4E80
 			DC.W $4E75,$4E71,$4880,$4400,$41C0,$3040,$3000,$2040,$2000,$1000
-			DC.W $0C00,$0B40,$0000
+			DC.W $0C00,$0180,$0000
 
 *--------------------------------- Source Code ---------------------------------
 
