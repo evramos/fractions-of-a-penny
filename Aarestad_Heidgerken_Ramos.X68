@@ -484,6 +484,94 @@ DISPLAY_POSTINC:
 			TRAP #15
 			RTS
 
+*-------------------------------------------------------------------------------
+* Display_Reg
+* as source
+* 16 bit regmask  A7->A0/D7->D0
+* assumed to be in D1
+* D2 will contain a count and points to current bit.
+* D3 will store a value of the previous bit
+* a value of 3 indicates that the previous char printed was a dash
+* Written by: David Heidgerken
+*-------------------------------------------------------------------------------
+DISPLAY_REGS:
+
+					MOVE.L		#0, D2		; store counter count up
+
+.top				CMP.W		#16,D2
+					BEQ			.exit       ;undfined symbol?
+					
+					BTST		D2, D1
+					BEQ			.current_zero	;if current is 0 branch to current_zero
+
+.current_one		CMP.W 	#1, D3			;check previous value
+					BEQ		.display_dash	;if eq branch to display_dash
+					BLT		.display_current    ;if last was 0 display current
+					
+
+					BRA		.next			;if last was dash no display needed.
+		
+.current_zero		CMP.L	#1, D3			;chk previous value
+					BGE		.display_previous	;if 1 display previous
+					
+
+					BRA		.next				;if - go next
+					
+.display_dash		MOVE.L	D1,-(SP)			;move regmask onto stack
+				
+					MOVE.L	#$2D,D1				;move dashvalu into D1
+					MOVE.B #6,D0
+					TRAP #15
+
+					MOVE.L	(SP)+,D1			;move regmask back to D1
+					MOVE.L	#3, D3				;update previous
+					BRA		.next
+					
+.display_current	MOVE.L	D1,-(SP)			;move regmask onto stack
+
+					MOVE.L	D2, D1				;move counter
+					CMP.W	#8,	D1		        ;compare to 8
+					BGE		.displaycurAx		;counter GE to 8are AddRegs		
+				
+					BSR		DISPLAY_DATAREG		
+					BRA		.current_next
+					
+.displaycurAx		SUBI	#8,D1	
+					BSR		DISPLAY_ADDEREG		
+					
+.current_next		MOVE.L	(SP)+,D1			;move regmask back to D1
+					MOVE.L	#1, D3				;update previous
+					BRA		.next
+					
+.display_previous	MOVE.L	D1,-(SP)			;move regmask onto stack
+
+					MOVE.L	D2, D1				;move counter into D1
+					SUBI    #1, D1              ;subtract one to get previousvalue
+					CMP.W	#8,D1				;compare to 8
+					BGE		.displayprevAx			;counter GE to 8are AddRegs		
+				
+					BSR		DISPLAY_DATAREG		
+					BRA		.display_slash
+
+.display_slash  	MOVE.L	#$2F,D1				;move slashvalu into D1
+					MOVE.B #6,D0
+					TRAP #15
+				
+					BRA		.previous_next
+					
+.displayprevAx		SUBI	#8,D1	
+					BSR		DISPLAY_ADDEREG	
+                    BRA     .display_slash	
+					
+.previous_next		MOVE.L	(SP)+,D1			;move regmask back to D1
+
+					MOVE.L	#0, D3				;update previous
+					BRA		.next
+
+.next				ADDI.W	#1,D2				;add 1 to counter
+                    BRA     .top
+
+.exit				RTS
 
 ************************* Effective Address Algorithm **************************
 *-------------------------------------------------------------------------------
@@ -785,88 +873,96 @@ EA_TYPE4:
 .INV_MODE	BRA		DISPLAY_ERROR	* Display error
 
 
-; *-------------------------------------------------------------------------------
-; * Type 5 mode xxxx xDxx xxoo oorrr   MOVEM needs Range work....
-; * SubRoutine for handling One Operand addressing looking for a mode and register 
-; * value  assumes that size has already been parsed by opcode.
-; * Written by: David Heidgerken
-; * Description.  16 bit Instruction will be passed to subroutine via D7
-; * and will parse it to find which address mode and location is being used.
-; * D6 used for Register value, D5 is mode D4 is the Size D3 is direction bit
-; * MOVEM
-; *-----------------------------------------------------------------------------
-; EA_TYPE5:
-; 			MOVE.B	#%00000100, D4	* move primative 1 bitmask into D4 	0x0D (DIRECTION)
-; 			LSL.W	#8, D4			* shift data mask into upper byte.
-; 			MOVE.B	#%00111000, D5	* move Primative 3 bit mask into D5 0x38 (EA MODE)
-; 			MOVE.B	#%00000111, D6	* move primative 3 bitmask into D6 	0x07 (EA REGISTER)
-
-; 			AND.W	D7, D4			* and D7 and D4 store in D4 (DIRECTION)
-; 			LSR.W	#8, D4			* move DIRECTION value into lower byte.
-; 			LSR.W	#2, D4			* shift right 2 times.
-; 			AND.W	D7, D5			* and D7 and D5 store in D5 (OPMODE)
-; 			LSR.W	#3, D5			* shift value right 3 times
-; 			AND.W	D7, D6			* and D7 and D6 store in D6 (REGISTER)
+*-------------------------------------------------------------------------------
+* Type 5 mode xxxx xDxx xxoo oorrr   MOVEM needs Range work....
+* SubRoutine for handling One Operand addressing looking for a mode and register 
+* value  assumes that size has already been parsed by opcode.
+* Written by: David Heidgerken
+* Description.  16 bit Instruction will be passed to subroutine via D7
+* and will parse it to find which address mode and location is being used.
+* D6 used for Register value, D5 is mode D4 is the direction bit
+* MOVEM
+*-----------------------------------------------------------------------------
+EA_TYPE5:   
+ 			MOVE.B	#%00000100, D4	* move primative 1 bitmask into D4 	0x0D (DIRECTION)
+ 			LSL.W	#8, D4			* shift data mask into upper byte.
+ 			MOVE.B	#%00111000, D5	* move Primative 3 bit mask into D5 0x38 (EA MODE)
+ 			MOVE.B	#%00000111, D6	* move primative 3 bitmask into D6 	0x07 (EA REGISTER)
+ 			AND.W	D7, D4			* and D7 and D4 store in D4 (DIRECTION)
+ 			LSR.W	#8, D4			* move DIRECTION value into lower byte.
+ 			LSR.W	#2, D4			* shift right 2 times.
+ 			AND.W	D7, D5			* and D7 and D5 store in D5 (OPMODE)
+ 			LSR.W	#3, D5			* shift value right 3 times
+ 			AND.W	D7, D6			* and D7 and D6 store in D6 (REGISTER)
 			
-; 			CMP.B	#0, D4			;verify direction of operation.
-; 			BNE		.IND_MODE		;otherwise send to comparisons
+ 			CMP.B	#0, D4			;verify direction of operation.
+ 			BNE		.IND_MODE		;otherwise send to comparisons
 
-; 			MOVE.W (A6), D1			; move a word from data stream into D1.
-; 			ADDA	#WORD, A6		;increment data pointer
-; 			BSR		DISPLAY_REGS	; display regs first.  then ea modes.
+ 			MOVE.W (A6), D1			; move a word from data stream into D1.
+ 			ADDA	#WORD, A6		;increment data pointer
+ 			BSR		DISPLAY_REGS	; display regs first.  then ea modes.
 
-; *------------------------ Compares between OPMODE 2,4,7--------------------------
+*------------------------ Compares between OPMODE 2,4,7--------------------------
 			
-; .IND_MODE	CMP.B	#2, D5			* compare opmode with 010  (Ax) ************
-; 			BNE		.PD_MODE		* branch to indirect Mode
-; 			BSR		DISPLAY_INDIR	* Send to data register indirect subr
+.IND_MODE	CMP.B	#2, D5			* compare opmode with 010  (Ax) ************
+			BNE		.PI_MODE		* branch to indirect Mode
+			MOVE.L	D6,D1
+ 			BSR		DISPLAY_INDIR	* Send to data register indirect subr
+            BRA     .break
+            
+.PI_MODE	CMP.B	#3, D5			* compare opmode with 011  (Ax)+ ***********
+ 			BNE		.PD_MODE		* branch tp post incrementmodebr
+            MOVE.L	D6,D1
+ 			BSR		DISPLAY_POSTINC	* Send to POSTINCR display sub
+            BRA     .break
+ 			
+.PD_MODE	CMP.B	#4, D5			* compare opmode with 100 -(Ax) ************
+ 			BNE		.DATA_MODE		* branchto Post decrement mode
+            MOVE.L	D6,D1
+ 			BSR		DISPLAY_PREDEC
+            BRA     .break
 
-; .PD_MODE	CMP.B	#4, D5			* compare opmode with 100 -(Ax) ************
-; 			BNE		.DATA_MODE		* branchto Post decrement mode
-; 			BSR		DISPLAY_PREDEC
+*---------------- Compares between OPMODE 7 (xxx).W or (xxx).L -----------------
 
+.DATA_MODE	CMP.B	#7, D5			* compare opmode with 111 .W .L ************
+ 			BNE		.INV_MODE		* branc to data modes
 
-; *---------------- Compares between OPMODE 7 (xxx).W or (xxx).L -----------------
-
-; .DATA_MODE	CMP.B	#7, D5			* compare opmode with 111 .W .L ************
-; 			BNE		.INV_MODE		* branc to data modes
-
-; 			TST.B	D6				* compare register to 000 (xxx).W
-; 			BEQ		.WORDDATA		;branch to word data
+ 			TST.B	D6				* compare register to 000 (xxx).W
+ 			BEQ		.WORDDATA		;branch to word data
 			
-; 			CMP.B	#1, D6			* compare register to 001 (xxx).L
-; 			BEQ		.LONGDATA		;branch to long data
-; 			BRA		DISPLAY_ERROR	;branch to invalid mode if reg greater than1
+ 			CMP.B	#1, D6			* compare register to 001 (xxx).L
+ 			BEQ		.LONGDATA		;branch to long data
+ 			BRA		DISPLAY_ERROR	;branch to invalid mode if reg greater than1
 						
-; .WORDDATA	LEA INIT_MEM,A1
-; 			MOVE.B #14,D0
-; 			TRAP #15
+.WORDDATA	LEA INIT_MEM,A1
+ 			MOVE.B #14,D0
+ 			TRAP #15
 
-; 			ADDA.W #WORD,A0
-; 			MOVE.W (A0),D2
-; 			BSR	DISPLAY_WORD_HEX		; display word in hex
+ 			ADDA.W #WORD,A0
+ 			MOVE.W (A0),D2
+ 			BSR	DISPLAY_WORD_HEX		; display word in hex
 
-; .LONGDATA	LEA INIT_MEM,A1
-; 			MOVE.B #14,D0
-; 			TRAP #15
+.LONGDATA	LEA INIT_MEM,A1
+ 			MOVE.B #14,D0
+ 			TRAP #15
 
-; 			ADDA.W #WORD,A0
-; 			MOVE.L (A0),D2
-; 			ADDA.W #WORD,A0
-; 			BSR	DISPLAY_LONG_HEX	; display long in hex
+ 			ADDA.W #WORD,A0
+ 			MOVE.L (A0),D2
+ 			ADDA.W #WORD,A0
+ 			BSR	DISPLAY_LONG_HEX	; display long in hex
 
-; .INV_MODE	BRA		DISPLAY_ERROR	* Display error
+.INV_MODE	BRA		DISPLAY_ERROR	* Display error
 
-; *------------------- verify direction again ------------------------------------
-; .break		CMP.B	#1, D3			;verify direction of operation.
-; 			BEQ		.printregs
-; 			BGT		.exit
+*------------------- verify direction again ------------------------------------
+.break		CMP.B	#1, D4			;verify direction of operation.
+ 			BEQ		.printregs
+ 			BGT		.exit
 			
-; .printregs	MOVE.W (A6), D1			; move a word from data stream into D1.
-; 			ADDA	#WORD, A6		;increment data pointer
-; 			BRA		DISPLAY_REGS	; display regs last	
+.printregs	MOVE.W (A0), D1			; move a word from data stream into D1.
+ 			ADDA	#WORD, A0		;increment data pointer
+ 			BSR	DISPLAY_REGS	; display regs last	
 			
-; .exit		RTS					;return to calling instruction
+.exit		RTS					;return to calling instruction
 
 
 *-------------------------------------------------------------------------------
@@ -1085,6 +1181,7 @@ ADD_T		LEA ADD_M,A1
 MULS_T		LEA MULS_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR EA_TYPE7
 			RTS
 
 *- 009 CMP ------------------------ Compare ------------------------------------
@@ -1106,6 +1203,7 @@ SUB_T		LEA SUB_M,A1
 DIVS_T		LEA DIVS_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR EA_TYPE7
 			RTS
 
 *- 012 OR ------------------- Inclusive OR Logical -----------------------------
@@ -1179,6 +1277,8 @@ NOP_T		LEA NOP_M,A1
 MOVEM_T		LEA MOVEM_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR	OPERAND_POSITION
+			BSR EA_TYPE5
 			RTS
 
 *- 023 NEG ------------------------- Negate ------------------------------------
@@ -1193,6 +1293,7 @@ NEG_T		LEA NEG_M,A1
 LEA_T		LEA LEA_M,A1
 			MOVE.B #14,D0
 			TRAP #15
+			BSR EA_TYPE7
 			RTS
 
 *- 025 MOVEA.W -------------- Move Address (WORD) ------------------------------
@@ -1350,7 +1451,7 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 
 SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3
 			DC.L  ORI_1,ORI_2,ORI_3
-			DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7
+			DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7,TEST_8
 			DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
 
 
@@ -1421,7 +1522,8 @@ ORI_3		DC.W $0039,$00AB,$3000,$4000
 
 *-------------------------------------------------------------------------------
 
-; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,,TEST_6,,TEST_7,0
+; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,,TEST_6,,TEST_7
+; SOURCE_C			DC.L  TEST_8,0
 
 TEST_0		DC.W $4440
 			DC.W $4451
@@ -1491,11 +1593,13 @@ TEST_6		DC.W %1101000010111000,$2000	;ADD
 			DC.W %1001011010111000,$2000	;SUB
 			DC.W $FFFF
 
-			
 TEST_7		DC.W %0101011101111000,$2000	;SUBQ
 			DC.W %0000011110010010			;BCLR
 			DC.W %0011100101010010			;MOVEA.W
 			DC.W %0010100101010010			;MOVEA.L
+			DC.W $FFFF
+
+TEST_8		DC.W %0100110011010011,%1011011110110111
 			DC.W $FFFF
 			
 *-------------------------------------------------------------------------------
