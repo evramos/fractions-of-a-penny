@@ -255,8 +255,6 @@ DISPLAY_BYTE_HEX:
 			RTS					* Returns from subroutine
 
 
-			
-			
 *----------------- Heart of the hexadecimal display Algorithm ------------------
 
 INTI_LOOP	MOVE.W D2,D1		* Move the current 16-bits into data register 3
@@ -1451,9 +1449,9 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 
 *--------------------------------- Source Code ---------------------------------
 
-;SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3
+SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3
 			DC.L  ORI_1,ORI_2,ORI_3
-			DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7
+			DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7,TEST_8
 			DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
 
 
@@ -1525,8 +1523,7 @@ ORI_3		DC.W $0039,$00AB,$3000,$4000
 *-------------------------------------------------------------------------------
 
 ; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,,TEST_6,,TEST_7
-SOURCE_C			DC.L  TEST_9,0
-
+; SOURCE_C			DC.L  TEST_8,0
 
 TEST_0		DC.W $4440
 			DC.W $4451
@@ -1597,14 +1594,12 @@ TEST_6		DC.W %1101000010111000,$2000	;ADD
 			DC.W $FFFF
 
 TEST_7		DC.W %0101011101111000,$2000	;SUBQ
-			DC.W $FFFF
-			
-TEST_8		DC.W %0000011110010010		;BCLR
-			DC.W %0011100101010010		;MOVEA.W
-			DC.W %0010100101010010		;MOVEA.L
+			DC.W %0000011110010010			;BCLR
+			DC.W %0011100101010010			;MOVEA.W
+			DC.W %0010100101010010			;MOVEA.L
 			DC.W $FFFF
 
-TEST_9		DC.W %0100110011010011,%1011011110110111
+TEST_8		DC.W %0100110011010011,%1011011110110111
 			DC.W $FFFF
 			
 *-------------------------------------------------------------------------------
@@ -1692,11 +1687,6 @@ SOURCE_5	DC.W $4E71
 
 	END		START				* last line of source
 
-
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
 
 *~Font name~Courier New~
 *~Font size~10~
