@@ -12,12 +12,8 @@ CR			EQU   $000D
 LF			EQU   $000A
 START		EQU   $1000			* Program starting address
 EXIT		EQU   $2700			* Simulator stoping code
-; BYTE		EQU   $0001			* Advance address by a byte
 WORD		EQU   $0002			* Advance address by a word
-; LONG		EQU   $0004			* Advance address by a long
 BITMASK8	EQU   $00FF
-; BITMASK4	EQU   $000F
-; BITMASK3	EQU   $0007
 
 *----------------------- Address Register / Data Register ----------------------
 * A0: Designated for Source Code
@@ -25,8 +21,8 @@ BITMASK8	EQU   $00FF
 * A2: Designated for OP Bitmask list / Hexadecimal Bitmask list
 * A3: Designated for Task Operation list / Hexadecimal value list
 * A4: 
-* A5: 
-* A6: 
+* A5: Starting Address
+* A6: Ending Address
 
 
 * D0: Designated for task code values while using TRAP #15
@@ -42,12 +38,17 @@ BITMASK8	EQU   $00FF
 
 			ORG    START		* Program begins here
 
-			LEA SOURCE_C,A2		* Loading the source into address register A2
+			****  Ascii to Hexadecimal  ****
 
-NEXT_SOURCE	MOVEA.L (A2)+,A0		*******  TESTING BETA  ******
+			MOVE.W #$2000,A5	***** OPEN DATA ******
+			MOVE.W #$2200,A6	***** OPEN DATA ******
 
-			MOVE.L A2,SOURCE_LIST
+; 			LEA SOURCE_C,A2		* Loading the source into address register A2
+; NEXT_SOURCE	MOVEA.L (A2)+,A0		*******  TESTING BETA  ******
+; 			MOVE.L A2,SOURCE_LIST
 
+			MOVEA.L A5,A0 		***** OPEN DATA ******
+NEXT_SOURCE
 *---------------------------- Displaying to output -----------------------------
 
 			LEA LINE,A1
@@ -76,19 +77,30 @@ NEXT_SOURCE	MOVEA.L (A2)+,A0		*******  TESTING BETA  ******
 			MOVE.B #13,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
 
+
+			****  Moving Starting pointer to next set of instructions  ****
+
+SEARCH_WORD	CMPA.L A0,A6			******  OPEN DATA  ******
+			BGE END_PROGRAM			******  OPEN DATA  ******
+			ADDA.W #WORD,A0	
+			CMPI.W #FFFF,(A0)
+			BEQ SEARCH_WORD
+
+*------------------------ Press ANY key to continue to -------------------------
+
 			LEA PRESS_ANY,A1
 			MOVE.B #14,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
 
-*------------------------ Press ANY key to continue to -------------------------
-
 			MOVE.B #5,D0			******  TESTING BETA  ******
 			TRAP #15				******  TESTING BETA  ******
 
-			MOVE.L SOURCE_LIST,A2
+			; MOVE.L SOURCE_LIST,A2
+			; TST.L (A2)				******  TESTING BETA  ******
+			; BEQ END_PROGRAM			******  TESTING BETA  ******
 
-			TST.L (A2)				******  TESTING BETA  ******
-			BEQ END_PROGRAM			******  TESTING BETA  ******
+			; CMPA.L A0,A6			******  OPEN DATA  ******
+			; BGE END_PROGRAM			******  OPEN DATA  ******
 
 			MOVE.B #11,D0 		* Moving task 11 into Data Register 0
 			MOVE.W #$FF00,D1	* Clear Screen : Set D1.W to $FF00
@@ -1449,10 +1461,10 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 
 *--------------------------------- Source Code ---------------------------------
 
-SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3
-			DC.L  ORI_1,ORI_2,ORI_3
-			DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7,TEST_8
-			DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
+; SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3
+; 			DC.L  ORI_1,ORI_2,ORI_3
+; 			DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7,TEST_8
+; 			DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
 
 
 ; *		LSD 1110 0[01]D 11[xx xxxx]  	LSL 1110 0011 11[00 0000]
@@ -1468,224 +1480,226 @@ SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3
 
 ; SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3,0
 
-ROD_TEST_1	DC.W $E31F
-			DC.W $E55E
-			DC.W $E79D
+; ROD_TEST_1	DC.W $E31F
+; 			DC.W $E55E
+; 			DC.W $E79D
 
-			DC.W $E91C
-			DC.W $EB5B
-			DC.W $ED9A
+; 			DC.W $E91C
+; 			DC.W $EB5B
+; 			DC.W $ED9A
 
-			DC.W $EF19
-			DC.W $E158
-			DC.W $FFFF
+; 			DC.W $EF19
+; 			DC.W $E158
+; 			DC.W $FFFF
 
-ROD_TEST_2 	DC.W $E13F
-			DC.W $E37E
-			DC.W $E5BD
-			DC.W $E73C
-			DC.W $E97B
-			DC.W $EBBA
-			DC.W $ED39
-			DC.W $EF78
-			DC.W $FFFF
+; ROD_TEST_2 	DC.W $E13F
+; 			DC.W $E37E
+; 			DC.W $E5BD
+; 			DC.W $E73C
+; 			DC.W $E97B
+; 			DC.W $EBBA
+; 			DC.W $ED39
+; 			DC.W $EF78
+; 			DC.W $FFFF
 
-ROD_TEST_3 	DC.W $E7D0 	ROL (A0)
-			DC.W $E6D1  ROR (A1)
+; ROD_TEST_3 	DC.W $E7D0 	ROL (A0)
+; 			DC.W $E6D1  ROR (A1)
 
-			DC.W $E1D2  ASL (A2)
-			DC.W $E0D3  ASR (A3)
+; 			DC.W $E1D2  ASL (A2)
+; 			DC.W $E0D3  ASR (A3)
 
-			DC.W $E3D4  LSL (A4)
-			DC.W $E2D5  LSR (A5)
-			DC.W $FFFF
+; 			DC.W $E3D4  LSL (A4)
+; 			DC.W $E2D5  LSR (A5)
+; 			DC.W $FFFF
 
-*-------------------------------------------------------------------------------
+; *-------------------------------------------------------------------------------
 
-; SOURCE_C	DC.L  ORI_1,ORI_2,ORI_3
-; OR_1		DC.W $8455,0
+; ; SOURCE_C	DC.L  ORI_1,ORI_2,ORI_3
+; ; OR_1		DC.W $8455,0
 
-ORI_1		DC.W $0000,$00ABD
-			DC.W $0041,$ABCD
-			DC.W $0082,$89AB,$CDEF
-			DC.W $FFFF
+; ORI_1		DC.W $0000,$00ABD
+; 			DC.W $0041,$ABCD
+; 			DC.W $0082,$89AB,$CDEF
+; 			DC.W $FFFF
 
-ORI_2		DC.W $0038,$00AB,$3000
-			DC.W $0078,$ABCD,$4000
-			DC.W $00B8,$89AB,$CDEF,$5000
-			DC.W $FFFF
+; ORI_2		DC.W $0038,$00AB,$3000
+; 			DC.W $0078,$ABCD,$4000
+; 			DC.W $00B8,$89AB,$CDEF,$5000
+; 			DC.W $FFFF
 
-ORI_3		DC.W $0039,$00AB,$3000,$4000
-			DC.W $0079,$ABCD,$4000,$5000
-			DC.W $00B9,$89AB,$CDEF,$5000,$6000
-			DC.W $FFFF
+; ORI_3		DC.W $0039,$00AB,$3000,$4000
+; 			DC.W $0079,$ABCD,$4000,$5000
+; 			DC.W $00B9,$89AB,$CDEF,$5000,$6000
+; 			DC.W $FFFF
 
-*-------------------------------------------------------------------------------
+; *-------------------------------------------------------------------------------
 
-; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,,TEST_6,,TEST_7
-; SOURCE_C			DC.L  TEST_8,0
+; ; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,,TEST_6,,TEST_7
+; ; SOURCE_C			DC.L  TEST_8,0
 
-TEST_0		DC.W $4440
-			DC.W $4451
-			DC.W $4462
-			DC.W $445B
-			DC.W $4478,$2001
-			DC.W $4479,$1000,$2001
-			DC.W $FFFF
+; TEST_0		DC.W $4440
+; 			DC.W $4451
+; 			DC.W $4462
+; 			DC.W $445B
+; 			DC.W $4478,$2001
+; 			DC.W $4479,$1000,$2001
+; 			DC.W $FFFF
 
-* Displays Dx 1-7
-TEST_1		DC.W %0100010000000000		
-			DC.W %0100010001000001
-			DC.W %0100010010000010
-			DC.W %0100010011000011
-			DC.W %0100010000000100
-			DC.W %0100010001000101
-			DC.W %0100010010000110
-			DC.W %0100010011000111
-			DC.W $FFFF
+; * Displays Dx 1-7
+; TEST_1		DC.W %0100010000000000		
+; 			DC.W %0100010001000001
+; 			DC.W %0100010010000010
+; 			DC.W %0100010011000011
+; 			DC.W %0100010000000100
+; 			DC.W %0100010001000101
+; 			DC.W %0100010010000110
+; 			DC.W %0100010011000111
+; 			DC.W $FFFF
 
-* Displays (Ax) 1-7
-TEST_2		DC.W %0100010000010000		
-			DC.W %0100010000010001
-			DC.W %0100010000010010
-			DC.W %0100010000010011
-			DC.W %0100010000010100
-			DC.W %0100010000010101
-			DC.W %0100010000010110
-			DC.W %0100010000010111
-			DC.W $FFFF
+; * Displays (Ax) 1-7
+; TEST_2		DC.W %0100010000010000		
+; 			DC.W %0100010000010001
+; 			DC.W %0100010000010010
+; 			DC.W %0100010000010011
+; 			DC.W %0100010000010100
+; 			DC.W %0100010000010101
+; 			DC.W %0100010000010110
+; 			DC.W %0100010000010111
+; 			DC.W $FFFF
 
-* Displays (Ax)+ 1-7
-TEST_3		DC.W %0100010000011000		
-			DC.W %0100010000011001
-			DC.W %0100010000011010
-			DC.W %0100010000011011
-			DC.W %0100010000011100
-			DC.W %0100010000011101
-			DC.W %0100010000011110
-			DC.W %0100010000011111
-			DC.W $FFFF
+; * Displays (Ax)+ 1-7
+; TEST_3		DC.W %0100010000011000		
+; 			DC.W %0100010000011001
+; 			DC.W %0100010000011010
+; 			DC.W %0100010000011011
+; 			DC.W %0100010000011100
+; 			DC.W %0100010000011101
+; 			DC.W %0100010000011110
+; 			DC.W %0100010000011111
+; 			DC.W $FFFF
 
-* Displays -(Ax) 1-7
-TEST_4		DC.W %0100010000100000		
-			DC.W %0100010000100001
-			DC.W %0100010000100010
-			DC.W %0100010000100011
-			DC.W %0100010000100100
-			DC.W %0100010000100101
-			DC.W %0100010000100110
-			DC.W %0100010000100111
-			DC.W $FFFF
+; * Displays -(Ax) 1-7
+; TEST_4		DC.W %0100010000100000		
+; 			DC.W %0100010000100001
+; 			DC.W %0100010000100010
+; 			DC.W %0100010000100011
+; 			DC.W %0100010000100100
+; 			DC.W %0100010000100101
+; 			DC.W %0100010000100110
+; 			DC.W %0100010000100111
+; 			DC.W $FFFF
 
-* Displays (xxx).W
-TEST_5		DC.W %0100010000111000,$2000		
-			DC.W %0100010000111001,$3000,$4000
-			DC.W $FFFF
+; * Displays (xxx).W
+; TEST_5		DC.W %0100010000111000,$2000		
+; 			DC.W %0100010000111001,$3000,$4000
+; 			DC.W $FFFF
 
-* TEST for EA type 3
-TEST_6		DC.W %1101000010111000,$2000	;ADD
-			DC.W %1101011011111000,$2000	;ADDA
-			DC.W %1011011010111000,$2000	;CMP
-			DC.W %0001011010111000,$2000	;MOVE.B
-			DC.W %0011011010111000,$2000	;MOVE.W
-			DC.W %0010011010111000,$2000	;MOVE.L
-			DC.W %1000011010111000,$2000	;OR
-			DC.W %1001011010111000,$2000	;SUB
-			DC.W $FFFF
+; * TEST for EA type 3
+; TEST_6		DC.W %1101000010111000,$2000	;ADD
+; 			DC.W %1101011011111000,$2000	;ADDA
+; 			DC.W %1011011010111000,$2000	;CMP
+; 			DC.W %0001011010111000,$2000	;MOVE.B
+; 			DC.W %0011011010111000,$2000	;MOVE.W
+; 			DC.W %0010011010111000,$2000	;MOVE.L
+; 			DC.W %1000011010111000,$2000	;OR
+; 			DC.W %1001011010111000,$2000	;SUB
+; 			DC.W $FFFF
 
-TEST_7		DC.W %0101011101111000,$2000	;SUBQ
-			DC.W %0000011110010010			;BCLR
-			DC.W %0011100101010010			;MOVEA.W
-			DC.W %0010100101010010			;MOVEA.L
-			DC.W $FFFF
+; TEST_7		DC.W %0101011101111000,$2000	;SUBQ
+; 			DC.W %0000011110010010			;BCLR
+; 			DC.W %0011100101010010			;MOVEA.W
+; 			DC.W %0010100101010010			;MOVEA.L
+; 			DC.W $FFFF
 
-TEST_8		DC.W %0100110011010011,%1011011110110111
-			DC.W $FFFF
+; TEST_8		DC.W %0100110011010011,%1011011110110111
+; 			DC.W $FFFF
 			
-*-------------------------------------------------------------------------------
+; *-------------------------------------------------------------------------------
 
-; SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
+; ; SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
 
-SOURCE_1	DC.W $4E75				RTS
-			DC.W $D6C7				ADDA
-			DC.W $4EB8				JSR
-			DC.W $4487				NEG.L
-			DC.W $D5C2				ADDA
-			DC.W $4E71				NOP
-			DC.W $4EB9				JSR
-			DC.W $D280				ADD.L
-			DC.W $303C				MOVE.W
-			DC.W $4E75				RTS
-			DC.W $FFFF,$FFFF,$FFFF,$FFFF
-
-
-SOURCE_2	DC.W $66FC				DATA
-			DC.W $EE45				ASR.W
-			DC.W $6CFF,$0002,$6A12	BGE
-			DC.W $E6AA				LSR.L
-			DC.W $E439				ROR.B
-			DC.W $2646				MOVEA.L
-			DC.W $EF45				ASL.W
-			DC.W $62FC				DATA
-			DC.W $E539				ROL.B
-			DC.W $60AA				BRA
-			DC.W $EF45				ASL.W
-			DC.W $68CD				BVC
-			DC.W $BBBB				ERROR (CMP.L)
-			DC.W $E6AA				LSR.L
-			DC.W $EE45				ASR.W
-			DC.W $85C3				DIVS
-			DC.W $AAAA				ERROR (OR.L)
-			DC.W $FFFF
+; SOURCE_1	DC.W $4E75				RTS
+; 			DC.W $D6C7				ADDA
+; 			DC.W $4EB8				JSR
+; 			DC.W $4487				NEG.L
+; 			DC.W $D5C2				ADDA
+; 			DC.W $4E71				NOP
+; 			DC.W $4EB9				JSR
+; 			DC.W $D280				ADD.L
+; 			DC.W $303C				MOVE.W
+; 			DC.W $4E75				RTS
+; 			DC.W $FFFF,$FFFF,$FFFF,$FFFF
 
 
-**** Displacement TESTING - REMOVE WHEN DONE ****
-SOURCE_3	DC.W $6FFC				BLE	1111
-			DC.W $6EFC				BGT	1110
-			DC.W $6DFC				BLT	1101
-			DC.W $6C00,$0004		BGE	1100
-			DC.W $6BFC				BMI	1011
-			DC.W $6AFC				BPL	1010
-			DC.W $69FC				BVS	1001
-			DC.W $68FF,$2803,$3201	BVC	1000
-			DC.W $67FC				BEQ	0111
-			DC.W $66FC				BNE	0110
-			DC.W $65FC				BCS	0101
-			DC.W $64FC				BCC	0100
-			DC.W $63FC				BLS	0011
-			DC.W $62FC				BHI	0010
-			DC.W $60FC				BRA
-			DC.W $60FF,$0000,$000A	BRA
-			DC.W $60FF,$1234,$5678	BRA
-			DC.W $FFFF
+; SOURCE_2	DC.W $66FC				DATA
+; 			DC.W $EE45				ASR.W
+; 			DC.W $6CFF,$0002,$6A12	BGE
+; 			DC.W $E6AA				LSR.L
+; 			DC.W $E439				ROR.B
+; 			DC.W $2646				MOVEA.L
+; 			DC.W $EF45				ASL.W
+; 			DC.W $62FC				DATA
+; 			DC.W $E539				ROL.B
+; 			DC.W $60AA				BRA
+; 			DC.W $EF45				ASL.W
+; 			DC.W $68CD				BVC
+; 			DC.W $BBBB				ERROR (CMP.L)
+; 			DC.W $E6AA				LSR.L
+; 			DC.W $EE45				ASR.W
+; 			DC.W $85C3				DIVS
+; 			DC.W $AAAA				ERROR (OR.L)
+; 			DC.W $FFFF
+
+
+; **** Displacement TESTING - REMOVE WHEN DONE ****
+; SOURCE_3	DC.W $6FFC				BLE	1111
+; 			DC.W $6EFC				BGT	1110
+; 			DC.W $6DFC				BLT	1101
+; 			DC.W $6C00,$0004		BGE	1100
+; 			DC.W $6BFC				BMI	1011
+; 			DC.W $6AFC				BPL	1010
+; 			DC.W $69FC				BVS	1001
+; 			DC.W $68FF,$2803,$3201	BVC	1000
+; 			DC.W $67FC				BEQ	0111
+; 			DC.W $66FC				BNE	0110
+; 			DC.W $65FC				BCS	0101
+; 			DC.W $64FC				BCC	0100
+; 			DC.W $63FC				BLS	0011
+; 			DC.W $62FC				BHI	0010
+; 			DC.W $60FC				BRA
+; 			DC.W $60FF,$0000,$000A	BRA
+; 			DC.W $60FF,$1234,$5678	BRA
+; 			DC.W $FFFF
 			
 
-**** Size BYTE,WORD,LONG TESTING - REMOVE WHEN DONE ****
-SOURCE_4	DC.W $E118				ROL.B
-			DC.W $E158				ROL.W
-			DC.W $E198				ROL.L
-			DC.W $E1D8				ROL
+; **** Size BYTE,WORD,LONG TESTING - REMOVE WHEN DONE ****
+; SOURCE_4	DC.W $E118				ROL.B
+; 			DC.W $E158				ROL.W
+; 			DC.W $E198				ROL.L
+; 			DC.W $E1D8				ROL
 
-			DC.W $E018				LOL.B
-			DC.W $E058				LOL.W
-			DC.W $E098				LOL.L
-			DC.W $E0D8				LOL	
+; 			DC.W $E018				LOL.B
+; 			DC.W $E058				LOL.W
+; 			DC.W $E098				LOL.L
+; 			DC.W $E0D8				LOL	
 
-			DC.W $E110				LSL.B
-			DC.W $E150				LSL.W
-			DC.W $E190				LSL.L
-			DC.W $E1D0				LSL
-			DC.W $FFFF
+; 			DC.W $E110				LSL.B
+; 			DC.W $E150				LSL.W
+; 			DC.W $E190				LSL.L
+; 			DC.W $E1D0				LSL
+; 			DC.W $FFFF
 
-SOURCE_5	DC.W $4E71
-			DC.W $6DFC
-			DC.W $6CFC
-			DC.W $68FC
-			DC.W $65FC
-			DC.W $60FC
-			DC.W $FFFF
+; SOURCE_5	DC.W $4E71
+; 			DC.W $6DFC
+; 			DC.W $6CFC
+; 			DC.W $68FC
+; 			DC.W $65FC
+; 			DC.W $60FC
+; 			DC.W $FFFF
 
 	END		START				* last line of source
+
+
 
 
 *~Font name~Courier New~
