@@ -485,8 +485,8 @@ DISPLAY_POSTINC:
 			RTS
 
 *-------------------------------------------------------------------------------
-* Display_Reg
-* as source
+* Display_Reg1 - read 0 -> 15
+*
 * 16 bit regmask  A7->A0/D7->D0
 * assumed to be in D1
 * D2 will contain a count and points to current bit.
@@ -495,83 +495,85 @@ DISPLAY_POSTINC:
 * Written by: David Heidgerken
 *-------------------------------------------------------------------------------
 DISPLAY_REGS:
-
 					MOVE.L		#0, D2		; store counter count up
-
-.top				CMP.W		#16,D2
-					BEQ			.exit       ;undfined symbol?
-					
-					BTST		D2, D1
-					BEQ			.current_zero	;if current is 0 branch to current_zero
-
-.current_one		CMP.W 	#1, D3			;check previous value
-					BEQ		.display_dash	;if eq branch to display_dash
-					BLT		.display_current    ;if last was 0 display current
-					
-
-					BRA		.next			;if last was dash no display needed.
-		
-.current_zero		CMP.L	#1, D3			;chk previous value
-					BGE		.display_previous	;if 1 display previous
-					
-
-					BRA		.next				;if - go next
-					
-.display_dash		MOVE.L	D1,-(SP)			;move regmask onto stack
 				
-					MOVE.L	#$2D,D1				;move dashvalu into D1
-					MOVE.B #6,D0
-					TRAP #15
+.top				BTST		D2, D1
+					BEQ			.currentzero	;if current is 0 branch to current_zero
+*-------------------------------------------------------------------------------
+.currentone			CMP.W 	#1, D3			;check previous(d3) value
+					BEQ		.startofseq		;if 1 display startofseq
+					
+					CMP.W	#0, D3			;cmp prev(d3) to 0
+					BEQ		.updateone		;branch to updateone
+					BRA		.next			;otherwise(D3 = 3) next
+					
+.updateone			MOVE.L	#1, D3			;update D3 w/ 1
+					BRA		.next
+					
+.startofseq			MOVE.L	D1,-(SP)			;move regmask onto stack
 
-					MOVE.L	(SP)+,D1			;move regmask back to D1
+					MOVE.L	D2, D1				;move counter into d1
+					SUBI	#1,D1				;subtract 1 to get previous i
+					CMP.W	#8,	D1		        ;compare to 8
+					BGE		.displayAxOne		;counter GE to 8are AddRegs		
+				
+.displayDxOne		BSR		DISPLAY_DATAREG		
+					BRA		.startnext
+					
+.displayAxOne		SUBI	#8,D1	
+					BSR		DISPLAY_ADDEREG
+					
+.startnext			MOVE.L	(SP)+,D1			;move regmask back to D1
 					MOVE.L	#3, D3				;update previous
 					BRA		.next
-					
-.display_current	MOVE.L	D1,-(SP)			;move regmask onto stack
+*-------------------------------------------------------------------------------
+.currentzero		CMP		#0, D3				;cmp prev(d3)to 0
+					BEQ		.next				;if eq go .next
 
-					MOVE.L	D2, D1				;move counter
-					CMP.W	#8,	D1		        ;compare to 8
-					BGE		.displaycurAx		;counter GE to 8are AddRegs		
-				
-					BSR		DISPLAY_DATAREG		
-					BRA		.current_next
 					
-.displaycurAx		SUBI	#8,D1	
-					BSR		DISPLAY_ADDEREG		
-					
-.current_next		MOVE.L	(SP)+,D1			;move regmask back to D1
-					MOVE.L	#1, D3				;update previous
-					BRA		.next
-					
-.display_previous	MOVE.L	D1,-(SP)			;move regmask onto stack
+					MOVE.L	D1,-(SP)			;move regmask onto stack
 
-					MOVE.L	D2, D1				;move counter into D1
-					SUBI    #1, D1              ;subtract one to get previousvalue
-					CMP.W	#8,D1				;compare to 8
-					BGE		.displayprevAx			;counter GE to 8are AddRegs		
-				
-					BSR		DISPLAY_DATAREG		
-					BRA		.display_slash
-
-.display_slash  	MOVE.L	#$2F,D1				;move slashvalu into D1
+					CMP		#1, D3
+					BEQ		.endofseq
+					
+					MOVE.L	#$2D,D1				;move dashvalu into D1
 					MOVE.B #6,D0
-					TRAP #15
-				
-					BRA		.previous_next
+					TRAP #15					;and display
 					
-.displayprevAx		SUBI	#8,D1	
-					BSR		DISPLAY_ADDEREG	
-                    BRA     .display_slash	
-					
-.previous_next		MOVE.L	(SP)+,D1			;move regmask back to D1
+.endofseq			MOVE.L	D2, D1				;move counter into d1
+					SUBI	#1,D1				;subtract 1 to get previous i
+					CMP.W	#8,	D1		        ;compare to 8
+					BGE		.displayAxZero		;counter GE to 8are AddRegs
 
+.displayDxZero		BSR		DISPLAY_DATAREG
+					BRA		.endnext
+					
+.displayAxZero		SUBI	#8,D1	
+					BSR		DISPLAY_ADDEREG
+					
+.endnext			MOVE.L	#$2F,D1				;move slashvalu into D1
+					MOVE.B #6,D0
+					TRAP #15					;and display
+					
+					MOVE.L	(SP)+,D1			;move regmask back to D1
 					MOVE.L	#0, D3				;update previous
 					BRA		.next
-
+					
+*-------------------------------------------------------------------------------
 .next				ADDI.W	#1,D2				;add 1 to counter
-                    BRA     .top
+                    CMP.W		#16,D2
+					BEQ			.break			;head to break
+					BRA     .top
 
+.break				CMP.W 	#0, D3				;check previous value
+					BEQ		.exit				;if 0 exit, othewise display A7
+	
+.displayA7			MOVE.L	#7, D1				;move 7 into d1
+					BSR		DISPLAY_ADDEREG
+					
 .exit				RTS
+*-------------------------------------------------------------------------------
+
 
 ************************* Effective Address Algorithm **************************
 *-------------------------------------------------------------------------------
@@ -992,8 +994,8 @@ EA_TYPE6:
 			TST.B 	D5				* Checks if i/r bit is an immediate value of 0
 			BNE		.regmode		* D3 (I/R) is a Register Rotate Count
 			
-; If i/r = 0, this field contains the rotate count. The values 1 – 7 represent
-; counts of 1 – 7, and zero specifies a count of eight.
+; If i/r = 0, this field contains the rotate count. The values 1 ï¿½ 7 represent
+; counts of 1 ï¿½ 7, and zero specifies a count of eight.
 
 			MOVE.B #$23,D1 			* Prints '#' into the output
 			MOVE.B #6,D0
