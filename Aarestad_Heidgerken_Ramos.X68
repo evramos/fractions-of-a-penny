@@ -33,7 +33,7 @@ BITMASK8	EQU   $00FF
 * D4: 
 * D5: 
 * D6: 
-* D7: 
+* D7: Temporary 16-bits for EA
 
 ******************** Main Program / Initial Starting Point *********************
 
@@ -41,18 +41,21 @@ BITMASK8	EQU   $00FF
 
 			****  Ascii to Hexadecimal  ****
 
-			MOVE.W #$2000,A5	***** OPEN DATA ******
+			MOVE.W #$1FFC,A5	***** OPEN DATA ******
 			MOVE.W #$2200,A6	***** OPEN DATA ******
 
-; 			LEA SOURCE_C,A2		* Loading the source into address register A2
-; NEXT_SOURCE	MOVEA.L (A2)+,A0		*******  TESTING BETA  ******
-; 			MOVE.L A2,SOURCE_LIST
+
+SEARCH_INIT	CMPA.L A6,A5		* Did I happen to go over the user range?
+			BGE END_PROGRAM		* If I did, I'll end the progarm.
+			ADDA.W #WORD,A5		* If not, I'll continue to hunt for DATA
+			CMPI.W #$FFFF,(A5)  * Did I happen to find any useful DATA?
+			BEQ SEARCH_INIT     * Nope, continue the hunt
 
 			MOVEA.L A5,A0 		***** OPEN DATA ******
-NEXT_SOURCE
+
 *---------------------------- Displaying to output -----------------------------
 
-			LEA LINE,A1
+NEXT_SOURCE	LEA LINE,A1
 			MOVE.B #14,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
 			MOVE.B #13,D0		* Move task 13 into Data Register 0
@@ -78,14 +81,11 @@ NEXT_SOURCE
 			MOVE.B #13,D0		* Move task 13 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF.
 
-
-			****  Moving Starting pointer to next set of instructions  ****
-
-SEARCH_WORD	CMPA.L A6,A0			******  OPEN DATA  ******
-			BGE END_PROGRAM			******  OPEN DATA  ******
-			ADDA.W #WORD,A0	
-			CMPI.W #$FFFF,(A0)
-			BEQ SEARCH_WORD
+SEARCH_HUNT	CMPA.L A6,A0		* Did I happen to go over the user range?
+			BGE END_PROGRAM		* If I did, I'll end the progarm.
+			ADDA.W #WORD,A0		* If not, I'll continue to hunt for DATA
+			CMPI.W #$FFFF,(A0)  * Did I happen to find any useful DATA?
+			BEQ SEARCH_HUNT     * Nope, continue the hunt
 
 *------------------------ Press ANY key to continue to -------------------------
 
@@ -95,13 +95,6 @@ SEARCH_WORD	CMPA.L A6,A0			******  OPEN DATA  ******
 
 			MOVE.B #5,D0			******  TESTING BETA  ******
 			TRAP #15				******  TESTING BETA  ******
-
-			; MOVE.L SOURCE_LIST,A2
-			; TST.L (A2)				******  TESTING BETA  ******
-			; BEQ END_PROGRAM			******  TESTING BETA  ******
-
-			; CMPA.L A0,A6			******  OPEN DATA  ******
-			; BGE END_PROGRAM			******  OPEN DATA  ******
 
 			MOVE.B #11,D0 		* Moving task 11 into Data Register 0
 			MOVE.W #$FF00,D1	* Clear Screen : Set D1.W to $FF00
@@ -1403,13 +1396,10 @@ POST_BRACKE	DC.B 	')',0
 ADDRESS_Ax	DC.B 	'A',0
 DATA_REG_M	DC.B 	'D',0
 
-; DISPLAY_REGS - for use in MOVEM where we need to display a / delimited list of Registers and ranges of registers.
-
 NEWLINE_M	DC.B  CR,LF,0
 
 POSITION 	DC.W  $0000
 SAVE_STATE	DS.L  1
-SOURCE_LIST DS.L  1   
 
 ROL_M		DC.B	'ROL',0		* Tested	0xE118
 LSL_M		DC.B	'LSL',0		* Tested	0xE108
@@ -1460,78 +1450,6 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 			DC.W $4E75,$4E71,$4880,$4400,$41C0,$3040,$3000,$2040,$2000,$1000
 			DC.W $0C00,$0180,$0000
 
-*--------------------------------- Source Code ---------------------------------
-
-; SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3
-; 			DC.L  ORI_1,ORI_2,ORI_3
-; 			DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,TEST_6,TEST_7,TEST_8
-; 			DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
-
-
-; *		LSD 1110 0[01]D 11[xx xxxx]  	LSL 1110 0011 11[00 0000]
-; *									   	LSR 1110 0010 11[00 0000]
-
-; *		ASD	1110 0[00]D 11[xx xxxx]		ASL 1110 0001 11[00 0000]
-; *										ASR 1110 0000 11[00 0000]
-; *		ROD 1110 0[11]D 11[xx xxxx]
-; *										ROL 1110 0111 11[00 0000]
-; *										ROR 1110 0110 11[00 0000]
-; *									BITMASK 1110 0000 1100 0000
-; *									E0C0
-
-; SOURCE_C	DC.L ROD_TEST_1,ROD_TEST_2,ROD_TEST_3,0
-
-; ROD_TEST_1	DC.W $E31F
-; 			DC.W $E55E
-; 			DC.W $E79D
-
-; 			DC.W $E91C
-; 			DC.W $EB5B
-; 			DC.W $ED9A
-
-; 			DC.W $EF19
-; 			DC.W $E158
-; 			DC.W $FFFF
-
-; ROD_TEST_2 	DC.W $E13F
-; 			DC.W $E37E
-; 			DC.W $E5BD
-; 			DC.W $E73C
-; 			DC.W $E97B
-; 			DC.W $EBBA
-; 			DC.W $ED39
-; 			DC.W $EF78
-; 			DC.W $FFFF
-
-; ROD_TEST_3 	DC.W $E7D0 	ROL (A0)
-; 			DC.W $E6D1  ROR (A1)
-
-; 			DC.W $E1D2  ASL (A2)
-; 			DC.W $E0D3  ASR (A3)
-
-; 			DC.W $E3D4  LSL (A4)
-; 			DC.W $E2D5  LSR (A5)
-; 			DC.W $FFFF
-
-; *-------------------------------------------------------------------------------
-
-; ; SOURCE_C	DC.L  ORI_1,ORI_2,ORI_3
-; ; OR_1		DC.W $8455,0
-
-; ORI_1		DC.W $0000,$00ABD
-; 			DC.W $0041,$ABCD
-; 			DC.W $0082,$89AB,$CDEF
-; 			DC.W $FFFF
-
-; ORI_2		DC.W $0038,$00AB,$3000
-; 			DC.W $0078,$ABCD,$4000
-; 			DC.W $00B8,$89AB,$CDEF,$5000
-; 			DC.W $FFFF
-
-; ORI_3		DC.W $0039,$00AB,$3000,$4000
-; 			DC.W $0079,$ABCD,$4000,$5000
-; 			DC.W $00B9,$89AB,$CDEF,$5000,$6000
-; 			DC.W $FFFF
 
 ; *-------------------------------------------------------------------------------
 
@@ -1699,10 +1617,6 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 ; 			DC.W $FFFF
 
 	END		START				* last line of source
-
-
-
-
 
 
 *~Font name~Courier New~
