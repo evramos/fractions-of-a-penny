@@ -28,10 +28,30 @@ ROD_TEST_2: ORG    $2020
 	    ROL.B D6,D1
 	    ROL.W D7,D0
 
+
+ORI_TEST_1: ORG    $2040
+
+        
+        ORI.B #$BD,D0
+        ORI.W #$ABCD,D1
+        ORI.L #$89ABCEF,D2
+
+        ORI.B #$AB,$3000
+        ORI.W #$ABCD,$3000
+        ORI.L #$89ABCDEF,$5000
+
+        ORI.B #$AB,$30004000
+        ORI.W #$ABCD,$30005000
+        ORI.L #$89ABCDEF,$50006000
+
+
     SIMHALT             ; halt simulator
+
 
     END    ROD_TEST_1
     END    ROD_TEST_2
+    END    ORI_TEST_1
+
 
 
 *~Font name~Courier New~
