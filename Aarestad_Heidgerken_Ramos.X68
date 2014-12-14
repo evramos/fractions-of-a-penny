@@ -39,19 +39,26 @@ BITMASK8	EQU   $00FF
 
 			ORG    START		* Program begins here
 
-			****  Ascii to Hexadecimal  ****
-
-			MOVE.W #$1FFC,A5	***** OPEN DATA ******
-			MOVE.W #$2200,A6	***** OPEN DATA ******
-
-
-SEARCH_INIT	CMPA.L A6,A5		* Did I happen to go over the user range?
-			BGE END_PROGRAM		* If I did, I'll end the progarm.
-			ADDA.W #WORD,A5		* If not, I'll continue to hunt for DATA
-			CMPI.W #$FFFF,(A5)  * Did I happen to find any useful DATA?
-			BEQ SEARCH_INIT     * Nope, continue the hunt
+INIT_START	BSR USER_HEX_INPUT
 
 			MOVEA.L A5,A0 		***** OPEN DATA ******
+
+*---------------------- Checks the range of START and END ----------------------
+
+			CMPA.L A6,A5 		* Tests to see if the starting mark isn't greater than the ending
+			BLT SEARCH_INIT 	* Okay good, you didn't crash my program. We can move on and be happy
+
+			LEA ERROR_HM0,A1 	* Loads error message to the output
+			MOVE.B #13,D0
+			TRAP #15
+			BRA INIT_START
+
+SEARCH_INIT	CMPA.L A6,A0		* Did I happen to go over the user range?
+			BGE NO_DATA_FOUND	* If I did, I'll end the progarm.
+			ADDA.W #WORD,A0		* If not, I'll continue to hunt for DATA
+			CMPI.W #$FFFF,(A0)  * Did I happen to find any useful DATA?
+			BEQ SEARCH_INIT     * Nope, continue the hunt
+
 
 *---------------------------- Displaying to output -----------------------------
 
@@ -206,6 +213,171 @@ NEWLINE		LEA NEWLINE_M,A1	* Loading NEWLINE into (A1) for next instruction
 			MOVE.B #14,D0		* Moving task 14 into Data Register 0
 			TRAP #15			* Display the string at (A1) without CR, LF
 			RTS					* Returns from subroutine
+
+
+*************************** No DATA Found subroutine ***************************
+
+NO_DATA_FOUND:
+			LEA ERROR_M0,A1
+			MOVE.B #14,D0
+			TRAP #15
+
+			MOVE.L A5,D2
+			BSR DISPLAY_LONG_HEX
+
+			MOVE.B #$2C,D1
+			MOVE.B #6,D0
+			TRAP #15
+
+			MOVE.L A6,D2
+			BSR DISPLAY_LONG_HEX
+
+			MOVE.B #$5D,D1
+			MOVE.B #6,D0
+			TRAP #15
+
+			BSR NEWLINE
+
+			LEA PRESS_ANY,A1
+			MOVE.B #14,D0		* Move task 13 into Data Register 0
+			TRAP #15			* Display the string at (A1) without CR, LF.
+
+			MOVE.B #5,D0			******  TESTING BETA  ******
+			TRAP #15				******  TESTING BETA  ******
+
+			MOVE.B #11,D0 		* Moving task 11 into Data Register 0
+			MOVE.W #$FF00,D1	* Clear Screen : Set D1.W to $FF00
+			TRAP #15
+
+			BRA INIT_START
+
+
+**************************  ASCII -> HEX  Subroutine  **************************
+
+USER_HEX_INPUT:
+
+*--------------------- Starting/Ending Hexadecimal Input -----------------------
+
+            LEA SR_HEX_INP,A1       * Load the start hexadecimal address message
+            MOVE.B #14,D0           * Task 14: Display the string at (A1) without CR, LF
+            TRAP #15                * Display start hexadecimal address message
+            
+            LEA HEX_USER_IN,A1      * Load the address of the reserved hex user input
+            MOVE.B #2,D0            * Task 2: Read string from keyboard and store at (A1),(max 80) 
+            TRAP #15                * Get user input, store it in A1, store length in D1
+
+            BSR .HEX_LENGTH         * Checks the length of the input from the user
+            SUBQ #1,D1              * Subtract one from the loop counter to account for offset
+            BSR .HEX_ASCII          * Branch to HEX_ASCII (starting range address)
+            MOVE.L D3,A5            * Move the starting address in hexadecimal into A5
+
+            CLR.L D3                * Clearing D3 for the ending address
+
+            LEA ED_HEX_INP,A1       * Load ending hexadecimal address message
+            MOVE.B #14,D0           * Task 14: Display the string at (A1) without CR, LF
+            TRAP #15                * Display ending hexadecimal address message
+            
+            LEA HEX_USER_IN,A1      * Load the address of the reserved hex user input
+            MOVE.B #2,D0            * Task 2: Read string from keyboard and store at (A1),(max 80) 
+            TRAP #15                * Get user input, store it in A1, store length in D1
+            
+            BSR .HEX_LENGTH         * Checks the length of the input from the user
+            SUBI #1,D1              * Deals with the offset from the HEX_ASCII loop 
+            BSR .HEX_ASCII          * Branch to HEX_ASCII (ending range address)
+            MOVE.L D3,A6            * Move the ending address in hexadecimal into A6
+
+            LEA START_RANGE_M,A1
+            MOVE.B #14,D0
+            TRAP #15
+
+            MOVE.L A5,D2
+            BSR DISPLAY_LONG_HEX
+
+            LEA COMMA_M,A1
+            MOVE.B #14,D0
+            TRAP #15
+
+            MOVE.L A6,D2
+            BSR DISPLAY_LONG_HEX
+
+            LEA FINAL_RANGE_M,A1
+            MOVE.B #13,D0
+            TRAP #15
+
+			LEA PRESS_ANY,A1
+			MOVE.B #14,D0		* Move task 13 into Data Register 0
+			TRAP #15			* Display the string at (A1) without CR, LF.
+
+			MOVE.B #5,D0			******  TESTING BETA  ******
+			TRAP #15				******  TESTING BETA  ******
+
+			CLR.L D2
+			CLR.L D3
+
+			MOVE.B #11,D0 		* Moving task 11 into Data Register 0
+			MOVE.W #$FF00,D1	* Clear Screen : Set D1.W to $FF00
+			TRAP #15
+
+            RTS                     * Done with this Subroutine, and now go back to main
+
+*-------------------------- Hexadecimal length Check ---------------------------
+
+.HEX_LENGTH CMPI #8,D1              * Checks if the current length is less than a value of 8
+            LEA HEX_ERROR_LONG,A1   * Loading the HEX_ERROR_LONG error message into A1
+            BGT .BAD_HEX            * Branch to BAD_HEX if length is greater than a value of 8 (value > 0)
+            TST D1                  * Check if the current length is less than or equal to 0
+            LEA HEX_ERROR_NONE,A1   * Loading the HEX_ERROR_SHORT error message into A1
+            BLE .BAD_HEX            * Branchs to BAD_HEX if the current length is (value <= 0)
+            LEA HEX_USER_IN,A1      * Reload the Hex User Input location into A1
+            RTS
+            
+*----------------------- Display Error Handling Message ------------------------
+
+.BAD_ASCII  LEA HEX_ERROR,A1       * Load the generic bad hex message
+
+.BAD_HEX    MOVE.B #13,D0           * Prepare for printing an error message, using task 13
+            TRAP #15                * Display the selected error message
+            CLR.L HEX_USER_IN
+            BRA USER_HEX_INPUT      * Branch to get input again
+            
+*---------------------- Uppercase Hexadecimal Conversion -----------------------
+
+.HEX_ASCII  ROL.L #4,D3             * Rotate left shift by four bits (BYTE)
+            MOVE.B (A1)+,D2         * Move a byte from A1 into D2 to work with
+
+            CMP #'f',D2             * If D2 is great than lowercase 'f',0x66
+            BGT .BAD_ASCII          * Branch to the bad hexadecimal message
+            CMP #'0',D2             * If D2 is less than '0',0x30)
+            BLT .BAD_ASCII          * Branch to the bad hexadecimal message
+            CMP #'9',D2             * If D2 is or less than '9', 0x39. [0-9], 0x39
+            BLE .NUMUBER            * It's a number value, so branch yourself to NUMUBER
+            CMP #'a',D2             * If D2 is a lowercase letter [a - f], value >= 0x61
+            BGE .LOWERCASE          * Branch to LOWERCASE part
+            CMP #'A',D2             * If D2 is not below uppercase 'A', 0x41
+            BLT .BAD_ASCII          * Branch to the bad hexadecimal message
+            CMP #'F',D2             * If D2 is not above uppercase 'F', 0x46
+            BGT .BAD_ASCII          * Branch to the bad hexadecimal message
+            
+*--------------------- ASCII: Uppercase Hexadecimal Value ----------------------
+
+            SUBI.B #$37,D2          * Subtract $37 to make ASCII A-F -> HEX A-F
+            OR.L D2,D3              * OR D2 w/ D3 and store the result in D3
+            DBF D1,.HEX_ASCII       * D1--, if D1 = -1 STOP, otherwise branch to HEX_ASCII
+            RTS                     * Done with this HEX translation, go back up.
+
+*---------------------- ASCII: Number Hexadecimal Value ------------------------
+
+.NUMUBER    SUBI.B #$30,D2          * Subtract $30 to make ASCII 0-9 -> HEX 0-9
+            OR.L D2,D3              * OR D2 w/ D3 and store the result in D3
+            DBF D1,.HEX_ASCII       * D1--, if D1 = -1 STOP, otherwise branch to HEX_ASCII
+            RTS                     * Done with this HEX translation, go back up.
+
+*--------------------- ASCII: Lowercase Hexadecimal Value ----------------------
+
+.LOWERCASE  SUBI.B #$57,D2          * Subtract $57 to make ASCII a-f -> HEX A-F
+            OR.L D2,D3              * OR D2 w/ D3 and store the result in D3
+            DBF D1,.HEX_ASCII       * D1--, if D1 = -1 STOP, otherwise branch to HEX_ASCII_S   
+            RTS                     * Done with this HEX translation, go back up.
 
 
 ************************ Display Hexadecimal Subroutine ************************
@@ -653,7 +825,7 @@ EA_TYPE1:
 
  *-------------------------------------------------------------------------------
  * Type 3 xxxx rrrooo oorrr
- * SubRoutine for handling two Operand Effective addressing to find 2 3 bit modes
+ * Subroutine for handling two Operand Effective addressing to find 2 3 bit modes
  * and two 3 bit registers
  * Written by: David Heidgerken
  * Description.  16 bit Instruction will be passed to subroutine via D7
@@ -881,7 +1053,7 @@ EA_TYPE4:
 
 *-------------------------------------------------------------------------------
 * Type 5 mode xxxx xDxx xxoo oorrr   MOVEM needs Range work....
-* SubRoutine for handling One Operand addressing looking for a mode and register 
+* Subroutine for handling One Operand addressing looking for a mode and register 
 * value  assumes that size has already been parsed by opcode.
 * Written by: David Heidgerken
 * Description.  16 bit Instruction will be passed to subroutine via D7
@@ -1035,7 +1207,7 @@ EA_TYPE6:
 
 *-------------------------------------------------------------------------------
 * Type 7 DDDx xxxooo oorrr 
-* SubRoutine for handling two Operand Effective addressing to find 2 3 bit modes
+* Subrotine for handling two Operand Effective addressing to find 2 3 bit modes
 * and one 3 bit registers
 * Written by: David Heidgerken
 * Description.  16 bit Instruction will be passed to subroutine via D7
@@ -1137,6 +1309,8 @@ ROL_T		LEA ROL_M,A1
 *- 000.5 ROL E1------------------ Rotate Left ----------------------------------
 
 ROL_E1_T	LEA ROL_M,A1
+			MOVE.B #14,D0
+			TRAP #15
 			BSR OPERAND_POSITION
 			BSR EA_TYPE1
 			RTS			
@@ -1151,6 +1325,8 @@ LSL_T		LEA LSL_M,A1
 *- 001.5 LSL E1--------------- Logical Shift Left ------------------------------
 
 LSL_E1_T	LEA LSL_M,A1
+			MOVE.B #14,D0
+			TRAP #15
 			BSR OPERAND_POSITION
 			BSR EA_TYPE1
 			RTS
@@ -1165,6 +1341,8 @@ ASL_T		LEA ASL_M,A1
 *- 002.5 ASL E1 ------------ Arithmetic Shift Left -----------------------------
 
 ASL_E1_T	LEA ASL_M,A1
+			MOVE.B #14,D0
+			TRAP #15
 			BSR OPERAND_POSITION
 			BSR EA_TYPE1
 			RTS
@@ -1179,6 +1357,8 @@ ROR_T		LEA ROR_M,A1
 *- 003.5 ROR E1------------------ Rotate Right ---------------------------------
 
 ROR_E1_T	LEA ROR_M,A1
+			MOVE.B #14,D0
+			TRAP #15
 			BSR OPERAND_POSITION
 			BSR EA_TYPE1
 			RTS			
@@ -1193,6 +1373,8 @@ LSR_T		LEA LSR_M,A1
 *- 004.5 LSL_E1 ------------- Logical Shift Right ------------------------------
 
 LSR_E1_T	LEA LSR_M,A1
+			MOVE.B #14,D0
+			TRAP #15
 			BSR OPERAND_POSITION
 			BSR EA_TYPE1
 			RTS			
@@ -1207,6 +1389,8 @@ ASR_T		LEA ASR_M,A1
 *- 005.5 ASR E1 ------------ Arithmetic Shift Right ----------------------------
 
 ASR_E1_T	LEA ASR_M,A1
+			MOVE.B #14,D0
+			TRAP #15
 			BSR OPERAND_POSITION
 			BSR EA_TYPE1
 			RTS
@@ -1420,6 +1604,11 @@ ORI_T		LEA ORI_M,A1
 
 ********************************* Data Section *********************************
 
+ERROR_M0	DC.B 'No DATA was found between range [',0
+ERROR_HM0	DC.L $4f6b6179,$204e6173,$682c2074,$68697320,$73686f75,$6c642061
+			DC.L $74206c65,$61737420,$636f756e,$7420666f,$72206120,$72656170
+			DC.L $65722070,$6f696e74,$205b5261,$6e676520,$4572726f,$725d0000,0
+
 HEADER		DC.B	'Address   OP-Code	Operand				    Instruction', 0
 LINE		DC.B	'----------------------------------------',0
 PRESS_ANY	DC.B	'  press ANY key to continue...',0
@@ -1445,6 +1634,15 @@ NEWLINE_M	DC.B  CR,LF,0
 
 POSITION 	DC.W  $0000
 SAVE_STATE	DS.L  1
+HEX_USER_IN DS.L 20
+
+SR_HEX_INP      DC.L $53746172,$74696E67,$2052616E,$6765203A,$20307800,0
+ED_HEX_INP      DC.L $456E6469,$6E672052,$616E6765,$2020203A,$20307800,0
+HEX_ERROR       DC.B 'BAD INPUT',0
+HEX_ERROR_NONE  DC.B 'NO INPUT FOUND',0
+HEX_ERROR_LONG  DC.B 'INPUT TOO LONG',0
+START_RANGE_M	DC.B CR,LF,'The Range [',0
+FINAL_RANGE_M	DC.B '] is now set.',0
 
 ROL_M		DC.B	'ROL',0		* Tested	0xE118
 LSL_M		DC.B	'LSL',0		* Tested	0xE108
@@ -1484,18 +1682,16 @@ ORI_M		DC.B	'ORI',0					0x0000
 * The values for this constant are set to move in parallel with those of
 * the constant BITMASK via steps at label NEXT_MASK.
 
-TASK_OP		DC.W ROL_E1_T,ROR_E1_T,LSL_E1_T,LSR_E1_T,ASL_E1_T,ROL_T,LSL_T,ASL_T
-			DC.W ASR_E1_T,ROR_T,LSR_T,ASR_T,ADDA_T,ADD_T,MULS_T,CMP_T
-			DC.W SUB_T,DIVS_T,OR_T,BLT_T,BGE_T,BVC_T,BCS_T,BRA_T,SUBQ_T,JSR_T
-			DC.W RTS_T,NOP_T,MOVEM_T,NEG_T,LEA_T,MOAW_T,MOW_T,MOAL_T,MOL_T,MOB_T
-			DC.W CMPI_T,BCLR_T,ORI_T,0
+TASK_OP		DC.W ROL_E1_T,ROR_E1_T,LSL_E1_T,LSR_E1_T,ASL_E1_T,ROL_T,LSL_T,ASL_T,ASR_E1_T,ROR_T
+			DC.W LSR_T,ASR_T,ADDA_T,ADD_T,MULS_T,CMP_T,SUB_T,DIVS_T,OR_T,BLT_T
+			DC.W BGE_T,BVC_T,BCS_T,BRA_T,SUBQ_T,JSR_T,RTS_T,NOP_T,MOVEM_T,NEG_T
+			DC.W LEA_T,MOAW_T,MOW_T,MOAL_T,MOL_T,MOB_T,CMPI_T,BCLR_T,ORI_T,0
 
 *--------------------------- Bitmask Translation List --------------------------
 BITMASK		DC.W $E7C0,$E6C0,$E3C0,$E2C0,$E1C0,$E118,$E108,$E100,$E0C0,$E018
-			DC.W $E008,$E000,$D0C0,$D000,$C1C0,$B000
-			DC.W $9000,$81C0,$8000,$6D00,$6C00,$6800,$6500,$6000,$5100,$4E80
-			DC.W $4E75,$4E71,$4880,$4400,$41C0,$3040,$3000,$2040,$2000,$1000
-			DC.W $0C00,$0180,$0000
+			DC.W $E008,$E000,$D0C0,$D000,$C1C0,$B000,$9000,$81C0,$8000,$6D00
+			DC.W $6C00,$6800,$6500,$6000,$5100,$4E80,$4E75,$4E71,$4880,$4400
+			DC.W $41C0,$3040,$3000,$2040,$2000,$1000,$0C00,$0180,$0000
 
 
 ; *-------------------------------------------------------------------------------
@@ -1664,6 +1860,8 @@ BITMASK		DC.W $E7C0,$E6C0,$E3C0,$E2C0,$E1C0,$E118,$E108,$E100,$E0C0,$E018
 ; 			DC.W $FFFF
 
 	END		START				* last line of source
+
+
 
 
 

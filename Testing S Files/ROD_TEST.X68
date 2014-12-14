@@ -8,32 +8,33 @@
 ROD_TEST_1: ORG    $2000
 
         ROL.B #1,D7
-        ROL.W #2,D6
+        ROR.W #2,D6
         ROL.L #3,D5
-        ROL.B #4,D4
+        ROR.B #4,D4
         ROL.W #5,D3
-        ROL.L #6,D2
+        ROR.L #6,D2
         ROL.B #7,D1
-        ROL.W #8,D0
+        ROR.W #8,D0
 
 ROD_TEST_2: ORG    $2020
 
-	    ROL.B D0,D7
-	    ROL.W D1,D6
-	    ROL.L D2,D5
-	    ROL.B D3,D4
-	    ROL.W D4,D3
-	    ROL.L D5,D2
-	    ROL.B D6,D1
-	    ROL.W D7,D0
+	    ASL.B D0,D7
+	    ASR.W D1,D6
+	    ASL.L D2,D5
+	    ASR.B D3,D4
+	    ASL.W D4,D3
+	    ASR.L D5,D2
+	    ASL.B D6,D1
+	    ASR.W D7,D0
 
 ROD_TEST_3: ORG    $2040
 
-        ROR (A1)
+        ROL (A1)
         ROR (A2)
-        ROR (A3)
-        ROR (A4)
-        ROR (A5)
+        ASL (A3)
+        ASR (A4)
+        LSL (A5)
+        LSR (A6)
 
 *-------------------------------------------------------------------------------
 ORI_TEST_1: ORG    $2060
