@@ -112,6 +112,11 @@ SEARCH_HUNT	CMPA.L A6,A0		* Did I happen to go over the user range?
 			BRA NEXT_SOURCE
 
 END_PROGRAM	CLR.W POSITION			*** TEST - RESET POSITION ***
+			
+			LEA END_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+
 			STOP #EXIT			* Halt Simulator
 
 
@@ -238,18 +243,9 @@ NO_DATA_FOUND:
 
 			BSR NEWLINE
 
-			LEA PRESS_ANY,A1
-			MOVE.B #14,D0		* Move task 13 into Data Register 0
-			TRAP #15			* Display the string at (A1) without CR, LF.
+			CLR.L D2
 
-			MOVE.B #5,D0			******  TESTING BETA  ******
-			TRAP #15				******  TESTING BETA  ******
-
-			MOVE.B #11,D0 		* Moving task 11 into Data Register 0
-			MOVE.W #$FF00,D1	* Clear Screen : Set D1.W to $FF00
-			TRAP #15
-
-			BRA INIT_START
+			BRA END_PROGRAM
 
 
 **************************  ASCII -> HEX  Subroutine  **************************
@@ -1643,6 +1639,7 @@ HEX_ERROR_NONE  DC.B 'NO INPUT FOUND',0
 HEX_ERROR_LONG  DC.B 'INPUT TOO LONG',0
 START_RANGE_M	DC.B CR,LF,'The Range [',0
 FINAL_RANGE_M	DC.B '] is now set.',0
+END_M       	DC.B '[Program has terminated]',0
 
 ROL_M		DC.B	'ROL',0		* Tested	0xE118
 LSL_M		DC.B	'LSL',0		* Tested	0xE108
