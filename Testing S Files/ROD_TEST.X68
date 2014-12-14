@@ -5,7 +5,7 @@
 * Description:
 *-------------------------------------------------------------------------------
 
-ROD_TEST_1: ORG    $2000
+ROD_TEST_1: ORG    $3000
 
         ROL.B #1,D7
         ROR.W #2,D6
@@ -16,7 +16,7 @@ ROD_TEST_1: ORG    $2000
         ROL.B #7,D1
         ROR.W #8,D0
 
-ROD_TEST_2: ORG    $2020
+ROD_TEST_2: ORG    $3020
 
 	    ASL.B D0,D7
 	    ASR.W D1,D6
@@ -27,7 +27,7 @@ ROD_TEST_2: ORG    $2020
 	    ASL.B D6,D1
 	    ASR.W D7,D0
 
-ROD_TEST_3: ORG    $2040
+ROD_TEST_3: ORG    $3040
 
         ROL (A1)
         ROR (A2)
@@ -37,7 +37,7 @@ ROD_TEST_3: ORG    $2040
         LSR (A6)
 
 *-------------------------------------------------------------------------------
-ORI_TEST_1: ORG    $2060
+ORI_TEST_1: ORG    $3060
 
         
         ORI.B #$BD,D0
@@ -60,6 +60,7 @@ ORI_TEST_1: ORG    $2060
     END    ROD_TEST_2
     END    ROD_TEST_3
     END    ORI_TEST_1
+
 
 
 

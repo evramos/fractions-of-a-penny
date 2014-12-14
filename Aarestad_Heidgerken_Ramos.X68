@@ -41,24 +41,8 @@ BITMASK8	EQU   $00FF
 
 INIT_START	BSR USER_HEX_INPUT
 
-			MOVEA.L A5,A0 		***** OPEN DATA ******
-
-*---------------------- Checks the range of START and END ----------------------
-
-			CMPA.L A6,A5 		* Tests to see if the starting mark isn't greater than the ending
-			BLT SEARCH_INIT 	* Okay good, you didn't crash my program. We can move on and be happy
-
-			LEA ERROR_HM0,A1 	* Loads error message to the output
-			MOVE.B #13,D0
-			TRAP #15
-			BRA INIT_START
-
-SEARCH_INIT	CMPA.L A6,A0		* Did I happen to go over the user range?
-			BGE NO_DATA_FOUND	* If I did, I'll end the progarm.
-			ADDA.W #WORD,A0		* If not, I'll continue to hunt for DATA
-			CMPI.W #$FFFF,(A0)  * Did I happen to find any useful DATA?
-			BEQ SEARCH_INIT     * Nope, continue the hunt
-
+			MOVEA.L A5,A0 		* Move a temp starting point from A5 to A0
+			BSR RANGE_ERROR_CHECK
 
 *---------------------------- Displaying to output -----------------------------
 
@@ -247,6 +231,28 @@ NO_DATA_FOUND:
 
 			BRA END_PROGRAM
 
+
+**********************  Checking Range Input Subroutine  ***********************
+
+RANGE_ERROR_CHECK:
+*---------------------- Checks the range of START and END ----------------------
+			CMPA.L A6,A5 		* Tests to see if the starting mark isn't greater than the ending
+			BLT SEARCH_INIT 	* Okay good, you didn't crash my program. We can move on and be happy
+
+			LEA ERROR_HM0,A1 	* Loads error message to the output
+			MOVE.B #13,D0
+			TRAP #15
+
+			MOVE.L (A7)+,D2			**** SOME HOW POP FROM A7 ****
+
+			BRA INIT_START
+
+SEARCH_INIT	CMPA.L A6,A0		* Did I happen to go over the user range?
+			BGE NO_DATA_FOUND	* If I did, I'll end the progarm.
+			ADDA.W #WORD,A0		* If not, I'll continue to hunt for DATA
+			CMPI.W #$FFFF,(A0)  * Did I happen to find any useful DATA?
+			BEQ SEARCH_INIT     * Nope, continue the hunt
+			RTS					* Returns from subroutine
 
 **************************  ASCII -> HEX  Subroutine  **************************
 
@@ -607,7 +613,6 @@ DISPLAY_ERROR:
 
 			MOVE.W (A0),D2
 			BSR DISPLAY_WORD_HEX	
-			; RTS
 
 			MOVE.L (A7)+,D2			**** SOME HOW POP FROM A7 ****
 			BRA NEWLINE
@@ -659,8 +664,8 @@ DISPLAY_POSTINC:
 			RTS
 
 *-------------------------------------------------------------------------------
-* Display_Reg
-* as source
+* Display_Reg1 - read 0 -> 15
+*
 * 16 bit regmask  A7->A0/D7->D0
 * assumed to be in D1
 * D2 will contain a count and points to current bit.
@@ -669,83 +674,196 @@ DISPLAY_POSTINC:
 * Written by: David Heidgerken
 *-------------------------------------------------------------------------------
 DISPLAY_REGS:
-
 					MOVE.L		#0, D2		; store counter count up
-
-.top				CMP.W		#16,D2
-					BEQ			.exit       ;undfined symbol?
+					CLR			D3
 					
-					BTST		D2, D1
-					BEQ			.current_zero	;if current is 0 branch to current_zero
-
-.current_one		CMP.W 	#1, D3			;check previous value
-					BEQ		.display_dash	;if eq branch to display_dash
-					BLT		.display_current    ;if last was 0 display current
+.top				BTST		D2, D1
+					BEQ			.currentzero	;if current is 0 branch to current_zero
+*-------------------------------------------------------------------------------
+.currentone			CMP.W 	#1, D3			;check previous(d3) value
+					BEQ		.startofseq		;if 1 display startofseq
 					
-
-					BRA		.next			;if last was dash no display needed.
-		
-.current_zero		CMP.L	#1, D3			;chk previous value
-					BGE		.display_previous	;if 1 display previous
+					CMP.W	#0, D3			;cmp prev(d3) to 0
+					BEQ		.updateone		;branch to updateone
+					BRA		.next			;otherwise(D3 = 3) next
 					
-
-					BRA		.next				;if - go next
+.updateone			MOVE.L	#1, D3			;update D3 w/ 1
+					BRA		.next
 					
-.display_dash		MOVE.L	D1,-(SP)			;move regmask onto stack
+.startofseq			MOVE.L	D1,-(SP)			;move regmask onto stack
+
+					MOVE.L	D2, D1				;move counter into d1
+					SUBI	#1,D1				;subtract 1 to get previous i
+					CMP.W	#8,	D1		        ;compare to 8
+					BGE		.displayAxOne		;counter GE to 8are AddRegs		
 				
-					MOVE.L	#$2D,D1				;move dashvalu into D1
-					MOVE.B #6,D0
-					TRAP #15
-
-					MOVE.L	(SP)+,D1			;move regmask back to D1
+.displayDxOne		BSR		DISPLAY_DATAREG		
+					BRA		.startnext
+					
+.displayAxOne		SUBI	#8,D1	
+					BSR		DISPLAY_ADDEREG
+					
+.startnext			MOVE.L	(SP)+,D1			;move regmask back to D1
 					MOVE.L	#3, D3				;update previous
 					BRA		.next
-					
-.display_current	MOVE.L	D1,-(SP)			;move regmask onto stack
+*-------------------------------------------------------------------------------
+.currentzero		CMP		#0, D3				;cmp prev(d3)to 0
+					BEQ		.next				;if eq go .next
 
-					MOVE.L	D2, D1				;move counter
-					CMP.W	#8,	D1		        ;compare to 8
-					BGE		.displaycurAx		;counter GE to 8are AddRegs		
-				
-					BSR		DISPLAY_DATAREG		
-					BRA		.current_next
 					
-.displaycurAx		SUBI	#8,D1	
-					BSR		DISPLAY_ADDEREG		
-					
-.current_next		MOVE.L	(SP)+,D1			;move regmask back to D1
-					MOVE.L	#1, D3				;update previous
-					BRA		.next
-					
-.display_previous	MOVE.L	D1,-(SP)			;move regmask onto stack
+					MOVE.L	D1,-(SP)			;move regmask onto stack
 
-					MOVE.L	D2, D1				;move counter into D1
-					SUBI    #1, D1              ;subtract one to get previousvalue
-					CMP.W	#8,D1				;compare to 8
-					BGE		.displayprevAx			;counter GE to 8are AddRegs		
-				
-					BSR		DISPLAY_DATAREG		
-					BRA		.display_slash
-
-.display_slash  	MOVE.L	#$2F,D1				;move slashvalu into D1
+					CMP		#1, D3
+					BEQ		.endofseq
+					
+					MOVE.L	#$2D,D1				;move dashvalu into D1
 					MOVE.B #6,D0
-					TRAP #15
-				
-					BRA		.previous_next
+					TRAP #15					;and display
 					
-.displayprevAx		SUBI	#8,D1	
-					BSR		DISPLAY_ADDEREG	
-                    BRA     .display_slash	
-					
-.previous_next		MOVE.L	(SP)+,D1			;move regmask back to D1
+.endofseq			MOVE.L	D2, D1				;move counter into d1
+					SUBI	#1,D1				;subtract 1 to get previous i
+					CMP.W	#8,	D1		        ;compare to 8
+					BGE		.displayAxZero		;counter GE to 8are AddRegs
 
+.displayDxZero		BSR		DISPLAY_DATAREG
+					BRA		.endnext
+					
+.displayAxZero		SUBI	#8,D1	
+					BSR		DISPLAY_ADDEREG
+					
+.endnext			MOVE.L	#$2F,D1				;move slashvalu into D1
+					MOVE.B #6,D0
+					TRAP #15					;and display
+					
+					MOVE.L	(SP)+,D1			;move regmask back to D1
 					MOVE.L	#0, D3				;update previous
 					BRA		.next
-
+					
+*-------------------------------------------------------------------------------
 .next				ADDI.W	#1,D2				;add 1 to counter
-                    BRA     .top
+                    CMP.W		#16,D2
+					BEQ			.break			;head to break
+					BRA     .top
 
+.break				CMP.W 	#0, D3				;check previous value
+					BEQ		.exit				;if 0 exit, othewise display A7
+	
+.displayA7			CMP.W	#1,D3
+					BEQ		.nodash
+					
+					MOVE.L	#$2D,D1				;move dashvalu into D1
+					MOVE.B #6,D0
+					TRAP #15					;and display
+					
+.nodash				MOVE.L	#7, D1				;move 7 into d1
+					BSR		DISPLAY_ADDEREG
+					
 .exit				RTS
+*-------------------------------------------------------------------------------
+
+*-------------------------------------------------------------------------------
+* Display_Reg2 - read 15 -> 0  reverse order for -(Ax)
+*
+* 16 bit regmask  A7->A0/D7->D0
+* assumed to be in D1
+* D2 will contain a count and points to current bit.
+* D3 will store a value of the previous bit
+* a value of 3 indicates that the previous char printed was a dash
+* Written by: David Heidgerken
+*-------------------------------------------------------------------------------
+DISPLAY_REGS2:
+					MOVE.L		#15, D2		; store counter count up
+					CLR			D3
+					
+.top				BTST		D2, D1
+					BEQ			.currentzero	;if current is 0 branch to current_zero
+*-------------------------------------------------------------------------------
+.currentone			CMP.W 	#1, D3			;check previous(d3) value
+					BEQ		.startofseq		;if 1 display startofseq
+					
+					CMP.W	#0, D3			;cmp prev(d3) to 0
+					BEQ		.updateone		;branch to updateone
+					BRA		.next			;otherwise(D3 = 3) next
+					
+.updateone			MOVE.L	#1, D3			;update D3 w/ 1
+					BRA		.next
+					
+.startofseq			MOVE.L	D1,-(SP)			;move regmask onto stack
+
+					MOVE.L	D2, D1				;move counter into d1
+					ADDI	#1,D1				;add 1 to get previous i
+					CMP.W	#8,	D1		        ;compare to 8
+					BLT		.displayAxOne		;counter GE to 8are AddRegs		
+				
+.displayDxOne		SUBI	#15,D1
+					NEG		D1
+					BSR		DISPLAY_DATAREG		
+					BRA		.startnext
+					
+.displayAxOne		SUBI	#7,D1
+					NEG		D1
+					BSR		DISPLAY_ADDEREG
+					
+.startnext			MOVE.L	(SP)+,D1			;move regmask back to D1
+					MOVE.L	#3, D3				;update previous
+					BRA		.next
+*-------------------------------------------------------------------------------
+.currentzero		CMP		#0, D3				;cmp prev(d3)to 0
+					BEQ		.next				;if eq go .next
+
+					
+					MOVE.L	D1,-(SP)			;move regmask onto stack
+
+					CMP		#1, D3
+					BEQ		.endofseq
+					
+					MOVE.L	#$2D,D1				;move dashvalu into D1
+					MOVE.B #6,D0
+					TRAP #15					;and display
+					
+.endofseq			MOVE.L	D2, D1				;move counter into d1
+					ADDI	#1,D1				;add 1 to get previous i
+					CMP.W	#8,	D1		        ;compare to 8
+					BLT		.displayAxZero		;counter GE to 8are AddRegs
+
+.displayDxZero		SUBI	#15,D1
+					NEG		D1
+					BSR		DISPLAY_DATAREG		
+					BRA		.endnext
+					
+.displayAxZero		SUBI	#7,D1
+					NEG		D1
+					BSR		DISPLAY_ADDEREG
+					
+.endnext			MOVE.L	#$2F,D1				;move slashvalu into D1
+					MOVE.B #6,D0
+					TRAP #15					;and display
+					
+					MOVE.L	(SP)+,D1			;move regmask back to D1
+					MOVE.L	#0, D3				;update previous
+					BRA		.next
+					
+*-------------------------------------------------------------------------------
+.next				SUBI.W	#1,D2				;sub 1 to counter
+                    CMP.W		#0,D2
+					BLT			.break			;head to break
+					BRA     .top
+
+.break				CMP.W 	#0, D3				;check previous value
+					BEQ		.exit				;if 0 exit, othewise display A7
+	
+.displayA7			CMP.W	#1, D3
+					BEQ		.nodash
+					
+					MOVE.L	#$2D,D1				;move dashvalu into D1
+					MOVE.B #6,D0
+					TRAP #15					;and display
+					
+.nodash				MOVE.L	#7, D1				;move 7 into d1
+					BSR		DISPLAY_ADDEREG
+					
+.exit				RTS
+*-------------------------------------------------------------------------------
 
 ************************* Effective Address Algorithm **************************
 *-------------------------------------------------------------------------------
@@ -1074,7 +1192,18 @@ EA_TYPE5:
 
  			MOVE.W (A6), D1			; move a word from data stream into D1.
  			ADDA	#WORD, A6		;increment data pointer
- 			BSR		DISPLAY_REGS	; display regs first.  then ea modes.
+			
+			CMP.W	#4,D5
+			BNE		.forward
+			BSR		DISPLAY_REGS2
+			
+			LEA COMMA_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+			
+			BRA		.IND_MODE
+			
+.forward 	BSR		DISPLAY_REGS	; display regs first.  then ea modes.
 
 *------------------------ Compares between OPMODE 2,4,7--------------------------
 			
@@ -1134,7 +1263,17 @@ EA_TYPE5:
 			
 .printregs	MOVE.W (A0), D1			; move a word from data stream into D1.
  			ADDA	#WORD, A0		;increment data pointer
- 			BSR	DISPLAY_REGS	; display regs last	
+			
+			LEA COMMA_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+			
+			CMP.W	#4,D5
+			BNE		.forwardend
+			BSR		DISPLAY_REGS2
+			BRA		.exit
+			
+.forwardend BSR	DISPLAY_REGS	; display regs last	
 			
 .exit		RTS					;return to calling instruction
 
@@ -1166,8 +1305,8 @@ EA_TYPE6:
 			TST.B 	D5				* Checks if i/r bit is an immediate value of 0
 			BNE		.regmode		* D3 (I/R) is a Register Rotate Count
 			
-; If i/r = 0, this field contains the rotate count. The values 1 – 7 represent
-; counts of 1 – 7, and zero specifies a count of eight.
+; If i/r = 0, this field contains the rotate count. The values 1 � 7 represent
+; counts of 1 � 7, and zero specifies a count of eight.
 
 			MOVE.B #$23,D1 			* Prints '#' into the output
 			MOVE.B #6,D0
@@ -1857,6 +1996,7 @@ BITMASK		DC.W $E7C0,$E6C0,$E3C0,$E2C0,$E1C0,$E118,$E108,$E100,$E0C0,$E018
 ; 			DC.W $FFFF
 
 	END		START				* last line of source
+
 
 
 
