@@ -1639,7 +1639,7 @@ HEX_ERROR_NONE  DC.B 'NO INPUT FOUND',0
 HEX_ERROR_LONG  DC.B 'INPUT TOO LONG',0
 START_RANGE_M	DC.B CR,LF,'The Range [',0
 FINAL_RANGE_M	DC.B '] is now set.',0
-END_M       	DC.B '[Program has terminated]',0
+END_M       	DC.B '  [Program has terminated]',0
 
 ROL_M		DC.B	'ROL',0		* Tested	0xE118
 LSL_M		DC.B	'LSL',0		* Tested	0xE108
