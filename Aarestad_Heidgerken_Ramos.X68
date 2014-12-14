@@ -13,6 +13,7 @@ LF			EQU   $000A
 START		EQU   $1000			* Program starting address
 EXIT		EQU   $2700			* Simulator stoping code
 WORD		EQU   $0002			* Advance address by a word
+LONG		EQU   $0004			* Advance address by a long
 BITMASK8	EQU   $00FF
 
 *----------------------- Address Register / Data Register ----------------------
@@ -80,10 +81,10 @@ NEXT_SOURCE
 
 			****  Moving Starting pointer to next set of instructions  ****
 
-SEARCH_WORD	CMPA.L A0,A6			******  OPEN DATA  ******
+SEARCH_WORD	CMPA.L A6,A0			******  OPEN DATA  ******
 			BGE END_PROGRAM			******  OPEN DATA  ******
 			ADDA.W #WORD,A0	
-			CMPI.W #FFFF,(A0)
+			CMPI.W #$FFFF,(A0)
 			BEQ SEARCH_WORD
 
 *------------------------ Press ANY key to continue to -------------------------
@@ -1698,6 +1699,8 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 ; 			DC.W $FFFF
 
 	END		START				* last line of source
+
+
 
 
 
