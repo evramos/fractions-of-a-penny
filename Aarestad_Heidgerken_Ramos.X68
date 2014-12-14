@@ -1134,16 +1134,39 @@ ROL_T		LEA ROL_M,A1
 			BSR EA_TYPE6
 			RTS
 
+*- 000.5 ROL E1------------------ Rotate Left ----------------------------------
+
+ROL_E1_T	LEA ROL_M,A1
+			BSR OPERAND_POSITION
+			BSR EA_TYPE1
+			RTS			
+			
 *- 001 LSL ------------------- Logical Shift Left ------------------------------
 
 LSL_T		LEA LSL_M,A1
 			BSR DISPLAY_SIZE
+			BSR EA_TYPE6
+			RTS
+			
+*- 001.5 LSL E1--------------- Logical Shift Left ------------------------------
+
+LSL_E1_T	LEA LSL_M,A1
+			BSR OPERAND_POSITION
+			BSR EA_TYPE1
 			RTS
 
 *- 002 ASL ----------------- Arithmetic Shift Left -----------------------------
 
 ASL_T		LEA ASL_M,A1
 			BSR DISPLAY_SIZE
+			BSR EA_TYPE6
+			RTS
+			
+*- 002.5 ASL E1 ------------ Arithmetic Shift Left -----------------------------
+
+ASL_E1_T	LEA ASL_M,A1
+			BSR OPERAND_POSITION
+			BSR EA_TYPE1
 			RTS
 
 *- 003 ROR ---------------------- Rotate Right ---------------------------------
@@ -1151,19 +1174,41 @@ ASL_T		LEA ASL_M,A1
 ROR_T		LEA ROR_M,A1
 			BSR DISPLAY_SIZE
 			BSR EA_TYPE6
-
 			RTS
+			
+*- 003.5 ROR E1------------------ Rotate Right ---------------------------------
+
+ROR_E1_T	LEA ROR_M,A1
+			BSR OPERAND_POSITION
+			BSR EA_TYPE1
+			RTS			
 
 *- 004 LSL ------------------ Logical Shift Right ------------------------------
 
 LSR_T		LEA LSR_M,A1
 			BSR DISPLAY_SIZE
+			BSR EA_TYPE6
 			RTS
 
+*- 004.5 LSL_E1 ------------- Logical Shift Right ------------------------------
+
+LSR_E1_T	LEA LSR_M,A1
+			BSR OPERAND_POSITION
+			BSR EA_TYPE1
+			RTS			
+			
 *- 005 ASR ----------------- Arithmetic Shift Right ----------------------------
 
 ASR_T		LEA ASR_M,A1
 			BSR DISPLAY_SIZE
+			BSR EA_TYPE6
+			RTS
+			
+*- 005.5 ASR E1 ------------ Arithmetic Shift Right ----------------------------
+
+ASR_E1_T	LEA ASR_M,A1
+			BSR OPERAND_POSITION
+			BSR EA_TYPE1
 			RTS
 
 *- 006 ADDA --------------------- Add Address ----------------------------------
@@ -1439,13 +1484,15 @@ ORI_M		DC.B	'ORI',0					0x0000
 * The values for this constant are set to move in parallel with those of
 * the constant BITMASK via steps at label NEXT_MASK.
 
-TASK_OP		DC.W ROL_T,LSL_T,ASL_T,ROR_T,LSR_T,ASR_T,ADDA_T,ADD_T,MULS_T,CMP_T
+TASK_OP		DC.W ROL_E1_T,ROR_E1_T,LSL_E1_T,LSR_E1_T,ASL_E1_T,ROL_T,LSL_T,ASL_T
+			DC.W ASR_E1_T,ROR_T,LSR_T,ASR_T,ADDA_T,ADD_T,MULS_T,CMP_T
 			DC.W SUB_T,DIVS_T,OR_T,BLT_T,BGE_T,BVC_T,BCS_T,BRA_T,SUBQ_T,JSR_T
 			DC.W RTS_T,NOP_T,MOVEM_T,NEG_T,LEA_T,MOAW_T,MOW_T,MOAL_T,MOL_T,MOB_T
 			DC.W CMPI_T,BCLR_T,ORI_T,0
 
 *--------------------------- Bitmask Translation List --------------------------
-BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
+BITMASK		DC.W $E7C0,$E6C0,$E3C0,$E2C0,$E1C0,$E118,$E108,$E100,$E0C0,$E018
+			DC.W $E008,$E000,$D0C0,$D000,$C1C0,$B000
 			DC.W $9000,$81C0,$8000,$6D00,$6C00,$6800,$6500,$6000,$5100,$4E80
 			DC.W $4E75,$4E71,$4880,$4400,$41C0,$3040,$3000,$2040,$2000,$1000
 			DC.W $0C00,$0180,$0000
@@ -1617,6 +1664,7 @@ BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 ; 			DC.W $FFFF
 
 	END		START				* last line of source
+
 
 
 *~Font name~Courier New~
