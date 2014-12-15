@@ -898,7 +898,7 @@ EA_TYPE1:
 
 .A_MODE		CMP.B	#1, D5			* compare opmode with 001	Ax  ************
 			BNE		.IND_MODE		* branch to Address reg mode
-			BRA		DISPLAY_ERROR	* Invalid mode for this type
+			BRA		DISPLAY_ADDEREG	* Invalid mode for this type
 			
 .IND_MODE	CMP.B	#2, D5			* compare opmode with 010  (Ax) ************
 			BNE		.PI_MODE		* branch to indirect Mode
@@ -1582,18 +1582,19 @@ SET_LONG	LEA LONG_M,A1
 
 SET_DONE	BSR OPERAND_POSITION
 
-			BSR EA_TYPE3
+			BSR EA_TYPE1
 
-; 			LEA COMMA_M,A1
-; 			MOVE.B #14,D0
-; 			TRAP #15
+			LEA COMMA_M,A1
+			MOVE.B #14,D0
+			TRAP #15
 
-; 			MOVE.W #$0E00,D3
-; 			AND.W D7,D3
-; *			0000 1110 0000 0000
-; 			ROL.L #6,D3
+			MOVE.W #$0E00,D3
+			AND.W D7,D3
+*			0000111000000000
+			ROL.W #7,D3
 
-; 			BSR DISPLAY_ADDEREG
+			MOVE.L D3,D1
+			BSR DISPLAY_ADDEREG
 
 			RTS
 
