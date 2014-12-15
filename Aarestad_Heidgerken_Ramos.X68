@@ -1003,7 +1003,7 @@ EA_TYPE1:
 .DEST_MODE	MOVE.L	D3, D1			;load D3 into D1 for printing.
 			CMP		#3,D4
 			BEQ		.addadest
-			CMP		#8,D4
+			CMP		#7,D4
 			BEQ		.addadest
  			BSR		DISPLAY_DATAREG	;display Data Reg first.
 			BRA		.comma
@@ -1019,7 +1019,7 @@ EA_TYPE1:
 
  *------------------------ Compares between EA MODE 0-6 --------------------------
 
-.D_MODE		TST.B	D5				* Compare OpMode with 000	Dx  ************
+.D_MODE		TST.B	D5				* Compare EAMode with 000	Dx  ************
  			BNE		.A_MODE			* Branch to A register mode
  			MOVE.L	D6, D1			* load D6 into D1 for printing.
  			BSR		DISPLAY_DATAREG	* Send to data register display subr
