@@ -958,14 +958,14 @@ EA_TYPE1:
  			MOVE.W	#%00001110, D3	* move primative 3 bitmask into D3 	0xD (REGISTER)
  			LSL.W	#8, D3			* shift right eight time into upper bit 0x0D00
  			MOVE.W	#%11100000, D4	* move primative 3 bitmask into D4 	0xD0 (OPMODE)
- 			LSL.B	#1, D4			* shiftleft 1 time 0x01C0
+ 			LSL.W	#1, D4			* shiftleft 1 time 0x01C0
  			MOVE.W	#%00111000, D5	* move primative 3 bitmask into D5 0x38(EA MODE)
  			MOVE.W 	#%00000111, D6	* move primative 3 bit maskinto D6 0x7(EA REGISTER)
 
- 			MOVE.B	#%11100000, D4	* move primative 3 bitmask into D4 	0xD0 (OPMODE)
+ 			MOVE.W	#%11100000, D4	* move primative 3 bitmask into D4 	0xD0 (OPMODE)
  			LSL.W	#1, D4			* shiftleft 1 time 0x01C0
- 			MOVE.B	#%00111000, D5	* move primative 3 bitmask into D5 0x38(EA MODE)
- 			MOVE.B 	#%00000111, D6	* move primative 3 bit maskinto D6 0x7(EA REGISTER)
+ 			MOVE.W	#%00111000, D5	* move primative 3 bitmask into D5 0x38(EA MODE)
+ 			MOVE.W 	#%00000111, D6	* move primative 3 bit maskinto D6 0x7(EA REGISTER)
 
 
  			AND.W	D7, D3			* and D7 and D5 store in D3 (REGISTER)
@@ -980,7 +980,7 @@ EA_TYPE1:
  			MOVE.L	D6,D1			* Move register value to D1
 
 *------------------------ Compares Destination or Source Modes -----------------
-.OPMODE	CMP.B	#3,D4			;compare opmode to 3
+.OPMODE	CMP.B       #3,D4			;compare opmode to 3
  			BLE		.D_MODE			;do EA comparrisons first
  			BGT		.DEST_MODE		;send to destination mode
  			
@@ -1001,8 +1001,8 @@ EA_TYPE1:
 			BRA		.exit
 			
 .DEST_MODE	MOVE.L	D3, D1			;load D3 into D1 for printing.
-			CMP		#3,D4
-			BEQ		.addadest
+			; CMP		#3,D4
+			; BEQ		.addadest
 			CMP		#7,D4
 			BEQ		.addadest
  			BSR		DISPLAY_DATAREG	;display Data Reg first.
