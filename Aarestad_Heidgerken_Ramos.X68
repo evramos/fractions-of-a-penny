@@ -958,14 +958,14 @@ EA_TYPE1:
  			MOVE.W	#%00001110, D3	* move primative 3 bitmask into D3 	0xD (REGISTER)
  			LSL.W	#8, D3			* shift right eight time into upper bit 0x0D00
  			MOVE.W	#%11100000, D4	* move primative 3 bitmask into D4 	0xD0 (OPMODE)
- 			LSL.B	#1, D4			* shiftleft 1 time 0x01C0
+ 			LSL.W	#1, D4			* shiftleft 1 time 0x01C0
  			MOVE.W	#%00111000, D5	* move primative 3 bitmask into D5 0x38(EA MODE)
  			MOVE.W 	#%00000111, D6	* move primative 3 bit maskinto D6 0x7(EA REGISTER)
 
- 			MOVE.B	#%11100000, D4	* move primative 3 bitmask into D4 	0xD0 (OPMODE)
+ 			MOVE.W	#%11100000, D4	* move primative 3 bitmask into D4 	0xD0 (OPMODE)
  			LSL.W	#1, D4			* shiftleft 1 time 0x01C0
- 			MOVE.B	#%00111000, D5	* move primative 3 bitmask into D5 0x38(EA MODE)
- 			MOVE.B 	#%00000111, D6	* move primative 3 bit maskinto D6 0x7(EA REGISTER)
+ 			MOVE.W	#%00111000, D5	* move primative 3 bitmask into D5 0x38(EA MODE)
+ 			MOVE.W 	#%00000111, D6	* move primative 3 bit maskinto D6 0x7(EA REGISTER)
 
 
  			AND.W	D7, D3			* and D7 and D5 store in D3 (REGISTER)
@@ -980,7 +980,7 @@ EA_TYPE1:
  			MOVE.L	D6,D1			* Move register value to D1
 
 *------------------------ Compares Destination or Source Modes -----------------
-.OPMODE	CMP.B	#3,D4			;compare opmode to 3
+.OPMODE	CMP.B       #3,D4			;compare opmode to 3
  			BLE		.D_MODE			;do EA comparrisons first
  			BGT		.DEST_MODE		;send to destination mode
  			
@@ -1001,8 +1001,8 @@ EA_TYPE1:
 			BRA		.exit
 			
 .DEST_MODE	MOVE.L	D3, D1			;load D3 into D1 for printing.
-			CMP		#3,D4
-			BEQ		.addadest
+			; CMP		#3,D4
+			; BEQ		.addadest
 			CMP		#7,D4
 			BEQ		.addadest
  			BSR		DISPLAY_DATAREG	;display Data Reg first.
@@ -1019,7 +1019,7 @@ EA_TYPE1:
 
  *------------------------ Compares between EA MODE 0-6 --------------------------
 
-.D_MODE		TST.B	D5				* Compare EAMode with 000	Dx  ************
+.D_MODE		TST.B	D5				* Compare OpMode with 000	Dx  ************
  			BNE		.A_MODE			* Branch to A register mode
  			MOVE.L	D6, D1			* load D6 into D1 for printing.
  			BSR		DISPLAY_DATAREG	* Send to data register display subr
@@ -1028,21 +1028,24 @@ EA_TYPE1:
 .A_MODE		CMP.W	#1, D5			* compare opmode with 001	Ax  ************
  			BNE		.IND_MODE		* branch to indir mode
  			BRA		DISPLAY_ADDEREG	* Invalid mode for this type
+			BRA     .BREAK
 			
 .IND_MODE	CMP.W	#2, D5			* compare opmode with 010  (Ax) ************
  			BNE		.PI_MODE		* branch to post incr mode
  			MOVE.L	D6, D1			* load D6 into D1 for printing.
  			BSR		DISPLAY_INDIR	* Send to data register indirect subr
-
+			BRA     .BREAK
+			
 .PI_MODE	CMP.W	#3, D5			* compare opmode with 011  (Ax)+ ***********
  			BNE		.PD_MODE		* branch tp pre dec
  			BSR		DISPLAY_POSTINC	* Send to POSTINCR display sub
-
+			BRA     .BREAK
+			
 .PD_MODE	CMP.W	#4, D5			* compare opmode with 100 -(Ax) ************
  			BNE		.DATA_MODE		* branchto Post data mode
  			MOVE.L	D6, D1			* load D6 into D1 for printing.
  			BSR		DISPLAY_PREDEC
-
+			BRA     .BREAK
 
  *---------------- Compares between OPMODE 7 (xxx).W or (xxx).L -----------------
 
@@ -1144,14 +1147,16 @@ EA_TYPE4:
  			BNE		.A_MODE			* Branch to OpMode Data Register
  			BRA		DISPLAY_DATAREG	* Send to data register display subr
 
+
 .A_MODE		CMP.B	#1, D5			* compare opmode with 001	Ax  ************
  			BNE		.IND_MODE		* branch to Address reg mode
  			BRA		DISPLAY_ERROR	* Invalid mode for this type
 			
+			
 .IND_MODE	CMP.B	#2, D5			* compare opmode with 010  (Ax) ************
  			BNE		.PI_MODE		* branch to indirect Mode
  			BRA		DISPLAY_INDIR	* Send to data register indirect subr
-
+			
 .PI_MODE	CMP.B	#3, D5			* compare opmode with 011  (Ax)+ ***********
  			BNE		.PD_MODE		* branch tp post incrementmodebr
  			BRA		DISPLAY_POSTINC	* Send to POSTINCR display sub
@@ -1272,6 +1277,7 @@ EA_TYPE5:
  			ADDA.W #WORD,A0
  			MOVE.W (A0),D2
  			BSR	DISPLAY_WORD_HEX		; display word in hex
+			BRA     .break
 
 .LONGDATA	LEA INIT_MEM,A1
  			MOVE.B #14,D0
@@ -1281,6 +1287,7 @@ EA_TYPE5:
  			MOVE.L (A0),D2
  			ADDA.W #WORD,A0
  			BSR	DISPLAY_LONG_HEX	; display long in hex
+			BRA     .break
 
 .INV_MODE	BRA		DISPLAY_ERROR	* Display error
 
@@ -1888,6 +1895,7 @@ BITMASK		DC.W $E7C0,$E6C0,$E3C0,$E2C0,$E1C0,$E118,$E108,$E100,$E0C0,$E018
 			DC.W $41C0,$3040,$3000,$2040,$2000,$1000,$0C00,$0180,$0000
 
 	END		START				* last line of source
+
 
 
 *~Font name~Courier New~
