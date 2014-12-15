@@ -1405,10 +1405,9 @@ EA_TYPE5:
  			ADDA.W #WORD,A0
  			MOVE.W (A0),D2
  			BSR	DISPLAY_WORD_HEX		; display word in hex
-<<<<<<< HEAD
-=======
+
 			BRA     .break
->>>>>>> origin/Davids
+
 
 .LONGDATA	LEA INIT_MEM,A1
  			MOVE.B #14,D0
@@ -1418,10 +1417,9 @@ EA_TYPE5:
  			MOVE.L (A0),D2
  			ADDA.W #WORD,A0
  			BSR	DISPLAY_LONG_HEX	; display long in hex
-<<<<<<< HEAD
-=======
+
 			BRA     .break
->>>>>>> origin/Davids
+
 
 .INV_MODE	BRA		DISPLAY_ERROR	* Display error
 
@@ -1429,7 +1427,7 @@ EA_TYPE5:
 .break		CMP.B	#1, D4			;verify direction of operation.
  			BEQ		.printregs
  			BGT		.exit
-<<<<<<< HEAD
+
 			
 .printregs	MOVE.W (A0), D1			; move a word from data stream into D1.
  			ADDA	#WORD, A0		;increment data pointer
@@ -1443,21 +1441,6 @@ EA_TYPE5:
 			BSR		DISPLAY_REGS2
 			BRA		.exit
 			
-=======
-			
-.printregs	MOVE.W (A0), D1			; move a word from data stream into D1.
- 			ADDA	#WORD, A0		;increment data pointer
-			
-			LEA COMMA_M,A1
-			MOVE.B #14,D0
-			TRAP #15
-			
-			CMP.W	#4,D5
-			BNE		.forwardend
-			BSR		DISPLAY_REGS2
-			BRA		.exit
-			
->>>>>>> origin/Davids
 .forwardend BSR	DISPLAY_REGS	; display regs last	
 			
 .exit		RTS					;return to calling instruction
@@ -1684,10 +1667,7 @@ ASL_E1_T	LEA ASL_M,A1
 ROR_T		LEA ROR_M,A1
 			BSR DISPLAY_SIZE
 			BSR EA_TYPE6
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/Davids
 			RTS
 			
 *- 003.5 ROR E1------------------ Rotate Right ---------------------------------
@@ -1736,10 +1716,10 @@ ASR_E1_T	LEA ASR_M,A1
 ADDA_T		LEA ADDA_M,A1
 			MOVE.B #14,D0
 			TRAP #15
-<<<<<<< HEAD
+
 			BSR OPERAND_POSITION
 			BSR EA_TYPE3
-=======
+
 
 			MOVE.W (A0),D3 		* Make a temp copy of the current instruction in D3
 			ANDI.W #$0100,D3 		* Bitmask the current instruction to obtain only the size bits
@@ -1772,7 +1752,7 @@ SET_DONE	BSR OPERAND_POSITION
 
 ; 			BSR DISPLAY_ADDEREG
 
->>>>>>> origin/Davids
+
 			RTS
 
 *- 007 ADD -------------------------- Add --------------------------------------
@@ -1809,8 +1789,7 @@ SUB_T		LEA SUB_M,A1
 DIVS_T		LEA DIVS_M,A1
 			MOVE.B #14,D0
 			TRAP #15
-<<<<<<< HEAD
-=======
+
 			BSR OPERAND_POSITION
 >>>>>>> origin/Davids
 			BSR EA_TYPE7
@@ -2064,7 +2043,7 @@ TASK_OP		DC.W ROL_E1_T,ROR_E1_T,LSL_E1_T,LSR_E1_T,ASL_E1_T,ROL_T,LSL_T,ASL_T,ASR
 			DC.W LEA_T,MOAW_T,MOW_T,MOAL_T,MOL_T,MOB_T,CMPI_T,BCLR_T,ORI_T,0
 
 *--------------------------- Bitmask Translation List --------------------------
-<<<<<<< HEAD
+
 BITMASK		DC.W $E118,$E108,$E100,$E018,$E008,$E000,$D0C0,$D000,$C1C0,$B000
 			DC.W $9000,$81C0,$8000,$6D00,$6C00,$6800,$6500,$6000,$5100,$4E80
 			DC.W $4E75,$4E71,$4880,$4400,$41C0,$3040,$3000,$2040,$2000,$1000
