@@ -1003,7 +1003,7 @@ EA_TYPE1:
 .DEST_MODE	MOVE.L	D3, D1			;load D3 into D1 for printing.
 			CMP		#3,D4
 			BEQ		.addadest
-			CMP		#8,D4
+			CMP		#7,D4
 			BEQ		.addadest
  			BSR		DISPLAY_DATAREG	;display Data Reg first.
 			BRA		.comma
