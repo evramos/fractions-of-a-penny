@@ -832,15 +832,16 @@ EA_TYPE1:
   * ADD ADDA CMP MOVE.* OR SUB 
  *-------------------------------------------------------------------------------		
  EA_TYPE3:
- 			MOVE.B	#%00001110, D3	* move primative 3 bitmask into D3 	0xD (REGISTER)
+ 			MOVE.W	#%00001110, D3	* move primative 3 bitmask into D3 	0xD (REGISTER)
  			LSL.W	#8, D3			* shift right eight time into upper bit 0x0D00
- 			MOVE.B	#%11100000, D4	* move primative 3 bitmask into D4 	0xD0 (OPMODE)
+ 			MOVE.W	#%11100000, D4	* move primative 3 bitmask into D4 	0xD0 (OPMODE)
  			LSL.B	#1, D4			* shiftleft 1 time 0x01C0
- 			MOVE.B	#%00111000, D5	* move primative 3 bitmask into D5 0x38(EA MODE)
- 			MOVE.B 	#%00000111, D6	* move primative 3 bit maskinto D6 0x7(EA REGISTER)
+ 			MOVE.W	#%00111000, D5	* move primative 3 bitmask into D5 0x38(EA MODE)
+ 			MOVE.W 	#%00000111, D6	* move primative 3 bit maskinto D6 0x7(EA REGISTER)
 
  			AND.W	D7, D3			* and D7 and D5 store in D3 (REGISTER)
  			LSR.W	#8, D3			* shift it right 8 times
+			LSR.W	#1, D3			* shift right one more time.
  			AND.W	D7, D4			* and D7 and D6 store in D4 (OPMODE)
  			LSR.W	#6, D4			* Shifts the temp OPMODE right 6 places.
  			AND.W	D7, D5			* and D7 and D5 (EA MODE)
@@ -859,18 +860,26 @@ EA_TYPE1:
 			TRAP #15
 
 			MOVE.L	D3, D1			;load D3 into D1 for printing.
+			CMP		#3,D4
+			BEQ		.addasrc
+			CMP		#8,D4
+			BEQ		.addasrc
+			
  			BSR		DISPLAY_DATAREG	;display Data Reg first.
  			BRA		.exit
+.addasrc
+			BSR		DISPLAY_ADDEREG
+			BRA		.exit
 			
 .DEST_MODE	MOVE.L	D3, D1			;load D3 into D1 for printing.
+			CMP		#3,D4
+			BEQ		.addadest
+			CMP		#8,D4
+			BEQ		.addadest
  			BSR		DISPLAY_DATAREG	;display Data Reg first.
+			BRA		.comma
 			
-			LEA COMMA_M,A1
-			MOVE.B #14,D0
-			TRAP #15
-			
- 			BRA		.D_MODE			;send to addressmode comparrisons	
-			
+.addadest	BSR		DISPLAY_ADDEREG
  *------------------------ Compares between EA MODE 0-6 --------------------------
 
 .D_MODE		TST.B	D5				* Compare OpMode with 000	Dx  ************
@@ -879,20 +888,20 @@ EA_TYPE1:
  			BSR		DISPLAY_DATAREG	* Send to data register display subr
  			BRA		.BREAK
 
-.A_MODE		CMP.B	#1, D5			* compare opmode with 001	Ax  ************
+.A_MODE		CMP.W	#1, D5			* compare opmode with 001	Ax  ************
  			BNE		.IND_MODE		* branch to indir mode
  			BSR		DISPLAY_ERROR	* Invalid mode for this type
 			
-.IND_MODE	CMP.B	#2, D5			* compare opmode with 010  (Ax) ************
+.IND_MODE	CMP.W	#2, D5			* compare opmode with 010  (Ax) ************
  			BNE		.PI_MODE		* branch to post incr mode
  			MOVE.L	D6, D1			* load D6 into D1 for printing.
  			BSR		DISPLAY_INDIR	* Send to data register indirect subr
 
-.PI_MODE	CMP.B	#3, D5			* compare opmode with 011  (Ax)+ ***********
+.PI_MODE	CMP.W	#3, D5			* compare opmode with 011  (Ax)+ ***********
  			BNE		.PD_MODE		* branch tp pre dec
  			BSR		DISPLAY_POSTINC	* Send to POSTINCR display sub
 
-.PD_MODE	CMP.B	#4, D5			* compare opmode with 100 -(Ax) ************
+.PD_MODE	CMP.W	#4, D5			* compare opmode with 100 -(Ax) ************
  			BNE		.DATA_MODE		* branchto Post data mode
  			MOVE.L	D6, D1			* load D6 into D1 for printing.
  			BSR		DISPLAY_PREDEC
