@@ -1095,7 +1095,7 @@ EA_TYPE1:
 
 .INV_MODE	BRA		DISPLAY_ERROR	* Display error
 
-.BREAK		CMP.B	#3,D4			;compare opmode to 3
+.break		CMP.B	#3,D4			;compare opmode to 3
  			BLE		.SRC_MODE		;send to src mode
 	
 .EXIT		RTS
