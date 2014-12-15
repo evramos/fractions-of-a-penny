@@ -1004,7 +1004,7 @@ EA_TYPE1:
 
 .A_MODE		CMP.B	#1, D5			* compare opmode with 001	Ax  ************
  			BNE		.IND_MODE		* branch to indir mode
- 			BSR		DISPLAY_ERROR	* Invalid mode for this type
+ 			BRA		DISPLAY_ADDEREG	* Invalid mode for this type
 			
 .IND_MODE	CMP.B	#2, D5			* compare opmode with 010  (Ax) ************
  			BNE		.PI_MODE		* branch to post incr mode
@@ -1540,7 +1540,24 @@ ASR_E1_T	LEA ASR_M,A1
 ADDA_T		LEA ADDA_M,A1
 			MOVE.B #14,D0
 			TRAP #15
-			BSR OPERAND_POSITION
+
+			MOVE.W (A0),D3 		* Make a temp copy of the current instruction in D3
+			ANDI.W #$0100,D3 		* Bitmask the current instruction to obtain only the size bits
+			LSR.L #8,D3 		* Shift the obtained size bits to be the least bits in the register
+
+			TST.B D3
+			BNE SET_LONG
+
+			LEA WORD_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+			BRA SET_DONE
+
+SET_LONG	LEA LONG_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+
+SET_DONE	BSR OPERAND_POSITION												MAKE SIZE .W .L
 			BSR EA_TYPE3
 			RTS
 

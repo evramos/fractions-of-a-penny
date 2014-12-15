@@ -92,14 +92,32 @@ L   BLS N
 O   BHI L
     BRA O
 
+
+*-------------------------------------------------------------------------------
+* Testing Type 3
+*-------------------------------------------------------------------------------
+
+ADDA_TEST_1: ORG  $3400
+
+    ADDA.W D0,A0
+    ADDA.L A0,A1
+    ADDA.W (A0),A2
+    ADDA.L (A0)+,A3
+    ADDA.W -(A0),A4
+    ADDA.L $9000,A5
+    ADDA.W $90003000,A6
+    ADDA.L #$90003000,A7
+
+
     SIMHALT             ; halt simulator
 
 
-    END    ROD_TEST_1
-    END    ROD_TEST_2
-    END    ROD_TEST_3
-    END    ORI_TEST_1
-    END    CMPI_TEST_1
+    END     ROD_TEST_1
+    END     ROD_TEST_2
+    END     ROD_TEST_3
+    END     ORI_TEST_1
+    END     CMPI_TEST_1
+    END     ADDA_TEST_1
 
 
 
