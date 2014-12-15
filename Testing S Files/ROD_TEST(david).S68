@@ -120,17 +120,47 @@ ADD_TEST_1: ORG  $3500
 
     ADD.B $20006000,D3
 
+	
+;Type5     MOVEM
+ 
+            MOVEM   D0-A7,-(SP)
+            MOVEM   (SP)+,D0-A7
+ 
+;type4     SUBQ
+            SUBQ    #3,D4
+            SUBQ    #4,A3
+            SUBQ    #4,$4000
+            
+;type7     DIVS LEA MULS MOVEA
+ 
+            DIVS.W    D2,D1
+;            DIVS.L    D2,D1
+            DIVS.W   $4000,D1
+;            DIVS.W   D1,$4000
+            DIVS.W   (A2),D1
+;            DIVS.W   D1,(A2)
+            DIVS.W   (A3)+,D2
+;            DIVS.W   D2,-(A4)
+            DIVS.W   $40001000,D1
+;            DIVS.W   D1,$40001000
+            DIVS.W   -(A5),D2
+            LEA     $4000,A3
+            MULS.W  D4,D5
+            MOVEA.W    $5000,A3
+; ADD_TEST_2: ORG  $3600
+
 
     SIMHALT             ; halt simulator
 
 
-    END     ROD_TEST_1
-    END     ROD_TEST_2
-    END     ROD_TEST_3
-    END     ORI_TEST_1
-    END     CMPI_TEST_1
+    ; END     ROD_TEST_1
+    ; END     ROD_TEST_2
+    ; END     ROD_TEST_3
+    ; END     ORI_TEST_1
+    ; END     CMPI_TEST_1
     END     ADDA_TEST_1
     END     ADD_TEST_1
+    ; END     ADD_TEST_2
 
 
 
