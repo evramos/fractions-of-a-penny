@@ -958,7 +958,7 @@ EA_TYPE1:
  			MOVE.B	#%00001110, D3	* move primative 3 bitmask into D3 	0xD (REGISTER)
  			LSL.W	#8, D3			* shift right eight time into upper bit 0x0D00
  			MOVE.B	#%11100000, D4	* move primative 3 bitmask into D4 	0xD0 (OPMODE)
- 			LSL.B	#1, D4			* shiftleft 1 time 0x01C0
+ 			LSL.L	#1, D4			* shiftleft 1 time 0x01C0
  			MOVE.B	#%00111000, D5	* move primative 3 bitmask into D5 0x38(EA MODE)
  			MOVE.B 	#%00000111, D6	* move primative 3 bit maskinto D6 0x7(EA REGISTER)
 
@@ -972,7 +972,7 @@ EA_TYPE1:
 		
  			MOVE.L	D6,D1			* Move register value to D1
 
- *------------------------ Compares Destination or Source Modes -----------------
+*------------------------ Compares Destination or Source Modes -----------------
 .OPMODE	CMP.B	#3,D4			;compare opmode to 3
  			BLE		.D_MODE			;do EA comparrisons first
  			BGT		.DEST_MODE		;send to destination mode
@@ -982,18 +982,33 @@ EA_TYPE1:
 			TRAP #15
 
 			MOVE.L	D3, D1			;load D3 into D1 for printing.
+			CMP		#3,D4
+			BEQ		.addasrc
+			CMP		#8,D4
+			BEQ		.addasrc
+			
  			BSR		DISPLAY_DATAREG	;display Data Reg first.
  			BRA		.exit
+.addasrc
+			BSR		DISPLAY_ADDEREG
+			BRA		.exit
 			
 .DEST_MODE	MOVE.L	D3, D1			;load D3 into D1 for printing.
+			CMP		#3,D4
+			BEQ		.addadest
+			CMP		#8,D4
+			BEQ		.addadest
  			BSR		DISPLAY_DATAREG	;display Data Reg first.
+			BRA		.comma
 			
-			LEA COMMA_M,A1
+.addadest	BSR		DISPLAY_ADDEREG
+
+.comma		LEA COMMA_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			
- 			BRA		.D_MODE			;send to addressmode comparrisons	
-			
+ 			BRA		.D_MODE			;send to addressmode comparrisons
+ 			
  *------------------------ Compares between EA MODE 0-6 --------------------------
 
 .D_MODE		TST.B	D5				* Compare OpMode with 000	Dx  ************
@@ -1557,8 +1572,21 @@ SET_LONG	LEA LONG_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 
-SET_DONE	BSR OPERAND_POSITION												MAKE SIZE .W .L
+SET_DONE	BSR OPERAND_POSITION
+
 			BSR EA_TYPE3
+
+; 			LEA COMMA_M,A1
+; 			MOVE.B #14,D0
+; 			TRAP #15
+
+; 			MOVE.W #$0E00,D3
+; 			AND.W D7,D3
+; *			0000 1110 0000 0000
+; 			ROL.L #6,D3
+
+; 			BSR DISPLAY_ADDEREG
+
 			RTS
 
 *- 007 ADD -------------------------- Add --------------------------------------
@@ -2018,6 +2046,7 @@ BITMASK		DC.W $E7C0,$E6C0,$E3C0,$E2C0,$E1C0,$E118,$E108,$E100,$E0C0,$E018
 ; 			DC.W $FFFF
 
 	END		START				* last line of source
+
 
 
 
