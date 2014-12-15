@@ -250,10 +250,14 @@ RANGE_ERROR_CHECK:
 
 SEARCH_INIT	CMPA.L A6,A0		* Did I happen to go over the user range?
 			BGE NO_DATA_FOUND	* If I did, I'll end the progarm.
-			ADDA.W #WORD,A0		* If not, I'll continue to hunt for DATA
+			
 			CMPI.W #$FFFF,(A0)  * Did I happen to find any useful DATA?
-			BEQ SEARCH_INIT     * Nope, continue the hunt
-			RTS					* Returns from subroutine
+
+			BNE SEARCH_END     * Nope, continue the hunt
+			ADDA.W #WORD,A0		* If not, I'll continue to hunt for DATA
+			BRA SEARCH_INIT
+
+SEARCH_END	RTS					* Returns from subroutine
 
 **************************  ASCII -> HEX  Subroutine  **************************
 
