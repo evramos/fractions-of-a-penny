@@ -868,7 +868,7 @@ DISPLAY_REGS2:
 					BSR		DISPLAY_ADDEREG
 					
 .exit				RTS
-*-------------------------------------------------------------------------------
+
 
 ************************* Effective Address Algorithm **************************
 *-------------------------------------------------------------------------------
@@ -958,7 +958,7 @@ EA_TYPE1:
  			MOVE.B	#%00001110, D3	* move primative 3 bitmask into D3 	0xD (REGISTER)
  			LSL.W	#8, D3			* shift right eight time into upper bit 0x0D00
  			MOVE.B	#%11100000, D4	* move primative 3 bitmask into D4 	0xD0 (OPMODE)
- 			LSL.L	#1, D4			* shiftleft 1 time 0x01C0
+ 			LSL.W	#1, D4			* shiftleft 1 time 0x01C0
  			MOVE.B	#%00111000, D5	* move primative 3 bitmask into D5 0x38(EA MODE)
  			MOVE.B 	#%00000111, D6	* move primative 3 bit maskinto D6 0x7(EA REGISTER)
 
@@ -1325,8 +1325,8 @@ EA_TYPE6:
 			TST.B 	D5				* Checks if i/r bit is an immediate value of 0
 			BNE		.regmode		* D3 (I/R) is a Register Rotate Count
 			
-; If i/r = 0, this field contains the rotate count. The values 1 � 7 represent
-; counts of 1 � 7, and zero specifies a count of eight.
+; If i/r = 0, this field contains the rotate count. The values 1 – 7 represent
+; counts of 1 – 7, and zero specifies a count of eight.
 
 			MOVE.B #$23,D1 			* Prints '#' into the output
 			MOVE.B #6,D0
