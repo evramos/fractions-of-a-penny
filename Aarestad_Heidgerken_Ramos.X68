@@ -1023,25 +1023,29 @@ EA_TYPE1:
  			BNE		.A_MODE			* Branch to A register mode
  			MOVE.L	D6, D1			* load D6 into D1 for printing.
  			BSR		DISPLAY_DATAREG	* Send to data register display subr
- 			BRA		.BREAK
+ 			BRA		.break
 
 .A_MODE		CMP.W	#1, D5			* compare opmode with 001	Ax  ************
  			BNE		.IND_MODE		* branch to indir mode
  			BRA		DISPLAY_ADDEREG	* Invalid mode for this type
+			BRA     .break
 			
 .IND_MODE	CMP.W	#2, D5			* compare opmode with 010  (Ax) ************
  			BNE		.PI_MODE		* branch to post incr mode
  			MOVE.L	D6, D1			* load D6 into D1 for printing.
  			BSR		DISPLAY_INDIR	* Send to data register indirect subr
-
+			BRA     .break
+			
 .PI_MODE	CMP.W	#3, D5			* compare opmode with 011  (Ax)+ ***********
  			BNE		.PD_MODE		* branch tp pre dec
  			BSR		DISPLAY_POSTINC	* Send to POSTINCR display sub
-
+			BRA     .break
+			
 .PD_MODE	CMP.W	#4, D5			* compare opmode with 100 -(Ax) ************
  			BNE		.DATA_MODE		* branchto Post data mode
  			MOVE.L	D6, D1			* load D6 into D1 for printing.
  			BSR		DISPLAY_PREDEC
+			BRA     .BREAK
 
 
  *---------------- Compares between OPMODE 7 (xxx).W or (xxx).L -----------------
@@ -1273,6 +1277,9 @@ EA_TYPE5:
  			MOVE.W (A0),D2
  			BSR	DISPLAY_WORD_HEX		; display word in hex
 
+			BRA     .break
+
+
 .LONGDATA	LEA INIT_MEM,A1
  			MOVE.B #14,D0
  			TRAP #15
@@ -1281,6 +1288,9 @@ EA_TYPE5:
  			MOVE.L (A0),D2
  			ADDA.W #WORD,A0
  			BSR	DISPLAY_LONG_HEX	; display long in hex
+
+			BRA     .break
+
 
 .INV_MODE	BRA		DISPLAY_ERROR	* Display error
 
@@ -1592,7 +1602,7 @@ SET_DONE	BSR OPERAND_POSITION
 			AND.W D7,D3
 			ROL.W #7,D3
 
-			MOVE.L D3,D1
+			MOVE.W D3,D1
 			BSR DISPLAY_ADDEREG
 
 			RTS
