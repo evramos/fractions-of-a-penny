@@ -41,24 +41,8 @@ BITMASK8	EQU   $00FF
 
 INIT_START	BSR USER_HEX_INPUT
 
-			MOVEA.L A5,A0 		***** OPEN DATA ******
-
-*---------------------- Checks the range of START and END ----------------------
-
-			CMPA.L A6,A5 		* Tests to see if the starting mark isn't greater than the ending
-			BLT SEARCH_INIT 	* Okay good, you didn't crash my program. We can move on and be happy
-
-			LEA ERROR_HM0,A1 	* Loads error message to the output
-			MOVE.B #13,D0
-			TRAP #15
-			BRA INIT_START
-
-SEARCH_INIT	CMPA.L A6,A0		* Did I happen to go over the user range?
-			BGE NO_DATA_FOUND	* If I did, I'll end the progarm.
-			ADDA.W #WORD,A0		* If not, I'll continue to hunt for DATA
-			CMPI.W #$FFFF,(A0)  * Did I happen to find any useful DATA?
-			BEQ SEARCH_INIT     * Nope, continue the hunt
-
+			MOVEA.L A5,A0 		* Move a temp starting point from A5 to A0
+			BSR RANGE_ERROR_CHECK
 
 *---------------------------- Displaying to output -----------------------------
 
@@ -247,6 +231,33 @@ NO_DATA_FOUND:
 
 			BRA END_PROGRAM
 
+
+**********************  Checking Range Input Subroutine  ***********************
+
+RANGE_ERROR_CHECK:
+*---------------------- Checks the range of START and END ----------------------
+			CMPA.L A6,A5 		* Tests to see if the starting mark isn't greater than the ending
+			BLT SEARCH_INIT 	* Okay good, you didn't crash my program. We can move on and be happy
+
+			LEA ERROR_HM0,A1 	* Loads error message to the output
+			MOVE.B #13,D0
+			TRAP #15
+
+			MOVE.L (A7)+,D2			**** SOME HOW POP FROM A7 ****
+			CLR.L D2
+
+			BRA INIT_START
+
+SEARCH_INIT	CMPA.L A6,A0		* Did I happen to go over the user range?
+			BGE NO_DATA_FOUND	* If I did, I'll end the progarm.
+			
+			CMPI.W #$FFFF,(A0)  * Did I happen to find any useful DATA?
+
+			BNE SEARCH_END     * Nope, continue the hunt
+			ADDA.W #WORD,A0		* If not, I'll continue to hunt for DATA
+			BRA SEARCH_INIT
+
+SEARCH_END	RTS					* Returns from subroutine
 
 **************************  ASCII -> HEX  Subroutine  **************************
 
@@ -607,7 +618,6 @@ DISPLAY_ERROR:
 
 			MOVE.W (A0),D2
 			BSR DISPLAY_WORD_HEX	
-			; RTS
 
 			MOVE.L (A7)+,D2			**** SOME HOW POP FROM A7 ****
 			BRA NEWLINE
@@ -659,8 +669,8 @@ DISPLAY_POSTINC:
 			RTS
 
 *-------------------------------------------------------------------------------
-* Display_Reg
-* as source
+* Display_Reg1 - read 0 -> 15
+*
 * 16 bit regmask  A7->A0/D7->D0
 * assumed to be in D1
 * D2 will contain a count and points to current bit.
@@ -669,83 +679,196 @@ DISPLAY_POSTINC:
 * Written by: David Heidgerken
 *-------------------------------------------------------------------------------
 DISPLAY_REGS:
-
 					MOVE.L		#0, D2		; store counter count up
-
-.top				CMP.W		#16,D2
-					BEQ			.exit       ;undfined symbol?
+					CLR			D3
 					
-					BTST		D2, D1
-					BEQ			.current_zero	;if current is 0 branch to current_zero
-
-.current_one		CMP.W 	#1, D3			;check previous value
-					BEQ		.display_dash	;if eq branch to display_dash
-					BLT		.display_current    ;if last was 0 display current
+.top				BTST		D2, D1
+					BEQ			.currentzero	;if current is 0 branch to current_zero
+*-------------------------------------------------------------------------------
+.currentone			CMP.W 	#1, D3			;check previous(d3) value
+					BEQ		.startofseq		;if 1 display startofseq
 					
-
-					BRA		.next			;if last was dash no display needed.
-		
-.current_zero		CMP.L	#1, D3			;chk previous value
-					BGE		.display_previous	;if 1 display previous
+					CMP.W	#0, D3			;cmp prev(d3) to 0
+					BEQ		.updateone		;branch to updateone
+					BRA		.next			;otherwise(D3 = 3) next
 					
-
-					BRA		.next				;if - go next
+.updateone			MOVE.L	#1, D3			;update D3 w/ 1
+					BRA		.next
 					
-.display_dash		MOVE.L	D1,-(SP)			;move regmask onto stack
+.startofseq			MOVE.L	D1,-(SP)			;move regmask onto stack
+
+					MOVE.L	D2, D1				;move counter into d1
+					SUBI	#1,D1				;subtract 1 to get previous i
+					CMP.W	#8,	D1		        ;compare to 8
+					BGE		.displayAxOne		;counter GE to 8are AddRegs		
 				
-					MOVE.L	#$2D,D1				;move dashvalu into D1
-					MOVE.B #6,D0
-					TRAP #15
-
-					MOVE.L	(SP)+,D1			;move regmask back to D1
+.displayDxOne		BSR		DISPLAY_DATAREG		
+					BRA		.startnext
+					
+.displayAxOne		SUBI	#8,D1	
+					BSR		DISPLAY_ADDEREG
+					
+.startnext			MOVE.L	(SP)+,D1			;move regmask back to D1
 					MOVE.L	#3, D3				;update previous
 					BRA		.next
-					
-.display_current	MOVE.L	D1,-(SP)			;move regmask onto stack
+*-------------------------------------------------------------------------------
+.currentzero		CMP		#0, D3				;cmp prev(d3)to 0
+					BEQ		.next				;if eq go .next
 
-					MOVE.L	D2, D1				;move counter
-					CMP.W	#8,	D1		        ;compare to 8
-					BGE		.displaycurAx		;counter GE to 8are AddRegs		
-				
-					BSR		DISPLAY_DATAREG		
-					BRA		.current_next
 					
-.displaycurAx		SUBI	#8,D1	
-					BSR		DISPLAY_ADDEREG		
-					
-.current_next		MOVE.L	(SP)+,D1			;move regmask back to D1
-					MOVE.L	#1, D3				;update previous
-					BRA		.next
-					
-.display_previous	MOVE.L	D1,-(SP)			;move regmask onto stack
+					MOVE.L	D1,-(SP)			;move regmask onto stack
 
-					MOVE.L	D2, D1				;move counter into D1
-					SUBI    #1, D1              ;subtract one to get previousvalue
-					CMP.W	#8,D1				;compare to 8
-					BGE		.displayprevAx			;counter GE to 8are AddRegs		
-				
-					BSR		DISPLAY_DATAREG		
-					BRA		.display_slash
-
-.display_slash  	MOVE.L	#$2F,D1				;move slashvalu into D1
+					CMP		#1, D3
+					BEQ		.endofseq
+					
+					MOVE.L	#$2D,D1				;move dashvalu into D1
 					MOVE.B #6,D0
-					TRAP #15
-				
-					BRA		.previous_next
+					TRAP #15					;and display
 					
-.displayprevAx		SUBI	#8,D1	
-					BSR		DISPLAY_ADDEREG	
-                    BRA     .display_slash	
-					
-.previous_next		MOVE.L	(SP)+,D1			;move regmask back to D1
+.endofseq			MOVE.L	D2, D1				;move counter into d1
+					SUBI	#1,D1				;subtract 1 to get previous i
+					CMP.W	#8,	D1		        ;compare to 8
+					BGE		.displayAxZero		;counter GE to 8are AddRegs
 
+.displayDxZero		BSR		DISPLAY_DATAREG
+					BRA		.endnext
+					
+.displayAxZero		SUBI	#8,D1	
+					BSR		DISPLAY_ADDEREG
+					
+.endnext			MOVE.L	#$2F,D1				;move slashvalu into D1
+					MOVE.B #6,D0
+					TRAP #15					;and display
+					
+					MOVE.L	(SP)+,D1			;move regmask back to D1
 					MOVE.L	#0, D3				;update previous
 					BRA		.next
-
+					
+*-------------------------------------------------------------------------------
 .next				ADDI.W	#1,D2				;add 1 to counter
-                    BRA     .top
+                    CMP.W		#16,D2
+					BEQ			.break			;head to break
+					BRA     .top
 
+.break				CMP.W 	#0, D3				;check previous value
+					BEQ		.exit				;if 0 exit, othewise display A7
+	
+.displayA7			CMP.W	#1,D3
+					BEQ		.nodash
+					
+					MOVE.L	#$2D,D1				;move dashvalu into D1
+					MOVE.B #6,D0
+					TRAP #15					;and display
+					
+.nodash				MOVE.L	#7, D1				;move 7 into d1
+					BSR		DISPLAY_ADDEREG
+					
 .exit				RTS
+*-------------------------------------------------------------------------------
+
+*-------------------------------------------------------------------------------
+* Display_Reg2 - read 15 -> 0  reverse order for -(Ax)
+*
+* 16 bit regmask  A7->A0/D7->D0
+* assumed to be in D1
+* D2 will contain a count and points to current bit.
+* D3 will store a value of the previous bit
+* a value of 3 indicates that the previous char printed was a dash
+* Written by: David Heidgerken
+*-------------------------------------------------------------------------------
+DISPLAY_REGS2:
+					MOVE.L		#15, D2		; store counter count up
+					CLR			D3
+					
+.top				BTST		D2, D1
+					BEQ			.currentzero	;if current is 0 branch to current_zero
+*-------------------------------------------------------------------------------
+.currentone			CMP.W 	#1, D3			;check previous(d3) value
+					BEQ		.startofseq		;if 1 display startofseq
+					
+					CMP.W	#0, D3			;cmp prev(d3) to 0
+					BEQ		.updateone		;branch to updateone
+					BRA		.next			;otherwise(D3 = 3) next
+					
+.updateone			MOVE.L	#1, D3			;update D3 w/ 1
+					BRA		.next
+					
+.startofseq			MOVE.L	D1,-(SP)			;move regmask onto stack
+
+					MOVE.L	D2, D1				;move counter into d1
+					ADDI	#1,D1				;add 1 to get previous i
+					CMP.W	#8,	D1		        ;compare to 8
+					BLT		.displayAxOne		;counter GE to 8are AddRegs		
+				
+.displayDxOne		SUBI	#15,D1
+					NEG		D1
+					BSR		DISPLAY_DATAREG		
+					BRA		.startnext
+					
+.displayAxOne		SUBI	#7,D1
+					NEG		D1
+					BSR		DISPLAY_ADDEREG
+					
+.startnext			MOVE.L	(SP)+,D1			;move regmask back to D1
+					MOVE.L	#3, D3				;update previous
+					BRA		.next
+*-------------------------------------------------------------------------------
+.currentzero		CMP		#0, D3				;cmp prev(d3)to 0
+					BEQ		.next				;if eq go .next
+
+					
+					MOVE.L	D1,-(SP)			;move regmask onto stack
+
+					CMP		#1, D3
+					BEQ		.endofseq
+					
+					MOVE.L	#$2D,D1				;move dashvalu into D1
+					MOVE.B #6,D0
+					TRAP #15					;and display
+					
+.endofseq			MOVE.L	D2, D1				;move counter into d1
+					ADDI	#1,D1				;add 1 to get previous i
+					CMP.W	#8,	D1		        ;compare to 8
+					BLT		.displayAxZero		;counter GE to 8are AddRegs
+
+.displayDxZero		SUBI	#15,D1
+					NEG		D1
+					BSR		DISPLAY_DATAREG		
+					BRA		.endnext
+					
+.displayAxZero		SUBI	#7,D1
+					NEG		D1
+					BSR		DISPLAY_ADDEREG
+					
+.endnext			MOVE.L	#$2F,D1				;move slashvalu into D1
+					MOVE.B #6,D0
+					TRAP #15					;and display
+					
+					MOVE.L	(SP)+,D1			;move regmask back to D1
+					MOVE.L	#0, D3				;update previous
+					BRA		.next
+					
+*-------------------------------------------------------------------------------
+.next				SUBI.W	#1,D2				;sub 1 to counter
+                    CMP.W		#0,D2
+					BLT			.break			;head to break
+					BRA     .top
+
+.break				CMP.W 	#0, D3				;check previous value
+					BEQ		.exit				;if 0 exit, othewise display A7
+	
+.displayA7			CMP.W	#1, D3
+					BEQ		.nodash
+					
+					MOVE.L	#$2D,D1				;move dashvalu into D1
+					MOVE.B #6,D0
+					TRAP #15					;and display
+					
+.nodash				MOVE.L	#7, D1				;move 7 into d1
+					BSR		DISPLAY_ADDEREG
+					
+.exit				RTS
+
 
 ************************* Effective Address Algorithm **************************
 *-------------------------------------------------------------------------------
@@ -835,7 +958,7 @@ EA_TYPE1:
  			MOVE.B	#%00001110, D3	* move primative 3 bitmask into D3 	0xD (REGISTER)
  			LSL.W	#8, D3			* shift right eight time into upper bit 0x0D00
  			MOVE.B	#%11100000, D4	* move primative 3 bitmask into D4 	0xD0 (OPMODE)
- 			LSL.B	#1, D4			* shiftleft 1 time 0x01C0
+ 			LSL.W	#1, D4			* shiftleft 1 time 0x01C0
  			MOVE.B	#%00111000, D5	* move primative 3 bitmask into D5 0x38(EA MODE)
  			MOVE.B 	#%00000111, D6	* move primative 3 bit maskinto D6 0x7(EA REGISTER)
 
@@ -849,7 +972,7 @@ EA_TYPE1:
 		
  			MOVE.L	D6,D1			* Move register value to D1
 
- *------------------------ Compares Destination or Source Modes -----------------
+*------------------------ Compares Destination or Source Modes -----------------
 .OPMODE	CMP.B	#3,D4			;compare opmode to 3
  			BLE		.D_MODE			;do EA comparrisons first
  			BGT		.DEST_MODE		;send to destination mode
@@ -859,18 +982,33 @@ EA_TYPE1:
 			TRAP #15
 
 			MOVE.L	D3, D1			;load D3 into D1 for printing.
+			CMP		#3,D4
+			BEQ		.addasrc
+			CMP		#8,D4
+			BEQ		.addasrc
+			
  			BSR		DISPLAY_DATAREG	;display Data Reg first.
  			BRA		.exit
+.addasrc
+			BSR		DISPLAY_ADDEREG
+			BRA		.exit
 			
 .DEST_MODE	MOVE.L	D3, D1			;load D3 into D1 for printing.
+			CMP		#3,D4
+			BEQ		.addadest
+			CMP		#8,D4
+			BEQ		.addadest
  			BSR		DISPLAY_DATAREG	;display Data Reg first.
+			BRA		.comma
 			
-			LEA COMMA_M,A1
+.addadest	BSR		DISPLAY_ADDEREG
+
+.comma		LEA COMMA_M,A1
 			MOVE.B #14,D0
 			TRAP #15
 			
- 			BRA		.D_MODE			;send to addressmode comparrisons	
-			
+ 			BRA		.D_MODE			;send to addressmode comparrisons
+ 			
  *------------------------ Compares between EA MODE 0-6 --------------------------
 
 .D_MODE		TST.B	D5				* Compare OpMode with 000	Dx  ************
@@ -881,7 +1019,7 @@ EA_TYPE1:
 
 .A_MODE		CMP.B	#1, D5			* compare opmode with 001	Ax  ************
  			BNE		.IND_MODE		* branch to indir mode
- 			BSR		DISPLAY_ERROR	* Invalid mode for this type
+ 			BRA		DISPLAY_ADDEREG	* Invalid mode for this type
 			
 .IND_MODE	CMP.B	#2, D5			* compare opmode with 010  (Ax) ************
  			BNE		.PI_MODE		* branch to post incr mode
@@ -1074,7 +1212,18 @@ EA_TYPE5:
 
  			MOVE.W (A6), D1			; move a word from data stream into D1.
  			ADDA	#WORD, A6		;increment data pointer
- 			BSR		DISPLAY_REGS	; display regs first.  then ea modes.
+			
+			CMP.W	#4,D5
+			BNE		.forward
+			BSR		DISPLAY_REGS2
+			
+			LEA COMMA_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+			
+			BRA		.IND_MODE
+			
+.forward 	BSR		DISPLAY_REGS	; display regs first.  then ea modes.
 
 *------------------------ Compares between OPMODE 2,4,7--------------------------
 			
@@ -1134,7 +1283,17 @@ EA_TYPE5:
 			
 .printregs	MOVE.W (A0), D1			; move a word from data stream into D1.
  			ADDA	#WORD, A0		;increment data pointer
- 			BSR	DISPLAY_REGS	; display regs last	
+			
+			LEA COMMA_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+			
+			CMP.W	#4,D5
+			BNE		.forwardend
+			BSR		DISPLAY_REGS2
+			BRA		.exit
+			
+.forwardend BSR	DISPLAY_REGS	; display regs last	
 			
 .exit		RTS					;return to calling instruction
 
@@ -1396,8 +1555,38 @@ ASR_E1_T	LEA ASR_M,A1
 ADDA_T		LEA ADDA_M,A1
 			MOVE.B #14,D0
 			TRAP #15
-			BSR OPERAND_POSITION
+
+			MOVE.W (A0),D3 		* Make a temp copy of the current instruction in D3
+			ANDI.W #$0100,D3 		* Bitmask the current instruction to obtain only the size bits
+			LSR.L #8,D3 		* Shift the obtained size bits to be the least bits in the register
+
+			TST.B D3
+			BNE SET_LONG
+
+			LEA WORD_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+			BRA SET_DONE
+
+SET_LONG	LEA LONG_M,A1
+			MOVE.B #14,D0
+			TRAP #15
+
+SET_DONE	BSR OPERAND_POSITION
+
 			BSR EA_TYPE3
+
+; 			LEA COMMA_M,A1
+; 			MOVE.B #14,D0
+; 			TRAP #15
+
+; 			MOVE.W #$0E00,D3
+; 			AND.W D7,D3
+; *			0000 1110 0000 0000
+; 			ROL.L #6,D3
+
+; 			BSR DISPLAY_ADDEREG
+
 			RTS
 
 *- 007 ADD -------------------------- Add --------------------------------------
@@ -1690,176 +1879,7 @@ BITMASK		DC.W $E7C0,$E6C0,$E3C0,$E2C0,$E1C0,$E118,$E108,$E100,$E0C0,$E018
 			DC.W $6C00,$6800,$6500,$6000,$5100,$4E80,$4E75,$4E71,$4880,$4400
 			DC.W $41C0,$3040,$3000,$2040,$2000,$1000,$0C00,$0180,$0000
 
-
-; *-------------------------------------------------------------------------------
-
-; ; SOURCE_C	DC.L  TEST_0,TEST_1,TEST_2,TEST_3,TEST_4,TEST_5,,TEST_6,,TEST_7
-; ; SOURCE_C			DC.L  TEST_8,0
-
-; TEST_0		DC.W $4440
-; 			DC.W $4451
-; 			DC.W $4462
-; 			DC.W $445B
-; 			DC.W $4478,$2001
-; 			DC.W $4479,$1000,$2001
-; 			DC.W $FFFF
-
-; * Displays Dx 1-7
-; TEST_1		DC.W %0100010000000000		
-; 			DC.W %0100010001000001
-; 			DC.W %0100010010000010
-; 			DC.W %0100010011000011
-; 			DC.W %0100010000000100
-; 			DC.W %0100010001000101
-; 			DC.W %0100010010000110
-; 			DC.W %0100010011000111
-; 			DC.W $FFFF
-
-; * Displays (Ax) 1-7
-; TEST_2		DC.W %0100010000010000		
-; 			DC.W %0100010000010001
-; 			DC.W %0100010000010010
-; 			DC.W %0100010000010011
-; 			DC.W %0100010000010100
-; 			DC.W %0100010000010101
-; 			DC.W %0100010000010110
-; 			DC.W %0100010000010111
-; 			DC.W $FFFF
-
-; * Displays (Ax)+ 1-7
-; TEST_3		DC.W %0100010000011000		
-; 			DC.W %0100010000011001
-; 			DC.W %0100010000011010
-; 			DC.W %0100010000011011
-; 			DC.W %0100010000011100
-; 			DC.W %0100010000011101
-; 			DC.W %0100010000011110
-; 			DC.W %0100010000011111
-; 			DC.W $FFFF
-
-; * Displays -(Ax) 1-7
-; TEST_4		DC.W %0100010000100000		
-; 			DC.W %0100010000100001
-; 			DC.W %0100010000100010
-; 			DC.W %0100010000100011
-; 			DC.W %0100010000100100
-; 			DC.W %0100010000100101
-; 			DC.W %0100010000100110
-; 			DC.W %0100010000100111
-; 			DC.W $FFFF
-
-; * Displays (xxx).W
-; TEST_5		DC.W %0100010000111000,$2000		
-; 			DC.W %0100010000111001,$3000,$4000
-; 			DC.W $FFFF
-
-; * TEST for EA type 3
-; TEST_6		DC.W %1101000010111000,$2000	;ADD
-; 			DC.W %1101011011111000,$2000	;ADDA
-; 			DC.W %1011011010111000,$2000	;CMP
-; 			DC.W %0001011010111000,$2000	;MOVE.B
-; 			DC.W %0011011010111000,$2000	;MOVE.W
-; 			DC.W %0010011010111000,$2000	;MOVE.L
-; 			DC.W %1000011010111000,$2000	;OR
-; 			DC.W %1001011010111000,$2000	;SUB
-; 			DC.W $FFFF
-
-; TEST_7		DC.W %0101011101111000,$2000	;SUBQ
-; 			DC.W %0000011110010010			;BCLR
-; 			DC.W %0011100101010010			;MOVEA.W
-; 			DC.W %0010100101010010			;MOVEA.L
-; 			DC.W $FFFF
-
-; TEST_8		DC.W %0100110011010011,%1011011110110111
-; 			DC.W $FFFF
-			
-; *-------------------------------------------------------------------------------
-
-; ; SOURCE_C	DC.L  SOURCE_1,SOURCE_2,SOURCE_3,SOURCE_4,SOURCE_5,0
-
-; SOURCE_1	DC.W $4E75				RTS
-; 			DC.W $D6C7				ADDA
-; 			DC.W $4EB8				JSR
-; 			DC.W $4487				NEG.L
-; 			DC.W $D5C2				ADDA
-; 			DC.W $4E71				NOP
-; 			DC.W $4EB9				JSR
-; 			DC.W $D280				ADD.L
-; 			DC.W $303C				MOVE.W
-; 			DC.W $4E75				RTS
-; 			DC.W $FFFF,$FFFF,$FFFF,$FFFF
-
-
-; SOURCE_2	DC.W $66FC				DATA
-; 			DC.W $EE45				ASR.W
-; 			DC.W $6CFF,$0002,$6A12	BGE
-; 			DC.W $E6AA				LSR.L
-; 			DC.W $E439				ROR.B
-; 			DC.W $2646				MOVEA.L
-; 			DC.W $EF45				ASL.W
-; 			DC.W $62FC				DATA
-; 			DC.W $E539				ROL.B
-; 			DC.W $60AA				BRA
-; 			DC.W $EF45				ASL.W
-; 			DC.W $68CD				BVC
-; 			DC.W $BBBB				ERROR (CMP.L)
-; 			DC.W $E6AA				LSR.L
-; 			DC.W $EE45				ASR.W
-; 			DC.W $85C3				DIVS
-; 			DC.W $AAAA				ERROR (OR.L)
-; 			DC.W $FFFF
-
-
-; **** Displacement TESTING - REMOVE WHEN DONE ****
-; SOURCE_3	DC.W $6FFC				BLE	1111
-; 			DC.W $6EFC				BGT	1110
-; 			DC.W $6DFC				BLT	1101
-; 			DC.W $6C00,$0004		BGE	1100
-; 			DC.W $6BFC				BMI	1011
-; 			DC.W $6AFC				BPL	1010
-; 			DC.W $69FC				BVS	1001
-; 			DC.W $68FF,$2803,$3201	BVC	1000
-; 			DC.W $67FC				BEQ	0111
-; 			DC.W $66FC				BNE	0110
-; 			DC.W $65FC				BCS	0101
-; 			DC.W $64FC				BCC	0100
-; 			DC.W $63FC				BLS	0011
-; 			DC.W $62FC				BHI	0010
-; 			DC.W $60FC				BRA
-; 			DC.W $60FF,$0000,$000A	BRA
-; 			DC.W $60FF,$1234,$5678	BRA
-; 			DC.W $FFFF
-			
-
-; **** Size BYTE,WORD,LONG TESTING - REMOVE WHEN DONE ****
-; SOURCE_4	DC.W $E118				ROL.B
-; 			DC.W $E158				ROL.W
-; 			DC.W $E198				ROL.L
-; 			DC.W $E1D8				ROL
-
-; 			DC.W $E018				LOL.B
-; 			DC.W $E058				LOL.W
-; 			DC.W $E098				LOL.L
-; 			DC.W $E0D8				LOL	
-
-; 			DC.W $E110				LSL.B
-; 			DC.W $E150				LSL.W
-; 			DC.W $E190				LSL.L
-; 			DC.W $E1D0				LSL
-; 			DC.W $FFFF
-
-; SOURCE_5	DC.W $4E71
-; 			DC.W $6DFC
-; 			DC.W $6CFC
-; 			DC.W $68FC
-; 			DC.W $65FC
-; 			DC.W $60FC
-; 			DC.W $FFFF
-
 	END		START				* last line of source
-
-
-
 
 
 *~Font name~Courier New~
